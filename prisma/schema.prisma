@@ -18,5 +18,7 @@ model Request {
   name String 
   phone String
   description String
+  status String @default("new")
   createdAt DateTime @default(now())
 }
+

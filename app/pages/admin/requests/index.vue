@@ -1,5 +1,22 @@
 <script setup>
 const { data, refresh } = await useFetch('/api/test')
+
+async function updateStatus(id, status) {
+    console.log('STATUS UPDATE', id, status)
+
+  try {
+    await $fetch(`/api/request/${id}`, {
+      method: 'PATCH',
+      body: {
+        status
+      }
+    })
+
+    refresh()
+  } catch (error) {
+    console.error(error)
+  }
+}
 </script>
 
 <template>
@@ -16,7 +33,7 @@ const { data, refresh } = await useFetch('/api/test')
 
     <div class="grid gap-4">
       <UCard
-        v-for="request in data"
+        v-for="request in data || []"
         :key="request.id"
       >
         <div class="space-y-2">
@@ -34,7 +51,18 @@ const { data, refresh } = await useFetch('/api/test')
             <strong>Опис:</strong>
             {{ request.description }}
           </p>
-
+          <p>
+              <strong>Статус:</strong>
+              {{ request.status }}
+          </p>
+         <select
+  v-model="request.status"
+  @change="updateStatus(request.id, request.status)"
+>
+  <option value="new">new</option>
+  <option value="in_progress">in_progress</option>
+  <option value="done">done</option>
+</select>
           <p class="text-sm text-gray-500">
             {{ new Date(request.createdAt).toLocaleString() }}
           </p>

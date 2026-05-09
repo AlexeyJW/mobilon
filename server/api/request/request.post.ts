@@ -1,5 +1,5 @@
-import prisma from '../utils/prisma'
-import { resend } from '../utils/resend'
+import prisma from '../../utils/prisma'
+import { resend } from '../../utils/resend'
 import { z } from 'zod'
 
 const requestSchema = z.object({
