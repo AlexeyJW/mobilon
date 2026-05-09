@@ -1,0 +1,23 @@
+{
+  "name": "nuxt-app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@iconify-json/heroicons": "^1.2.3",
+    "@nuxt/image": "^2.0.0",
+    "@prisma/client": "^6.19.3",
+    "nuxt": "^4.4.2",
+    "prisma": "^6.19.3",
+    "resend": "^6.12.3",
+    "vue": "^3.5.33",
+    "vue-router": "^5.0.6",
+    "zod": "^4.4.3"
+  }
+}
