@@ -1,6 +1,23 @@
 <script setup>
+definePageMeta({
+  middleware: 'admin'
+})
 const { data, refresh } = await useFetch('/api/test')
+function getStatusColor(status) {
+  switch (status) {
+    case 'new':
+      return 'error'
 
+    case 'in_progress':
+      return 'warning'
+
+    case 'done':
+      return 'success'
+
+    default:
+      return 'neutral'
+  }
+}
 async function updateStatus(id, status) {
     console.log('STATUS UPDATE', id, status)
 
@@ -51,10 +68,16 @@ async function updateStatus(id, status) {
             <strong>Опис:</strong>
             {{ request.description }}
           </p>
-          <p>
-              <strong>Статус:</strong>
-              {{ request.status }}
-          </p>
+          <div class="flex items-center gap-2">
+            <strong>Статус:</strong>
+
+              <UBadge
+                :color="getStatusColor(request.status)"
+                
+              >
+                {{ request.status }}
+              </UBadge>
+          </div>
          <select
   v-model="request.status"
   @change="updateStatus(request.id, request.status)"

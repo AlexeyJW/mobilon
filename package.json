@@ -13,6 +13,7 @@
     "@iconify-json/heroicons": "^1.2.3",
     "@nuxt/image": "^2.0.0",
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "nuxt": "^4.4.2",
     "prisma": "^6.19.3",
     "resend": "^6.12.3",
