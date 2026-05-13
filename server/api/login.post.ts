@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 
 const ADMIN_SECRET = ((globalThis as any).process?.env?.ADMIN_SECRET as string) || 'admin-secret-default'
 const SESSION_MAX_AGE = 60 * 60 * 24
