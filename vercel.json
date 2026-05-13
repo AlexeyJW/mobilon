@@ -1,0 +1,16 @@
+{
+  "buildCommand": "nuxt build",
+  "outputDirectory": ".output",
+  "framework": "nuxt",
+  "functions": {
+    "server/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
+}
