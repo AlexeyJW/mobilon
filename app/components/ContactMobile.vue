@@ -1,6 +1,6 @@
 <!-- components/ContactMobile.vue -->
 <template>
-  <section class="px-4 py-6">
+  <section id="contact-form" class="px-4 py-6">
     <UCard>
       <h3 class="text-lg font-semibold mb-4 text-center">
         Залиште заявку

@@ -39,6 +39,7 @@
     <!-- BUTTONS -->
     <div class="flex flex-col gap-3">
       <UButton
+        href="#contact-form"
         block
         size="lg"
         color="primary"
