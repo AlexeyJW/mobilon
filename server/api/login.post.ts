@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 const ADMIN_SECRET = ((globalThis as any).process?.env?.ADMIN_SECRET as string) || 'admin-secret-default'
 const SESSION_MAX_AGE = 60 * 60 * 24
@@ -13,6 +13,7 @@ async function createSessionToken() {
     .update(payload)
     .digest('hex')
   return `${payload}.${signature}`
+  
 }
 
 export default defineEventHandler(async (event) => {
