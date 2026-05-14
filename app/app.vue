@@ -2,6 +2,7 @@
   <UApp>
   <div>
    <NuxtLayout >
+    
       <NuxtPage />
    </NuxtLayout>
 
