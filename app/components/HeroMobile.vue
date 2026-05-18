@@ -49,6 +49,7 @@
       </UButton>
 
       <UButton
+        href="/about"
         block
         variant="outline"
         size="lg"
