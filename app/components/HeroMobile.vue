@@ -2,7 +2,7 @@
 <template>
   <section class="px-4 pt-4 pb-8 text-center">
 
-  <div class="relative flex justify-center mb-4">
+  <div class="relative flex justify-center mb-4 ">
 
   
     <!-- картинка -->

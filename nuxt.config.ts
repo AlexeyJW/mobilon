@@ -2,7 +2,10 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui','@nuxt/image','@nuxtjs/sitemap'],
+  modules: ['@nuxt/ui','@nuxt/image','@nuxtjs/sitemap','@nuxtjs/color-mode'],
+   colorMode: {
+    classSuffix: ''
+  },
   sitemap: {
     siteUrl: 'https://mobilon-seven.vercel.app'
   },
