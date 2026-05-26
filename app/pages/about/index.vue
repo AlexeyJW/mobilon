@@ -27,7 +27,7 @@ const faqItems = [
   <div class="px-4 py-10 space-y-20">
 
     <!-- HERO -->
-
+   <RevealOnScroll>
     <section class="space-y-8">
 
       <div class="space-y-4">
@@ -91,9 +91,9 @@ const faqItems = [
       </div>
 
     </section>
-
+   </RevealOnScroll>
     <!-- SERVICES -->
-
+  <RevealOnScroll>
     <section class="space-y-8">
 
       <div class="text-center space-y-2">
@@ -158,9 +158,9 @@ const faqItems = [
       </div>
 
     </section>
-
+</RevealOnScroll>
     <!-- WHY -->
-
+<RevealOnScroll>
     <section class="space-y-8">
 
       <div class="text-center space-y-2">
@@ -225,9 +225,9 @@ const faqItems = [
       </div>
 
     </section>
-
+</RevealOnScroll>
     <!-- STEPS -->
-
+<RevealOnScroll>
     <section class="space-y-8">
 
       <div class="text-center space-y-2">
@@ -291,7 +291,7 @@ const faqItems = [
       </div>
 
     </section>
-
+</RevealOnScroll>
     <!-- TRUST -->
 
     <section>

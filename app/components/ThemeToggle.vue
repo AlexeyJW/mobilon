@@ -1,6 +1,12 @@
 <script setup>
 const colorMode = useColorMode()
 
+const mounted = ref(false)
+
+onMounted(() => {
+  mounted.value = true
+})
+
 function toggleTheme() {
   colorMode.preference =
     colorMode.value === 'dark'
@@ -12,6 +18,7 @@ function toggleTheme() {
 <template>
 
   <button
+    v-if="mounted"
     @click="toggleTheme"
     class="
       fixed
@@ -19,26 +26,27 @@ function toggleTheme() {
       right-4
       z-50
 
-      w-10
-      h-10
+      w-11
+      h-11
 
-      rounded-full
+      rounded-xl
 
-      backdrop-blur
       bg-white/10
+      backdrop-blur
+
       border
-      border-white/20
+      border-white/10
 
       flex
       items-center
       justify-center
 
-      text-xl
+      shadow-lg
 
       transition-all
       duration-300
 
-      hover:scale-110
+      hover:scale-105
     "
   >
 

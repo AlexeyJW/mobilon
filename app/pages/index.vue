@@ -1,9 +1,12 @@
 <template>
   <div>
-    <HeroMobile />
-    <BenefitsMobile />
-    <ServicesMobile />
-    <StepsMobile />
-    <ContactMobile />
+    <RevealOnScroll>
+      <HeroMobile />
+      <BenefitsMobile />
+      <ServicesMobile />
+     <StepsMobile />
+     <ContactMobile />
+    </RevealOnScroll>
+    
   </div>
 </template>    
