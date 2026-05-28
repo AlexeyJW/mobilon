@@ -1,4 +1,5 @@
 <script setup>
+
 const faqItems = [
   {
     label: 'Чи збережуться мої фото та дані?',

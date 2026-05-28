@@ -26,7 +26,14 @@ const form = reactive({
 })
 
 const loading = ref(false)
-
+const toast=useToast()
+function showToast() {
+  toast.add({
+    title: 'Заявка збережена',
+    description: 'Ваша заявка успішно збережена. Ми зв\'яжемося з вами найближчим часом.',
+    color: 'success'
+  })
+}
 async function submitForm() {
   loading.value = true
 
@@ -38,8 +45,8 @@ async function submitForm() {
 
     console.log(response)
 
-    alert('Заявка збережена')
-
+    // alert('Заявка збережена')
+    showToast()
     form.name = ''
     form.phone = ''
     form.description = ''
