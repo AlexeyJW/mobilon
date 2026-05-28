@@ -1,8 +1,15 @@
 <script setup>
 definePageMeta({
+  layout: 'admin',
   middleware: 'admin'
 })
-const { data, refresh } = await useFetch('/api/test')
+
+const loading = ref(false)
+const {
+  data,
+  refresh,
+  pending
+} = await useFetch('/api/test')
 function getStatusColor(status) {
   switch (status) {
     case 'new':
@@ -19,9 +26,13 @@ function getStatusColor(status) {
   }
 }
 async function updateStatus(id, status) {
-    console.log('STATUS UPDATE', id, status)
+
+  loading.value = true
+
+  console.log('STATUS UPDATE', id, status)
 
   try {
+
     await $fetch(`/api/request/${id}`, {
       method: 'PATCH',
       body: {
@@ -29,10 +40,18 @@ async function updateStatus(id, status) {
       }
     })
 
-    refresh()
+    await refresh()
+
   } catch (error) {
+
     console.error(error)
+
+  } finally {
+
+    loading.value = false
+
   }
+
 }
 </script>
 
@@ -43,12 +62,28 @@ async function updateStatus(id, status) {
         Заявки
       </h1>
 
-      <UButton @click="refresh">
-        Оновити
-      </UButton>
+      <UButton
+  :loading="loading"
+  :disabled="loading"
+  @click="refresh"
+>
+  {{ loading ? 'Оновлення...' : 'Оновити' }}
+</UButton>
     </div>
+<div
+  v-if="pending"
+  class="space-y-4"
+>
 
-    <div class="grid gap-4">
+  <USkeleton class="h-40 rounded-2xl" />
+  <USkeleton class="h-40 rounded-2xl" />
+  <USkeleton class="h-40 rounded-2xl" />
+
+</div>
+    <div
+  v-else
+  class="grid gap-4"
+>
       <UCard
         v-for="request in data || []"
         :key="request.id"
@@ -78,14 +113,18 @@ async function updateStatus(id, status) {
                 {{ request.status }}
               </UBadge>
           </div>
-         <select
+<USelect
   v-model="request.status"
-  @change="updateStatus(request.id, request.status)"
->
-  <option value="new">new</option>
-  <option value="in_progress">in_progress</option>
-  <option value="done">done</option>
-</select>
+  :items="[
+    'new',
+    'in_progress',
+    'done'
+  ]"
+  :disabled="loading"
+  @update:model-value="
+    updateStatus(request.id, $event)
+  "
+/>  
           <p class="text-sm text-gray-500">
             {{ new Date(request.createdAt).toLocaleString() }}
           </p>

@@ -10,9 +10,15 @@
         <UInput v-model="form.name" placeholder="Ваше ім'я" />
         <UInput v-model="form.phone" placeholder="Телефон" />
         <UTextarea v-model="form.description" placeholder="Опис" />
-        <UButton block size="lg" :disabled="loading" type="submit">
-          Надіслати
-        </UButton>
+        <UButton
+  block
+  size="lg"
+  :loading="loading"
+  :disabled="loading"
+  type="submit"
+>
+  {{ loading ? 'Відправка...' : 'Надіслати' }}
+</UButton>
       </UForm>
     </UCard>
   </section>
