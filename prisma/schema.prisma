@@ -13,6 +13,20 @@ datasource db {
   url= env("DATABASE_URL")
 }
 
+model Customer {
+  id        Int       @id @default(autoincrement())
+
+  name      String
+  phone     String    @unique
+
+  visits    Int       @default(0)
+  points    Int       @default(0)
+
+  createdAt DateTime  @default(now())
+
+  requests  Request[]
+}
+
 model Request {
   id  Int   @id @default(autoincrement())
   name String 
@@ -20,5 +34,7 @@ model Request {
   description String
   status String @default("new")
   createdAt DateTime @default(now())
+  customerId Int?
+  customer Customer? @relation(fields: [customerId], references: [id])
 }
 

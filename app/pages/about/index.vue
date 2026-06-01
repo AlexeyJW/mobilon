@@ -419,7 +419,7 @@ const faqItems = [
 
     <!-- CTA -->
 
-    <section>
+    <section id="about-cta">
 
       <UCard
         class="

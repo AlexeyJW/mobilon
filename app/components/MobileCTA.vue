@@ -1,26 +1,21 @@
 <script setup>
 const route = useRoute()
-
 const showCTA = useState('showCTA', () => true)
 
 let observer = null
 
 async function scrollToForm() {
-
   // одразу ховаємо CTA
   showCTA.value = false
 
   // якщо вже на головній
   if (route.path === '/') {
-
     const element = document.getElementById('contact-form')
-
     if (element) {
       element.scrollIntoView({
         behavior: 'smooth'
       })
     }
-
     return
   }
 
@@ -29,65 +24,65 @@ async function scrollToForm() {
 }
 
 function setupObserver() {
-
-  // cleanup
+  // очищення попереднього спостерігача
   if (observer) {
     observer.disconnect()
   }
 
-  const form = document.getElementById('contact-form')
+  // отримуємо обидві форми
+  const contactForm = document.getElementById('contact-form')
+  const aboutCta = document.getElementById('about-cta')
+  
+  // створюємо масив тільки з існуючих форм
+  const forms = [contactForm, aboutCta].filter(form => form !== null)
 
-  // якщо форми нема → показуємо CTA
-  if (!form) {
+  // якщо жодної форми немає → показуємо CTA
+  if (forms.length === 0) {
     showCTA.value = true
     return
   }
 
+  // спостерігаємо за обома формами одночасно
   observer = new IntersectionObserver(
-    ([entry]) => {
-
-      // якщо форма видима
-      showCTA.value = !entry.isIntersecting
-
+    (entries) => {
+      // перевіряємо, чи хоч одна форма видима
+      const isAnyFormVisible = entries.some(entry => entry.isIntersecting)
+      
+      // CTA ховається, якщо будь-яка форма видима
+      showCTA.value = !isAnyFormVisible
     },
     {
       threshold: 0.3
     }
   )
 
-  observer.observe(form)
+  // додаємо всі форми до спостерігача
+  forms.forEach(form => observer.observe(form))
 }
 
 onMounted(() => {
-
   // маленька затримка після hydration
   setTimeout(() => {
     setupObserver()
   }, 200)
-
 })
 
 watch(
   () => route.fullPath,
   () => {
-
     // після route transition
     setTimeout(() => {
       setupObserver()
     }, 300)
-
   }
 )
 
 onUnmounted(() => {
-
   if (observer) {
     observer.disconnect()
   }
-
 })
 </script>
-
 <template>
 
   <Transition
