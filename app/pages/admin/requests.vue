@@ -98,6 +98,10 @@ async function updateStatus(id, status) {
             <strong>Телефон:</strong>
             {{ request.phone }}
           </p>
+          <p>
+            <strong>Звернень:</strong>
+            {{ request.customer?.visits || 0 }}
+          </p>
 
           <p>
             <strong>Опис:</strong>

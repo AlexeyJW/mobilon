@@ -26,7 +26,18 @@
       <h1 class="font-bold text-xl">
         Admin Panel
       </h1>
-
+      <UButton
+        to="/admin/customers"
+        variant="ghost"
+      >
+        Клієнти
+      </UButton>
+      <UButton
+        to="/admin/requests"
+        variant="ghost"
+      >
+        Заявки
+      </UButton>
       <UButton
         to="/"
         variant="ghost"

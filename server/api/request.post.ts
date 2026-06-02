@@ -11,12 +11,39 @@ const requestSchema = z.object({
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
+    
 
+    
     // validation
     const validatedData = requestSchema.parse(body)
+console.log('VALIDATED:', validatedData)
 
+    const customer = await prisma.customer.upsert({
+  where: {
+    phone: validatedData.phone
+  },
+
+  update: {
+    visits: {
+      increment: 1
+    },
+
+    name: validatedData.name
+  },
+
+  create: {
+    name: validatedData.name,
+    phone: validatedData.phone,
+    visits: 1
+  }
+})
+console.log('CUSTOMER:', customer)
     const request = await prisma.request.create({
-      data: validatedData
+      data:{
+    ...validatedData,
+
+    customerId: customer.id
+  }
     })
 
     await resend.emails.send({

@@ -2,15 +2,18 @@ import prisma from '../utils/prisma'
 
 export default defineEventHandler(async () => {
 
-  const requests = await prisma.request.findMany({
+  const customers = await prisma.customer.findMany({
+
     include: {
-      customer: true
+      requests: true
     },
+
     orderBy: {
-      createdAt: 'desc'
+      visits: 'desc'
     }
+
   })
 
-  return requests
+  return customers
 
 })
