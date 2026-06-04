@@ -1,44 +1,31 @@
-// api/debug.ts
-import prisma from '../utils/prisma'
+// Замініть весь вміст на це
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export default defineEventHandler(async () => {
-  const results = {}
+  // Перевірка 1: чи існує prisma
+  console.log('Prisma exists?', !!prisma)
+  console.log('Prisma.request exists?', !!prisma?.request)
   
+  // Перевірка 2: спроба підключення
   try {
-    // 1. Перевірка підключення
-    results.connection = await prisma.$queryRaw`SELECT 1 as connected`
-    
-    // 2. Кількість запитів
-    results.requestsCount = await prisma.request.count()
-    
-    // 3. Кількість клієнтів
-    results.customersCount = await prisma.customer.count()
-    
-    // 4. Перші 5 запитів (без include)
-    results.firstRequests = await prisma.request.findMany({
-      take: 5,
-      select: {
-        id: true,
-        description: true,
-        customerId: true
-      }
-    })
-    
-    // 5. Спробуємо include на одному записі
-    const oneRequest = await prisma.request.findFirst({
-      include: { customer: true }
-    })
-    results.sampleWithInclude = oneRequest
-    
-    return results
-    
+    await prisma.$connect()
+    console.log('Connected to database')
+  } catch (e) {
+    console.error('Connection failed:', e)
+  }
+  
+  // Перевірка 3: простий count
+  try {
+    const count = await prisma.request.count()
+    return { success: true, count, message: 'Prisma works!' }
   } catch (error) {
-    return {
-      error: {
-        message: error.message,
-        code: error.code,
-        meta: error.meta
-      }
+    return { 
+      success: false, 
+      error: error.message,
+      prismaExists: !!prisma,
+      hasRequestMethod: !!prisma?.request
     }
   }
 })
