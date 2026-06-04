@@ -25,11 +25,11 @@ const { data } = await useFetch('/api/customers')
       <div class="space-y-2">
 
         <p>
-          <strong>{{ customer.name }}</strong>
+          <strong>{{ customer.CustomerName }}</strong>
         </p>
 
         <p>
-          {{ customer.phone }}
+          {{ customer.CustomerPhone }}
         </p>
 
         <p>
