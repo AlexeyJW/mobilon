@@ -4,8 +4,20 @@ definePageMeta({
   layout: 'admin',
   middleware: 'admin'
 })
+const search = ref('')
 
 const { data } = await useFetch('/api/customers')
+
+const filteredCustomers = computed(() => {
+  if (!data.value) {
+    return []
+  }
+
+  return data.value.filter(customer =>
+    customer.phone.includes(search.value) ||
+    customer.name.toLowerCase().includes(search.value.toLowerCase())
+  )
+})
 
 </script>
 
@@ -16,10 +28,20 @@ const { data } = await useFetch('/api/customers')
     <h1 class="text-2xl font-bold">
       Клієнти
     </h1>
-
+    <UInput
+  v-model="search"
+  placeholder="Пошук по імені або телефону..."
+  class="mb-4"
+/>
+    <div  
+       v-for="customer in filteredCustomers"
+      :key="customer.id">
+    <NuxtLink  :to="`/admin/customers/${customer.id}`"
+     
+      class="block"
+    >
     <UCard
-      v-for="customer in data"
-      :key="customer.id"
+      class="p-4"
     >
 
       <div class="space-y-2">
@@ -45,7 +67,11 @@ const { data } = await useFetch('/api/customers')
       </div>
 
     </UCard>
+</NuxtLink>
+    
+    </div>
 
+   
   </section>
 
 </template>

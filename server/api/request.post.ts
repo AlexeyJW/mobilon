@@ -27,14 +27,17 @@ console.log('VALIDATED:', validatedData)
     visits: {
       increment: 1
     },
-
+    points: {
+      increment: 10
+    },
     name: validatedData.name
   },
 
   create: {
     name: validatedData.name,
     phone: validatedData.phone,
-    visits: 1
+    visits: 1,
+    points: 10
   }
 })
 console.log('CUSTOMER:', customer)
