@@ -95,9 +95,20 @@ async function updateStatus(id, status) {
           </p>
 
           <p>
-            <strong>Телефон:</strong>
-            {{ request.phone }}
-          </p>
+  <strong>Телефон:</strong>
+
+  <NuxtLink
+    v-if="request.customer"
+    :to="`/admin/customers/${request.customer.id}`"
+    class="text-primary hover:underline"
+  >
+    {{ request.phone }}
+  </NuxtLink>
+
+  <span v-else>
+    {{ request.phone }}
+  </span>
+</p>
           <p>
             <strong>Звернень:</strong>
             {{ request.customer?.visits || 0 }}

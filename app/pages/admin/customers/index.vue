@@ -18,7 +18,33 @@ const filteredCustomers = computed(() => {
     customer.name.toLowerCase().includes(search.value.toLowerCase())
   )
 })
+const totalCustomers = computed(() => {
+  return data.value?.length || 0
+})
 
+const goldCustomers = computed(() => {
+  return data.value?.filter(customer =>
+    customer.points >= 100
+  ).length || 0
+})
+
+const totalPoints = computed(() => {
+  return data.value?.reduce((sum, customer) =>
+    sum + customer.points, 0
+  ) || 0
+})
+
+const totalRequests = computed(() => {
+  return data.value?.reduce((sum, customer) =>
+    sum + customer.requests.length, 0
+  ) || 0
+})
+
+const topCustomers = computed(() => {
+  return [...(data.value || [])]
+    .sort((a, b) => b.visits - a.visits)
+    .slice(0, 5)
+})
 </script>
 
 <template>
@@ -28,6 +54,73 @@ const filteredCustomers = computed(() => {
     <h1 class="text-2xl font-bold">
       Клієнти
     </h1>
+    <div class="grid grid-cols-2 gap-3 mb-6">
+
+  <UCard>
+    <div class="text-center">
+      <p class="text-sm text-gray-500">
+        👥 Клієнтів
+      </p>
+
+      <p class="text-2xl font-bold">
+        {{ totalCustomers }}
+      </p>
+    </div>
+  </UCard>
+
+  <UCard>
+    <div class="text-center">
+      <p class="text-sm text-gray-500">
+        📋 Заявок
+      </p>
+
+      <p class="text-2xl font-bold">
+        {{ totalRequests }}
+      </p>
+    </div>
+  </UCard>
+
+  <UCard>
+    <div class="text-center">
+      <p class="text-sm text-gray-500">
+        🥇 Золотих
+      </p>
+
+      <p class="text-2xl font-bold">
+        {{ goldCustomers }}
+      </p>
+    </div>
+  </UCard>
+
+  <UCard>
+    <div class="text-center">
+      <p class="text-sm text-gray-500">
+        🎁 Бонусів
+      </p>
+
+      <p class="text-2xl font-bold">
+        {{ totalPoints }}
+      </p>
+    </div>
+  </UCard>
+<UCard class="mb-6">
+  <template #header>
+    🏆 ТОП клієнтів
+  </template>
+
+  <div
+    v-for="customer in topCustomers"
+    :key="customer.id"
+    class="flex justify-between py-2"
+  >
+    <span>{{ customer.name }}</span>
+
+    <UBadge color="warning">
+      {{ customer.visits }} візитів
+    </UBadge>
+  </div>
+</UCard>
+</div>
     <UInput
   v-model="search"
   placeholder="Пошук по імені або телефону..."
