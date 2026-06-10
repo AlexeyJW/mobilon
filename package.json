@@ -22,12 +22,14 @@
     "bcryptjs": "^3.0.3",
     "nuxt": "^4.4.2",
     "prisma": "6.19.3",
+    "qrcode": "^1.5.4",
     "resend": "^6.12.3",
     "vue": "^3.5.33",
     "vue-router": "^5.0.6",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@nuxtjs/sitemap": "^8.0.15"
+    "@nuxtjs/sitemap": "^8.0.15",
+    "@types/qrcode": "^1.5.6"
   }
 }

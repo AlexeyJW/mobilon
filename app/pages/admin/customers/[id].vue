@@ -1,15 +1,23 @@
 <script setup>
+
+
 definePageMeta({
   layout: 'admin',
   middleware: 'admin'
 })
 
+
+const notes= ref('')
 const route = useRoute()
 
 const { data } = await useFetch(
   `/api/customers/${route.params.id}`
 )
-
+watchEffect(() => {
+  if (data.value) {
+    notes.value = data.value.notes || ''
+  }
+})
 function getLevel(points) {
   if (points >= 100) {
     return '🥇 Золото'
@@ -20,6 +28,33 @@ function getLevel(points) {
   }
 
   return '🥉 Бронза'
+}
+
+const toast = useToast()
+
+async function saveNotes() {
+  try {
+    await $fetch(`/api/customers/${route.params.id}`, {
+      method: 'PATCH',
+
+      body: {
+        notes: notes.value
+      }
+    })
+
+    toast.add({
+      title: 'Нотатки збережено',
+      color: 'success'
+    })
+
+  } catch (error) {
+    console.error(error)
+
+    toast.add({
+      title: 'Помилка збереження',
+      color: 'error'
+    })
+  }
 }
 </script>
 <template>
@@ -44,6 +79,22 @@ function getLevel(points) {
 
       </div>
 </UCard>
+<UCard class="mt-4">
+  <template #header>
+    📝 Нотатки
+  </template>
 
+  <UTextarea
+    v-model="notes"
+    :rows="5"
+    placeholder="Додайте інформацію про клієнта..."
+  />
+
+  <div class="mt-4">
+    <UButton @click="saveNotes">
+      Зберегти
+    </UButton>
+  </div>
+</UCard>
 
 </template>

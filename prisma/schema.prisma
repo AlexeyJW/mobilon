@@ -13,6 +13,7 @@ model Customer {
   phone     String    @unique
   visits    Int       @default(0)
   points    Int       @default(0)
+  notes     String?
   createdAt DateTime  @default(now())
   requests  Request[]
 }
