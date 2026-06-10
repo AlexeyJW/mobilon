@@ -13,11 +13,15 @@ const route = useRoute()
 const { data } = await useFetch(
   `/api/customers/${route.params.id}`
 )
-watchEffect(() => {
-  if (data.value) {
-    notes.value = data.value.notes || ''
-  }
-})
+watch(
+  data,
+  (val) => {
+    if (val) {
+      notes.value = val.notes || ''
+    }
+  },
+  { immediate: true }
+)
 function getLevel(points) {
   if (points >= 100) {
     return '🥇 Золото'
