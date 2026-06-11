@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model BonusTransaction {
+  id         Int      @id @default(autoincrement())
+
+  customerId Int
+  customer   Customer @relation( fields: [customerId], references: [id])
+
+  amount     Int
+  reason     String
+
+  createdAt  DateTime @default(now())
+}
+
 model Customer {
   id        Int       @id @default(autoincrement())
   name      String
@@ -16,6 +28,7 @@ model Customer {
   notes     String?
   createdAt DateTime  @default(now())
   requests  Request[]
+  bonusTransactions BonusTransaction[]
 }
 
 model Request {
