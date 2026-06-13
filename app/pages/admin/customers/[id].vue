@@ -6,11 +6,12 @@ definePageMeta({
   middleware: 'admin'
 })
 
-
+const bonusAmount = ref(10)
+const bonusReason = ref('')
 const notes= ref('')
 const route = useRoute()
 
-const { data } = await useFetch(
+const { data, refresh } = await useFetch(
   `/api/customers/${route.params.id}`
 )
 watchEffect(() => {
@@ -56,6 +57,20 @@ async function saveNotes() {
     })
   }
 }
+
+async function addBonus(amount) {
+  await $fetch(`/api/customers/${route.params.id}/bonus`, {
+    method: 'POST',
+    body: {
+      amount,
+      reason: bonusReason.value
+    }
+  })
+
+  bonusReason.value = ''
+
+  await refresh()
+}
 </script>
 <template>
   <UCard>
@@ -96,5 +111,43 @@ async function saveNotes() {
     </UButton>
   </div>
 </UCard>
+<UCard class="mt-4">
+  <template #header>
+    🎁 Бонуси
+  </template>
 
+  <div class="space-y-3">
+
+    <UInput
+      v-model="bonusReason"
+      placeholder="Причина"
+    />
+
+    <div class="flex gap-2">
+
+      <UButton
+        color="success"
+        @click="addBonus(10)"
+      >
+        +10
+      </UButton>
+
+      <UButton
+        color="success"
+        @click="addBonus(50)"
+      >
+        +50
+      </UButton>
+
+      <UButton
+        color="error"
+        @click="addBonus(-50)"
+      >
+        -50
+      </UButton>
+
+    </div>
+
+  </div>
+</UCard>
 </template>
