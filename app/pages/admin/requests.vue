@@ -33,7 +33,7 @@ async function updateStatus(id, status) {
 
   try {
 
-    await $fetch(`/api/request/${id}`, {
+    await $fetch(`/api/requests/${id}`, {
       method: 'PATCH',
       body: {
         status

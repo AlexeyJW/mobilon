@@ -1,19 +1,21 @@
 import prisma from '../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  const id = Number(getRouterParam(event, 'id'))
+  const id = Number(event.context.params?.id)
 
   const body = await readBody(event)
 
-  const customer = await prisma.customer.update({
+  console.log('PATCH ID:', id)
+  console.log('PATCH BODY:', body)
+
+  const updatedRequest = await prisma.request.update({
     where: {
       id
     },
-
     data: {
-      notes: body.notes
+      status: body.status
     }
   })
 
-  return customer
+  return updatedRequest
 })
