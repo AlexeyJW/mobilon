@@ -44,7 +44,7 @@ async function submitForm() {
   loading.value = true
 
   try {
-    const response = await $fetch('/api/request', {
+    const response = await $fetch('/api/requests', {
       method: 'POST',
       body: form
     })
