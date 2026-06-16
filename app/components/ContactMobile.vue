@@ -44,7 +44,7 @@ async function submitForm() {
   loading.value = true
 
   try {
-    const response = await $fetch('/api/requests', {
+    const response = await $fetch('/api/request', {
       method: 'POST',
       body: form
     })
@@ -58,8 +58,16 @@ async function submitForm() {
     form.description = ''
   } catch (error) {
     console.error(error)
-
-    alert('Помилка')
+   console.error('Full error:', error)
+    
+    // Отримуємо деталі помилки
+    const errorMessage = error.data?.statusMessage || error.message || 'Невідома помилка'
+    console.error('Error message:', errorMessage)
+    
+    // Показуємо конкретну помилку
+    alert(`Помилка: ${errorMessage}`)
+  
+    
   }
 
   loading.value = false

@@ -15,12 +15,12 @@
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.3",
     "@nuxt/image": "^2.0.0",
-    "@nuxt/ui": "^4.7.1",
+    "@nuxt/ui": "^4.1.0",
     "@nuxtjs/color-mode": "^4.0.0",
     "@prisma/client": "6.19.3",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
-    "nuxt": "^4.4.2",
+    "nuxt": "^4.1.0",
     "prisma": "6.19.3",
     "qrcode": "^1.5.4",
     "resend": "^6.12.3",
@@ -29,7 +29,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@nuxtjs/sitemap": "^8.0.15",
+    "@nuxtjs/sitemap": "^7.6.0",
     "@types/qrcode": "^1.5.6"
   }
 }
