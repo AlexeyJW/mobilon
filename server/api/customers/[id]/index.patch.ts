@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import prisma from '../../../utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const id = Number(event.context.params?.id)
@@ -8,12 +8,13 @@ export default defineEventHandler(async (event) => {
   console.log('PATCH ID:', id)
   console.log('PATCH BODY:', body)
 
-  const updatedRequest = await prisma.request.update({
+  const updatedRequest = await prisma.customer.update({
     where: {
       id
     },
     data: {
-      status: body.status
+      status: body.status,
+       notes: body.notes,
     }
   })
 
