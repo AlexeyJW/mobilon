@@ -3,13 +3,14 @@ definePageMeta({
   layout: 'admin',
   middleware: 'admin'
 })
-
+const statusFilter = ref('')
 const loading = ref(false)
-const {
-  data,
-  refresh,
-  pending
-} = await useFetch('/api/test')
+const { data, refresh, pending } = await useFetch('/api/test', {
+  query: {
+    status: statusFilter
+  }
+})
+
 function getStatusColor(status) {
   switch (status) {
     case 'new':
@@ -70,6 +71,37 @@ async function updateStatus(id, status) {
   {{ loading ? 'Оновлення...' : 'Оновити' }}
 </UButton>
     </div>
+     <div class="flex gap-2 mb-4">
+
+  <UButton
+    :variant="statusFilter === '' ? 'solid' : 'outline'"
+    @click="statusFilter = ''"
+  >
+    Всі
+  </UButton>
+
+  <UButton
+    :variant="statusFilter === 'new' ? 'solid' : 'outline'"
+    @click="statusFilter = 'new'"
+  >
+    Нові
+  </UButton>
+
+  <UButton
+    :variant="statusFilter === 'in_progress' ? 'solid' : 'outline'"
+    @click="statusFilter = 'in_progress'"
+  >
+    В роботі
+  </UButton>
+
+  <UButton
+    :variant="statusFilter === 'done' ? 'solid' : 'outline'"
+    @click="statusFilter = 'done'"
+  >
+    Завершені
+  </UButton>
+
+</div>
 <div
   v-if="pending"
   class="space-y-4"
@@ -84,6 +116,8 @@ async function updateStatus(id, status) {
   v-else
   class="grid gap-4"
 >
+
+     
       <UCard
         v-for="request in data || []"
         :key="request.id"

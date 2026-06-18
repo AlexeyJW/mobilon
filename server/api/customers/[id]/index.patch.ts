@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
       id
     },
     data: {
-      status: body.status,
+      
        notes: body.notes,
     }
   })

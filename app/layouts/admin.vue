@@ -1,3 +1,6 @@
+<script setup>
+const route = useRoute()
+</script>
 <template>
 
   <div
@@ -23,27 +26,47 @@
       "
     >
 
-      <h1 class="font-bold text-xl">
-        Admin Panel
-      </h1>
+     
+    <UButton
+  to="/admin"
+  icon="i-lucide-layout-dashboard"
+  :variant="
+    route.path === '/admin'
+      ? 'solid'
+      : 'ghost'
+  "
+>
+  Dashboard
+</UButton>
       <UButton
-        to="/admin/customers"
-        variant="ghost"
-      >
-        Клієнти
-      </UButton>
-      <UButton
-        to="/admin/requests"
-        variant="ghost"
-      >
-        Заявки
-      </UButton>
-      <UButton
-        to="/"
-        variant="ghost"
-      >
-        На сайт
-      </UButton>
+  to="/admin/customers"
+  icon="i-lucide-users"
+  :variant="
+    route.path.startsWith('/admin/customers')
+      ? 'solid'
+      : 'ghost'
+  "
+>
+  Клієнти
+</UButton>
+     <UButton
+  to="/admin/requests"
+  icon="i-lucide-clipboard-list"
+  :variant="
+    route.path.startsWith('/admin/requests')
+      ? 'solid'
+      : 'ghost'
+  "
+>
+  Заявки
+</UButton>
+    <UButton
+  to="/"
+  icon="i-lucide-house"
+  variant="ghost"
+>
+  На сайт
+</UButton>
 
     </div>
 

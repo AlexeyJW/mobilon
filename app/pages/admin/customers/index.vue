@@ -5,43 +5,49 @@ definePageMeta({
   middleware: 'admin'
 })
 const search = ref('')
-
-const { data } = await useFetch('/api/customers')
+watch(search, () => {
+  refresh()
+})
+const { data: customers, refresh } = await useFetch('/api/customers', {
+  query: {
+    search
+  }
+})
 
 const filteredCustomers = computed(() => {
-  if (!data.value) {
+  if (!customers.value) {
     return []
   }
 
-  return data.value.filter(customer =>
+  return customers.value.filter(customer =>
     customer.phone.includes(search.value) ||
     customer.name.toLowerCase().includes(search.value.toLowerCase())
   )
 })
 const totalCustomers = computed(() => {
-  return data.value?.length || 0
+  return customers.value?.length || 0
 })
 
 const goldCustomers = computed(() => {
-  return data.value?.filter(customer =>
+  return customers.value?.filter(customer =>
     customer.points >= 100
   ).length || 0
 })
 
 const totalPoints = computed(() => {
-  return data.value?.reduce((sum, customer) =>
+  return customers.value?.reduce((sum, customer) =>
     sum + customer.points, 0
   ) || 0
 })
 
 const totalRequests = computed(() => {
-  return data.value?.reduce((sum, customer) =>
+  return customers.value?.reduce((sum, customer) =>
     sum + customer.requests.length, 0
   ) || 0
 })
 
 const topCustomers = computed(() => {
-  return [...(data.value || [])]
+  return [...(customers.value || [])]
     .sort((a, b) => b.visits - a.visits)
     .slice(0, 5)
 })
