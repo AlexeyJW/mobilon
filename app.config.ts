@@ -1,8 +1,8 @@
 // app.config.ts
 export default defineAppConfig({
   ui: {
-    primary: 'blue',
-    gray: 'cool',
+    primary: 'green',
+    gray: 'slate',
     container: {
       padding: 'px-4'
     }

@@ -114,7 +114,7 @@ onUnmounted(() => {
           rounded-2xl
 
           border
-          border-white/10
+          border-gray-200
 
           bg-black/30
           backdrop-blur-md

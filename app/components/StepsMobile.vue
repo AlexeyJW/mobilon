@@ -18,7 +18,7 @@
           <p class="font-medium">
             {{ i + 1 }}. {{ step.title }}
           </p>
-          <p class="text-sm text-gray-400">
+          <p class="text-sm text-gray-600">
             {{ step.desc }}
           </p>
         </div>

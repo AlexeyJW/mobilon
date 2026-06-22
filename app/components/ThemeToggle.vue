@@ -1,63 +1,35 @@
+<!-- components/ThemeToggle.vue -->
+<template>
+  <UButton
+    :icon="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
+    :color="isDark ? 'yellow' : 'blue'"
+    variant="solid"
+    size="sm"
+    class="theme-toggle-btn"
+    @click="toggleTheme"
+  >
+    <span class="hidden sm:inline ml-1">
+      {{ isDark ? 'Світла' : 'Темна' }}
+    </span>
+  </UButton>
+</template>
+
 <script setup>
 const colorMode = useColorMode()
 
-const mounted = ref(false)
+const isDark = computed(() => colorMode.value === 'dark')
 
-onMounted(() => {
-  mounted.value = true
-})
-
-function toggleTheme() {
-  colorMode.preference =
-    colorMode.value === 'dark'
-      ? 'light'
-      : 'dark'
+const toggleTheme = () => {
+  colorMode.preference = isDark.value ? 'light' : 'dark'
 }
 </script>
 
-<template>
+<style scoped>
+.theme-toggle-btn {
+  transition: all 0.3s ease;
+}
 
-  <button
-    v-if="mounted"
-    @click="toggleTheme"
-    class="
-      fixed
-      top-4
-      right-4
-      z-50
-
-      w-11
-      h-11
-
-      rounded-xl
-
-      bg-white/10
-      backdrop-blur
-
-      border
-      border-white/10
-
-      flex
-      items-center
-      justify-center
-
-      shadow-lg
-
-      transition-all
-      duration-300
-
-      hover:scale-105
-    "
-  >
-
-    <span v-if="colorMode.value === 'dark'">
-      ☀️
-    </span>
-
-    <span v-else>
-      🌙
-    </span>
-
-  </button>
-
-</template>
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+</style>
