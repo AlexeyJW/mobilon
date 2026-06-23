@@ -55,6 +55,17 @@ watch(() => route.path, () => {
               Заявки
             </UButton>
 
+            <!-- Нова кнопка "Закупівлі" -->
+            <UButton
+              to="/admin/purchases"
+              icon="i-lucide-shopping-cart"
+              color="primary"
+              :variant="route.path.startsWith('/admin/purchases') ? 'solid' : 'ghost'"
+              size="sm"
+            >
+              Закупівлі
+            </UButton>
+
             <UDivider orientation="vertical" class="h-6" />
 
             <UButton
@@ -63,12 +74,26 @@ watch(() => route.path, () => {
               color="primary"
               variant="ghost"
               size="sm"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <span class="hidden lg:inline">На сайт</span>
             </UButton>
           </nav>
 
           <div class="flex items-center gap-2">
+            <!-- Кнопка на сайт для мобільних -->
+            <UButton
+              to="/"
+              icon="i-lucide-house"
+              color="primary"
+              variant="ghost"
+              size="sm"
+              class="md:hidden"
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+
             <ThemeToggleAdmin />
 
             <UButton
@@ -87,7 +112,7 @@ watch(() => route.path, () => {
         </div>
       </div>
 
-      <!-- Мобільне меню (без лінії) -->
+      <!-- Мобільне меню -->
       <div 
         v-if="isMobileMenuOpen" 
         class="md:hidden bg-default"
@@ -126,15 +151,29 @@ watch(() => route.path, () => {
             Заявки
           </UButton>
 
+          <!-- Нова кнопка "Закупівлі" в мобільному меню -->
+          <UButton
+            to="/admin/purchases"
+            icon="i-lucide-shopping-cart"
+            color="primary"
+            :variant="route.path.startsWith('/admin/purchases') ? 'solid' : 'ghost'"
+            block
+            class="justify-start"
+          >
+            Закупівлі
+          </UButton>
+
           <UDivider />
 
           <UButton
             to="/"
             icon="i-lucide-house"
             color="primary"
-            variant="ghost"
+            variant="solid"
             block
             class="justify-start"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             На сайт
           </UButton>
@@ -182,9 +221,34 @@ watch(() => route.path, () => {
         >
           <span class="text-[10px] mt-1">Заявки</span>
         </UButton>
+
+        <!-- Нова кнопка "Закупівлі" в нижній навігації -->
+        <UButton
+          to="/admin/purchases"
+          icon="i-lucide-shopping-cart"
+          color="primary"
+          :variant="route.path.startsWith('/admin/purchases') ? 'solid' : 'ghost'"
+          class="flex-col h-auto py-1 px-3"
+          size="sm"
+        >
+          <span class="text-[10px] mt-1">Закупівлі</span>
+        </UButton>
+
+        <UButton
+          to="/"
+          icon="i-lucide-house"
+          color="primary"
+          variant="ghost"
+          class="flex-col h-auto py-1 px-3"
+          size="sm"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="text-[10px] mt-1">Сайт</span>
+        </UButton>
       </div>
     </nav>
 
     <div class="h-16 md:hidden" />
   </div>
-</template>
+</template> 

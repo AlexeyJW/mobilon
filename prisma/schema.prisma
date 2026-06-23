@@ -41,3 +41,14 @@ model Request {
   customerId  Int?
   customer    Customer? @relation(fields: [customerId], references: [id])
 }
+
+model PurchaseItem {
+  id        Int      @id @default(autoincrement( ))
+  name      String
+  quantity  Int      @default(1)
+  supplier  String?
+  note      String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
