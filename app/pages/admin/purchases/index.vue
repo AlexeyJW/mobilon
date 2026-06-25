@@ -11,9 +11,21 @@
           Управління товарами на складі
         </p>
       </div>
+      
+      <!-- Кнопки дій -->
+      <div class="flex gap-2">
+        <UButton
+          color="primary"
+          variant="outline"
+          @click="exportToExcel"
+        >
+          <Icon name="i-lucide-file-spreadsheet" class="w-4 h-4" />
+          <span class="hidden sm:inline">Експорт Excel</span>
+        </UButton>
+      </div>
     </div>
 
-    <!-- Форма додавання товару (прямо на сторінці) -->
+    <!-- Форма додавання товару -->
     <UCard class="bg-elevated">
       <form @submit.prevent="handleSubmit" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <UInput
@@ -64,7 +76,6 @@
         </div>
       </form>
       
-      <!-- Підказка -->
       <p v-if="editingItem" class="text-sm text-primary mt-2">
         ✏️ Редагування: {{ editingItem.name }}
       </p>
@@ -283,7 +294,6 @@
         </table>
       </div>
       
-      <!-- Інформація про кількість -->
       <div v-if="filteredPurchases.length" class="mt-4 text-xs text-muted text-center border-t border-border pt-4">
         Показано {{ filteredPurchases.length }} з {{ purchases?.length || 0 }} товарів
       </div>
@@ -463,7 +473,6 @@ const editItem = (item) => {
     note: item.note || ''
   }
   
-  // Скрол до форми
   document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })
 }
 
@@ -517,5 +526,39 @@ const deleteItem = async (id) => {
     console.error('Помилка видалення:', error)
     alert('Сталася помилка при видаленні')
   }
+}
+
+// Експорт в Excel
+const exportToExcel = () => {
+  if (!filteredPurchases.value.length) {
+    alert('Немає даних для експорту')
+    return
+  }
+  
+  // Створюємо CSV
+  const headers = ['Назва', 'Кількість', 'Постачальник', 'Примітка', 'Дата']
+  const rows = filteredPurchases.value.map(item => [
+    item.name,
+    item.quantity,
+    item.supplier || '',
+    item.note || '',
+    formatDate(item.createdAt)
+  ])
+  
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n')
+  
+  // Створюємо та завантажуємо файл
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', `закупівлі_${new Date().toLocaleDateString('uk-UA')}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 </script>
