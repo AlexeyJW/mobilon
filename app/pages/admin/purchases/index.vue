@@ -11,42 +11,77 @@
           Управління товарами на складі
         </p>
       </div>
-      
-      <UButton
-        color="primary"
-        @click="isModalOpen = true"
-      >
-        <Icon name="i-lucide-plus" class="w-4 h-4" />
-        Додати товар
-      </UButton>
-      <UButton
-  color="success"
-  variant="soft"
-  @click="exportExcel"
->
-  <Icon
-    name="i-lucide-file-spreadsheet"
-    class="w-4 h-4"
-  />
-  Excel
-</UButton>
     </div>
 
-    <!-- Фільтри та пошук -->
+    <!-- Форма додавання товару (прямо на сторінці) -->
+    <UCard class="bg-elevated">
+      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <UInput
+          v-model="form.name"
+          placeholder="Назва товару *"
+          size="lg"
+          autocomplete="off"
+          required
+        />
+        
+        <UInput
+          v-model.number="form.quantity"
+          type="number"
+          min="1"
+          placeholder="Кількість"
+          size="lg"
+          autocomplete="off"
+        />
+        
+        <UInput
+          v-model="form.supplier"
+          placeholder="Постачальник"
+          size="lg"
+          autocomplete="off"
+        />
+        
+        <div class="flex gap-2">
+          <UButton
+            type="submit"
+            color="primary"
+            size="lg"
+            class="flex-1"
+            :loading="submitting"
+          >
+            <Icon name="i-lucide-plus" class="w-4 h-4" />
+            Додати
+          </UButton>
+          
+          <UButton
+            v-if="editingItem"
+            color="neutral"
+            variant="ghost"
+            size="lg"
+            @click="cancelEdit"
+          >
+            <Icon name="i-lucide-x" class="w-4 h-4" />
+          </UButton>
+        </div>
+      </form>
+      
+      <!-- Підказка -->
+      <p v-if="editingItem" class="text-sm text-primary mt-2">
+        ✏️ Редагування: {{ editingItem.name }}
+      </p>
+    </UCard>
+
+    <!-- Фільтри -->
     <UCard class="bg-elevated">
       <div class="flex flex-col sm:flex-row gap-4">
-        <!-- Пошук -->
         <div class="flex-1">
           <UInput
             v-model="searchQuery"
             placeholder="Пошук за назвою або постачальником..."
             icon="i-lucide-search"
             size="lg"
-           
           />
         </div>
         
-        <!-- Фільтри -->
         <div class="flex flex-wrap gap-2">
           <USelect
             v-model="filterSupplier"
@@ -54,7 +89,6 @@
             placeholder="Постачальник"
             size="lg"
             class="w-40"
-          
           />
           
           <USelect
@@ -63,7 +97,6 @@
             placeholder="Сортувати"
             size="lg"
             class="w-40"
-            @change="applyFilters"
           />
           
           <UButton
@@ -80,7 +113,7 @@
     </UCard>
 
     <!-- Статистика -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <UCard class="bg-elevated">
         <div class="text-center">
           <p class="text-xs sm:text-sm text-muted">Всього товарів</p>
@@ -154,12 +187,9 @@
                   />
                 </div>
               </th>
-              <th class="text-left py-3 px-4 text-muted text-sm font-medium">
+              <th class="text-left py-3 px-4 text-muted text-sm font-medium hidden md:table-cell">
                 Постачальник
               </th>
-              <th class="text-left py-3 px-4 text-muted text-sm font-medium">
-  Статус
-</th>
               <th 
                 class="text-left py-3 px-4 text-muted text-sm font-medium hidden lg:table-cell cursor-pointer hover:text-default transition-colors"
                 @click="toggleSort('createdAt')"
@@ -178,20 +208,22 @@
                   />
                 </div>
               </th>
-              
               <th class="text-left py-3 px-4 text-muted text-sm font-medium">Дії</th>
-              <th class="text-left py-3 px-4 text-muted text-sm font-medium hidden xl:table-cell">
-  Примітка
-</th>
             </tr>
           </thead>
           <tbody>
+            <!-- Стан завантаження -->
             <tr v-if="pending" class="border-b border-border">
               <td colspan="5" class="py-8 text-center text-muted">
-                <USpinner class="w-6 h-6 mx-auto" />
+                <Icon 
+                  name="i-lucide-loader-circle" 
+                  class="w-8 h-8 mx-auto text-primary animate-spin"
+                />
                 <span class="block mt-2 text-sm">Завантаження...</span>
               </td>
             </tr>
+            
+            <!-- Стан порожнього списку -->
             <tr v-else-if="!filteredPurchases.length" class="border-b border-border">
               <td colspan="5" class="py-8 text-center text-muted">
                 <Icon name="i-lucide-package" class="w-12 h-12 mx-auto text-dimmed" />
@@ -199,10 +231,13 @@
                 <p class="text-xs text-dimmed">Додайте перший товар</p>
               </td>
             </tr>
+            
+            <!-- Список товарів -->
             <tr
               v-for="item in filteredPurchases"
               :key="item.id"
               class="border-b border-border hover:bg-elevated/50 transition-colors"
+              :class="{ 'bg-primary/5': editingItem?.id === item.id }"
             >
               <td class="py-3 px-4 text-default font-medium">
                 {{ item.name }}
@@ -215,31 +250,11 @@
                   {{ item.quantity }} шт.
                 </UBadge>
               </td>
-
               <td class="py-3 px-4 text-muted hidden md:table-cell">
                 <UBadge color="neutral" variant="outline">
                   {{ item.supplier || '—' }}
                 </UBadge>
               </td>
-                            <td class="py-3 px-4">
-  <UBadge
-    :color="
-      item.status === 'pending'
-        ? 'warning'
-        : item.status === 'ordered'
-          ? 'primary'
-          : 'success'
-    "
-  >
-    {{
-      item.status === 'pending'
-        ? 'Очікує'
-        : item.status === 'ordered'
-          ? 'Замовлено'
-          : 'Отримано'
-    }}
-  </UBadge>
-</td>
               <td class="py-3 px-4 text-muted text-sm hidden lg:table-cell">
                 {{ formatDate(item.createdAt) }}
               </td>
@@ -263,9 +278,6 @@
                   </UButton>
                 </div>
               </td>
-              <td class="py-3 px-4 hidden xl:table-cell">
-  {{ item.note || '—' }}
-</td>
             </tr>
           </tbody>
         </table>
@@ -276,91 +288,10 @@
         Показано {{ filteredPurchases.length }} з {{ purchases?.length || 0 }} товарів
       </div>
     </UCard>
-
-    <!-- Модальне вікно додавання/редагування -->
-    <UModal v-model="isModalOpen">
-      <UCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-default">
-              {{ editingItem ? 'Редагувати товар' : 'Додати товар' }}
-            </h3>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              @click="closeModal"
-            >
-              <Icon name="i-lucide-x" class="w-5 h-5" />
-            </UButton>
-          </div>
-        </template>
-
-        <UForm :state="form" @submit="handleSubmit" class="space-y-4">
-          <UFormGroup label="Назва товару" required>
-            <UInput
-              v-model="form.name"
-              placeholder="Введіть назву товару"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <UFormGroup label="Кількість">
-            <UInput
-              v-model.number="form.quantity"
-              type="number"
-              min="1"
-              placeholder="1"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <UFormGroup label="Постачальник">
-            <UInput
-              v-model="form.supplier"
-              placeholder="Назва постачальника"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <UFormGroup label="Примітка">
-            <UTextarea
-              v-model="form.note"
-              placeholder="Додаткові примітки..."
-              size="lg"
-              :rows="3"
-            />
-          </UFormGroup>
-
-          <div class="flex gap-3 pt-4">
-            <UButton
-              type="submit"
-              color="primary"
-              size="lg"
-              block
-              :loading="submitting"
-            >
-              {{ editingItem ? 'Оновити' : 'Додати' }}
-            </UButton>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="lg"
-              @click="closeModal"
-            >
-              Скасувати
-            </UButton>
-          </div>
-        </UForm>
-      </UCard>
-    </UModal>
   </div>
 </template>
 
 <script setup>
-definePageMeta({
-  layout: 'admin',
-  middleware: 'admin'
-})
 // Завантаження даних
 const { data: purchases, refresh, pending } = await useFetch('/api/purchases')
 
@@ -370,7 +301,6 @@ const filterSupplier = ref('all')
 const filterSort = ref('createdAt-desc')
 
 // Стан форми
-const isModalOpen = ref(false)
 const submitting = ref(false)
 const editingItem = ref(null)
 
@@ -415,7 +345,6 @@ const filteredPurchases = computed(() => {
   
   let items = [...purchases.value]
   
-  // Пошук
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase().trim()
     items = items.filter(item =>
@@ -424,12 +353,10 @@ const filteredPurchases = computed(() => {
     )
   }
   
-  // Фільтр постачальника
   if (filterSupplier.value !== 'all') {
     items = items.filter(item => item.supplier === filterSupplier.value)
   }
   
-  // Сортування
   const [field, order] = filterSort.value.split('-')
   items.sort((a, b) => {
     let aVal = a[field]
@@ -501,8 +428,6 @@ const formatDate = (date) => {
   })
 }
 
-
-
 const resetFilters = () => {
   searchQuery.value = ''
   filterSupplier.value = 'all'
@@ -529,11 +454,6 @@ const resetForm = () => {
   editingItem.value = null
 }
 
-const closeModal = () => {
-  isModalOpen.value = false
-  resetForm()
-}
-
 const editItem = (item) => {
   editingItem.value = item
   form.value = {
@@ -542,21 +462,21 @@ const editItem = (item) => {
     supplier: item.supplier || '',
     note: item.note || ''
   }
-  isModalOpen.value = true
+  
+  // Скрол до форми
+  document.querySelector('form')?.scrollIntoView({ behavior: 'smooth' })
 }
 
-const exportExcel = () => {
-
-  window.open(
-    '/api/purchases/export',
-    '_blank'
-  )
-
+const cancelEdit = () => {
+  resetForm()
 }
-
-
 
 const handleSubmit = async () => {
+  if (!form.value.name.trim()) {
+    alert('Будь ласка, введіть назву товару')
+    return
+  }
+  
   submitting.value = true
   
   try {
@@ -572,9 +492,10 @@ const handleSubmit = async () => {
     })
     
     refresh()
-    closeModal()
+    resetForm()
   } catch (error) {
     console.error('Помилка:', error)
+    alert('Сталася помилка. Спробуйте ще раз.')
   } finally {
     submitting.value = false
   }
@@ -588,8 +509,13 @@ const deleteItem = async (id) => {
       method: 'DELETE'
     })
     refresh()
+    
+    if (editingItem.value?.id === id) {
+      resetForm()
+    }
   } catch (error) {
     console.error('Помилка видалення:', error)
+    alert('Сталася помилка при видаленні')
   }
 }
 </script>
