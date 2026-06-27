@@ -31,6 +31,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@iconify-json/lucide": "^1.2.114",
     "@nuxtjs/sitemap": "^7.6.0",
     "@types/qrcode": "^1.5.6"
   }

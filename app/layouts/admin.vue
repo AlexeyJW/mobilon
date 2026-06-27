@@ -66,7 +66,7 @@ watch(() => route.path, () => {
               Закупівлі
             </UButton>
 
-            <UDivider orientation="vertical" class="h-6" />
+            <USeparator orientation="vertical" class="h-6" />
 
             <UButton
               to="/"
@@ -94,7 +94,7 @@ watch(() => route.path, () => {
               rel="noopener noreferrer"
             />
 
-            <ThemeToggleAdmin />
+            <ThemeToggle/>
 
             <UButton
               color="primary"
@@ -163,7 +163,7 @@ watch(() => route.path, () => {
             Закупівлі
           </UButton>
 
-          <UDivider />
+          <USeparator orientation="vertical" class="h-6" />
 
           <UButton
             to="/"

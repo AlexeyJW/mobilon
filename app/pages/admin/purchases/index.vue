@@ -516,17 +516,40 @@ const deleteItem = async (id) => {
   if (!confirm('Ви впевнені, що хочете видалити цей товар?')) return
   
   try {
-    await $fetch(`/api/purchases/${id}`, {
+    const response = await $fetch(`/api/purchases/${id}`, {
       method: 'DELETE'
     })
-    refresh()
     
-    if (editingItem.value?.id === id) {
-      resetForm()
+    if (response.success) {
+      // Оновлюємо список
+      await refresh()
+      
+      // Якщо редагували цей товар - скидаємо форму
+      if (editingItem.value?.id === id) {
+        resetForm()
+      }
+      
+      // Показуємо повідомлення про успіх
+      alert('✅ Товар успішно видалено!')
+    } else {
+      alert(`❌ ${response.message || 'Помилка видалення товару'}`)
     }
   } catch (error) {
     console.error('Помилка видалення:', error)
-    alert('Сталася помилка при видаленні')
+    
+    // Показуємо детальну помилку
+    let errorMessage = 'Сталася помилка при видаленні. Спробуйте ще раз.'
+    
+    if (error.response) {
+      try {
+        const errorData = await error.response.json()
+        errorMessage = errorData.message || errorMessage
+      } catch {
+        errorMessage = `Помилка: ${error.status} - ${error.statusText}`
+      }
+    }
+    
+    alert(`❌ ${errorMessage}`)
   }
 }
 
