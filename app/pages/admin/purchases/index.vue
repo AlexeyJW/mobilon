@@ -350,7 +350,7 @@
 
         <UButton
           color="error"
-          @click="deleteItem"
+         @click="openDeleteModal(item)"
         >
           Видалити
         </UButton>
@@ -358,7 +358,44 @@
       </div>
 
     </div>
+<UModal v-model:open="isDeleteModalOpen">
+  <UCard>
 
+    <template #header>
+      <h3 class="text-lg font-semibold">
+        Видалення товару
+      </h3>
+    </template>
+
+    <p class="mb-6">
+      Ви дійсно хочете видалити
+
+      <strong>
+        {{ deletingItem?.name }}
+      </strong>?
+    </p>
+
+    <div class="flex justify-end gap-2">
+
+      <UButton
+        color="neutral"
+        variant="soft"
+        @click="isDeleteModalOpen = false"
+      >
+        Скасувати
+      </UButton>
+
+      <UButton
+        color="error"
+        @click="confirmDelete"
+      >
+        Видалити
+      </UButton>
+
+    </div>
+
+  </UCard>
+</UModal>
   </template>
 
 </UModal>
@@ -618,6 +655,12 @@ const isDeleteModalOpen = ref(false)
 const deleteModal = ref(false)
 const deletingItem = ref(null)
 
+
+const openDeleteModal = (item) => {
+  deletingItem.value = item
+  isDeleteModalOpen.value = true
+}
+
 const handleSubmit = async () => {
   if (!form.value.name.trim()) {
   toast.add({
@@ -665,12 +708,21 @@ const askDelete = (item) => {
   deletingItem.value = item
   deleteModal.value = true
 }
-const deleteItem = async () => {
+const confirmDelete = async () => {
+
   if (!deletingItem.value) return
 
   try {
+
     await $fetch(`/api/purchases/${deletingItem.value.id}`, {
       method: 'DELETE'
+    })
+
+    toast.add({
+      title: 'Товар видалено',
+      description: deletingItem.value.name,
+      color: 'success',
+      icon: 'i-lucide-trash'
     })
 
     if (editingItem.value?.id === deletingItem.value.id) {
@@ -679,26 +731,19 @@ const deleteItem = async () => {
 
     await refresh()
 
-    toast.add({
-      title: 'Товар видалено',
-      description: deletingItem.value.name,
-      color: 'success',
-      icon: 'i-lucide-trash-2'
-    })
-  }
-  catch (e) {
+  } catch (e) {
+
     toast.add({
       title: 'Помилка',
       description: 'Не вдалося видалити товар',
       color: 'error'
     })
-  }
-  finally {
-    deleteModal.value = false
-    deletingItem.value = null
-  }
-}
 
+  }
+
+  isDeleteModalOpen.value = false
+  deletingItem.value = null
+}
 async function updateStatus(id, status) {
 
   try {
