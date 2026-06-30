@@ -198,6 +198,9 @@
                   />
                 </div>
               </th>
+              <th class="text-left py-3 px-4">
+                Статус
+              </th>
               <th class="text-left py-3 px-4 text-muted text-sm font-medium hidden md:table-cell">
                 Постачальник
               </th>
@@ -261,6 +264,16 @@
                   {{ item.quantity }} шт.
                 </UBadge>
               </td>
+              <td class="py-3 px-4">
+
+<UBadge
+  :label="statusConfig[item.status].label"
+  :color="statusConfig[item.status].color"
+  variant="soft"
+  class="cursor-pointer"
+  @click="nextStatus(item)"
+/>
+</td>
               <td class="py-3 px-4 text-muted hidden md:table-cell">
                 <UBadge color="neutral" variant="outline">
                   {{ item.supplier || '—' }}
@@ -283,7 +296,7 @@
                     color="red"
                     variant="ghost"
                     size="xs"
-                    @click="deleteItem(item.id)"
+                    @click="askDelete(item)"
                   >
                     <Icon name="i-lucide-trash" class="w-4 h-4" />
                   </UButton>
@@ -298,6 +311,57 @@
         Показано {{ filteredPurchases.length }} з {{ purchases?.length || 0 }} товарів
       </div>
     </UCard>
+    <UModal v-model:open="deleteModal">
+
+  <template #content>
+
+    <div class="p-6 space-y-5">
+
+      <div class="flex items-center gap-3">
+
+        <UIcon
+          name="i-lucide-triangle-alert"
+          class="text-red-500 text-3xl"
+        />
+
+        <div>
+
+          <h3 class="font-semibold">
+            Видалити товар?
+          </h3>
+
+          <p class="text-sm text-muted">
+            {{ deletingItem?.name }}
+          </p>
+
+        </div>
+
+      </div>
+
+      <div class="flex justify-end gap-2">
+
+        <UButton
+          color="neutral"
+          variant="soft"
+          @click="deleteModal=false"
+        >
+          Скасувати
+        </UButton>
+
+        <UButton
+          color="error"
+          @click="deleteItem"
+        >
+          Видалити
+        </UButton>
+
+      </div>
+
+    </div>
+
+  </template>
+
+</UModal>
   </div>
 </template>
 
@@ -322,6 +386,46 @@ const form = ref({
   supplier: '',
   note: ''
 })
+
+const statusOptions = [
+
+  {
+    label: '🟠 Потрібно замовити',
+    value: 'pending'
+  },
+
+  {
+    label: '🔵 Замовлено',
+    value: 'ordered'
+  },
+
+  {
+    label: '🟢 Отримано',
+    value: 'received'
+  },
+
+  {
+    label: '⚫ Архів',
+    value: 'archived'
+  }
+
+]
+async function nextStatus(item) {
+
+  const order = [
+    'pending',
+    'ordered',
+    'received',
+    'archived'
+  ]
+
+  const index = order.indexOf(item.status)
+
+  const next = order[(index + 1) % order.length]
+
+  await updateStatus(item.id, next)
+
+}
 
 // Опції для фільтрів
 const supplierOptions = computed(() => {
@@ -440,6 +544,28 @@ const formatDate = (date) => {
   })
 }
 
+const statusConfig = {
+  pending: {
+    label: 'Потрібно',
+    color: 'warning'
+  },
+
+  ordered: {
+    label: 'Замовлено',
+    color: 'primary'
+  },
+
+  received: {
+    label: 'Отримано',
+    color: 'success'
+  },
+
+  archived: {
+    label: 'Архів',
+    color: 'neutral'
+  }
+}
+
 const resetFilters = () => {
   searchQuery.value = ''
   filterSupplier.value = 'all'
@@ -481,10 +607,23 @@ const editItem = (item) => {
 const cancelEdit = () => {
   resetForm()
 }
+// Обробка відправки форми
+
+//toast
+const toast = useToast()
+// modal
+const isDeleteModalOpen = ref(false)
+
+
+const deleteModal = ref(false)
+const deletingItem = ref(null)
 
 const handleSubmit = async () => {
   if (!form.value.name.trim()) {
-    alert('Будь ласка, введіть назву товару')
+  toast.add({
+  title: 'Не заповнена назва',
+  color: 'warning'
+})
     return
   }
   
@@ -501,58 +640,88 @@ const handleSubmit = async () => {
       method,
       body: form.value
     })
-    
+    toast.add({
+  title: editingItem.value
+    ? 'Товар оновлено'
+    : 'Товар додано',
+
+  color: 'success'
+})
     refresh()
     resetForm()
   } catch (error) {
     console.error('Помилка:', error)
-    alert('Сталася помилка. Спробуйте ще раз.')
+    toast.add({
+      title: 'Помилка',
+      description: 'Спробуйте ще раз',
+      color: 'error'
+    })
   } finally {
     submitting.value = false
   }
 }
 
-const deleteItem = async (id) => {
-  if (!confirm('Ви впевнені, що хочете видалити цей товар?')) return
-  
+const askDelete = (item) => {
+  deletingItem.value = item
+  deleteModal.value = true
+}
+const deleteItem = async () => {
+  if (!deletingItem.value) return
+
   try {
-    const response = await $fetch(`/api/purchases/${id}`, {
+    await $fetch(`/api/purchases/${deletingItem.value.id}`, {
       method: 'DELETE'
     })
-    
-    if (response.success) {
-      // Оновлюємо список
-      await refresh()
-      
-      // Якщо редагували цей товар - скидаємо форму
-      if (editingItem.value?.id === id) {
-        resetForm()
-      }
-      
-      // Показуємо повідомлення про успіх
-      alert('✅ Товар успішно видалено!')
-    } else {
-      alert(`❌ ${response.message || 'Помилка видалення товару'}`)
+
+    if (editingItem.value?.id === deletingItem.value.id) {
+      resetForm()
     }
-  } catch (error) {
-    console.error('Помилка видалення:', error)
-    
-    // Показуємо детальну помилку
-    let errorMessage = 'Сталася помилка при видаленні. Спробуйте ще раз.'
-    
-    if (error.response) {
-      try {
-        const errorData = await error.response.json()
-        errorMessage = errorData.message || errorMessage
-      } catch {
-        errorMessage = `Помилка: ${error.status} - ${error.statusText}`
-      }
-    }
-    
-    alert(`❌ ${errorMessage}`)
+
+    await refresh()
+
+    toast.add({
+      title: 'Товар видалено',
+      description: deletingItem.value.name,
+      color: 'success',
+      icon: 'i-lucide-trash-2'
+    })
+  }
+  catch (e) {
+    toast.add({
+      title: 'Помилка',
+      description: 'Не вдалося видалити товар',
+      color: 'error'
+    })
+  }
+  finally {
+    deleteModal.value = false
+    deletingItem.value = null
   }
 }
 
+async function updateStatus(id, status) {
+
+  try {
+
+    await $fetch(`/api/purchases/${id}`, {
+
+      method: 'PATCH',
+
+      body: {
+        status
+      }
+
+    })
+
+    refresh()
+
+  } catch (e) {
+
+    console.error(e)
+
+  }
+
+}
 // Експорт в Excel з підтримкою кирилиці
 const exportToExcel = () => {
   if (!filteredPurchases.value.length) {
@@ -603,7 +772,12 @@ const exportToExcel = () => {
     
   } catch (error) {
     console.error('Помилка експорту:', error)
-    alert('Сталася помилка при експорті даних')
+   toast.add({
+  title: 'Помилка',
+  description: 'Спробуйте ще раз',
+  color: 'error'
+})
   }
 }
+
 </script>
