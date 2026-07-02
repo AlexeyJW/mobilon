@@ -101,7 +101,13 @@
             size="lg"
             class="w-40"
           />
-          
+<USelect
+  v-model="filterStatus"
+  :options="statusFilterOptions"
+  placeholder="Статус"
+  size="lg"
+  class="w-44"
+/>
           <USelect
             v-model="filterSort"
             :options="sortOptions"
@@ -248,22 +254,18 @@
             
             <!-- Список товарів -->
             <tr
-              v-for="item in filteredPurchases"
-              :key="item.id"
-              class="border-b border-border hover:bg-elevated/50 transition-colors"
-              :class="{ 'bg-primary/5': editingItem?.id === item.id }"
-            >
+  v-for="item in filteredPurchases"
+  :key="item.id"
+  class="border-b border-border transition-colors"
+  :class="[
+    getRowClass(item.status),
+    editingItem?.id === item.id && 'ring-2 ring-primary'
+  ]"
+> 
               <td class="py-3 px-4 text-default font-medium">
                 {{ item.name }}
               </td>
-              <td class="py-3 px-4">
-                <UBadge 
-                  :color="getQuantityColor(item.quantity)" 
-                  variant="soft"
-                >
-                  {{ item.quantity }} шт.
-                </UBadge>
-              </td>
+:color="getQuantityColor(item.quantity)"
               <td class="py-3 px-4">
 
 <UBadge
@@ -405,12 +407,17 @@
 <script setup>
 import * as XLSX from 'xlsx'
 
+definePageMeta({
+  layout: 'admin',
+  middleware: 'admin'
+})
 // Завантаження даних
 const { data: purchases, refresh, pending } = await useFetch('/api/purchases')
 
 // Стан фільтрів
 const searchQuery = ref('')
 const filterSupplier = ref('all')
+const filterStatus = ref('all')
 const filterSort = ref('createdAt-desc')
 
 // Стан форми
@@ -492,6 +499,28 @@ const sortOptions = [
   { label: 'Кількість (менше)', value: 'quantity-asc' }
 ]
 
+const statusFilterOptions = [
+  {
+    label: 'Всі статуси',
+    value: 'all'
+  },
+  {
+    label: 'Потрібно замовити',
+    value: 'pending'
+  },
+  {
+    label: 'Замовлено',
+    value: 'ordered'
+  },
+  {
+    label: 'Отримано',
+    value: 'received'
+  },
+  {
+    label: 'Архів',
+    value: 'archived'
+  }
+]
 // Фільтровані та відсортовані дані
 const filteredPurchases = computed(() => {
   if (!purchases.value) return []
@@ -509,7 +538,9 @@ const filteredPurchases = computed(() => {
   if (filterSupplier.value !== 'all') {
     items = items.filter(item => item.supplier === filterSupplier.value)
   }
-  
+  if (filterStatus.value !== 'all') {
+    items = items.filter(item => item.status === filterStatus.value)
+}
   const [field, order] = filterSort.value.split('-')
   items.sort((a, b) => {
     let aVal = a[field]
@@ -606,7 +637,8 @@ const statusConfig = {
 const resetFilters = () => {
   searchQuery.value = ''
   filterSupplier.value = 'all'
-  filterSort.value = 'createdAt-desc'
+  filterStatus.value = 'all'
+filterSort.value = 'createdAt-desc'
 }
 
 const toggleSort = (field) => {
@@ -766,6 +798,60 @@ async function updateStatus(id, status) {
 
   }
 
+} 
+// Кольорові рядки для статусів
+
+const getRowClass = (status) => {
+  switch (status) {
+    case 'pending':
+      return 'bg-orange-500/8 hover:bg-orange-500/12'
+
+    case 'ordered':
+      return 'bg-blue-500/8 hover:bg-blue-500/12'
+
+    case 'received':
+      return 'bg-green-500/8 hover:bg-green-500/12'
+
+    case 'archived':
+      return 'bg-neutral-500/5 hover:bg-neutral-500/10'
+
+    default:
+      return 'hover:bg-elevated/50'
+  }
+}
+
+// зміна кількості товару
+async function updateQuantity(item, diff) {
+  const newQuantity = item.quantity + diff
+
+  if (newQuantity < 0) return
+
+  try {
+    await $fetch(`/api/purchases/${item.id}`, {
+      method: 'PUT',
+      body: {
+        ...item,
+        quantity: newQuantity
+      }
+    })
+
+    await refresh()
+
+    toast.add({
+      title: 'Кількість оновлена',
+      description: `${item.name}: ${newQuantity} шт.`,
+      color: 'success'
+    })
+
+  } catch (e) {
+    console.error(e)
+
+    toast.add({
+      title: 'Помилка',
+      description: 'Не вдалося змінити кількість',
+      color: 'error'
+    })
+  }
 }
 // Експорт в Excel з підтримкою кирилиці
 const exportToExcel = () => {
