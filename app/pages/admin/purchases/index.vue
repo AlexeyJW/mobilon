@@ -45,37 +45,12 @@
 />
 
     <!-- Статистика -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <UCard class="bg-elevated">
-        <div class="text-center">
-          <p class="text-xs sm:text-sm text-muted">Всього товарів</p>
-          <p class="text-xl sm:text-2xl font-bold text-default">{{ filteredPurchases.length }}</p>
-        </div>
-      </UCard>
-      
-      <UCard class="bg-elevated">
-        <div class="text-center">
-          <p class="text-xs sm:text-sm text-muted">Всього одиниць</p>
-          <p class="text-xl sm:text-2xl font-bold text-default">{{ totalQuantity }}</p>
-        </div>
-      </UCard>
-      
-      <UCard class="bg-elevated">
-        <div class="text-center">
-          <p class="text-xs sm:text-sm text-muted">Постачальників</p>
-          <p class="text-xl sm:text-2xl font-bold text-default">{{ uniqueSuppliers }}</p>
-        </div>
-      </UCard>
-      
-      <UCard class="bg-elevated">
-        <div class="text-center">
-          <p class="text-xs sm:text-sm text-muted">Останнє оновлення</p>
-          <p class="text-lg sm:text-xl font-bold text-default text-xs sm:text-sm">
-            {{ lastUpdate }}
-          </p>
-        </div>
-      </UCard>
-    </div>
+   <PurchasesStats
+      :total-items="filteredPurchases.length"
+      :total-quantity="totalQuantity"
+      :unique-suppliers="uniqueSuppliers"
+      :last-update="lastUpdate"
+    />
 
     <!-- Таблиця товарів -->
         <PurchasesTable
@@ -89,94 +64,11 @@
           @delete="askDelete"
           @status="nextStatus"
         />
-    <UModal v-model:open="deleteModal">
-
-  <template #content>
-
-    <div class="p-6 space-y-5">
-
-      <div class="flex items-center gap-3">
-
-        <UIcon
-          name="i-lucide-triangle-alert"
-          class="text-red-500 text-3xl"
+        <PurchasesModalDelete
+          v-model:open="deleteModal"
+          :item="deletingItem"
+          @confirm="confirmDelete"
         />
-
-        <div>
-
-          <h3 class="font-semibold">
-            Видалити товар?
-          </h3>
-
-          <p class="text-sm text-muted">
-            {{ deletingItem?.name }}
-          </p>
-
-        </div>
-
-      </div>
-
-      <div class="flex justify-end gap-2">
-
-        <UButton
-          color="neutral"
-          variant="soft"
-          @click="deleteModal=false"
-        >
-          Скасувати
-        </UButton>
-
-        <UButton
-          color="error"
-         @click="openDeleteModal(item)"
-        >
-          Видалити
-        </UButton>
-
-      </div>
-
-    </div>
-<UModal v-model:open="isDeleteModalOpen">
-  <UCard>
-
-    <template #header>
-      <h3 class="text-lg font-semibold">
-        Видалення товару
-      </h3>
-    </template>
-
-    <p class="mb-6">
-      Ви дійсно хочете видалити
-
-      <strong>
-        {{ deletingItem?.name }}
-      </strong>?
-    </p>
-
-    <div class="flex justify-end gap-2">
-
-      <UButton
-        color="neutral"
-        variant="soft"
-        @click="isDeleteModalOpen = false"
-      >
-        Скасувати
-      </UButton>
-
-      <UButton
-        color="error"
-        @click="confirmDelete"
-      >
-        Видалити
-      </UButton>
-
-    </div>
-
-  </UCard>
-</UModal>
-  </template>
-
-</UModal>
   </div>
 </template>
 

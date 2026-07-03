@@ -2,7 +2,7 @@
 <template>
   <section class="px-4 py-6">
     <h2 class="text-lg font-semibold mb-4">
-      Що я можу для вас зробити
+      Що ми можемо для вас зробити
     </h2>
 
     <div class="flex flex-col gap-3">

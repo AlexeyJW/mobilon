@@ -11,6 +11,7 @@
       width="500"
       height="500"
       class="w-[240px] h-auto"
+      alt="Ремонт телефонів у Солотвині Mobilon"
     />
   </div>
     <!-- BADGE -->
@@ -19,22 +20,20 @@
       variant="outline"
       class="mb-4"
     >
-      Налаштування смартфонів
+     Ремонт телефонів Samsung, iPhone та Xiaomi у Солотвині
     </UBadge>
 
     <!-- TITLE -->
     <h1 class="text-2xl font-bold leading-tight mb-4">
-      Ваш смартфон. <br />
-      <span class="text-primary">
-        Налаштований
-      </span> для вас.
+      Ремонт телефонів у Солотвині
     </h1>
 
     <!-- DESCRIPTION -->
-    <p class="text-gray-600 mb-6">
-      Перенесення даних, очищення від вірусів,
-      оптимізація та налаштування.
-    </p>
+    <p class="text-gray-600 mb-6 max-w-xl mx-auto">
+  Ремонт телефонів Samsung, iPhone, Xiaomi, Redmi, Poco, Motorola та інших
+  смартфонів у Солотвині. Заміна дисплеїв, акумуляторів, роз'ємів зарядки,
+  перенесення даних, налаштування Android та iPhone.
+</p>
 
     <!-- BUTTONS -->
     <div class="flex flex-col gap-3">
