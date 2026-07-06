@@ -8,26 +8,58 @@ export default defineNuxtConfig({
   sitemap: {
     siteUrl: 'https://mobilon-seven.vercel.app'
   },
+  htmlAttrs: {
+    lang: 'uk'
+},
+
   css: ['~/assets/css/main.css'],
-  app: {
-    head: {
-      title: 'Мобілон - Налаштування смартфонів',
-      meta: [
-        { name: 'description', content: 'Послуги з налаштування смартфонів' },
-        { name: 'keywords', content: 'nuxt, seo, сайт, налаштування, перенесення даних, смартфони, чистка смартфонів від вірусів ' },
-        { name: 'author', content: 'Олексій' },
+app: {
+  head: {
+    htmlAttrs: {
+      lang: 'uk'
+    },
 
-        // Open Graph (Facebook, Telegram)
-        { property: 'og:title', content: 'Мобілон' },
-        { property: 'og:description', content: 'Послуги з налаштування смартфонів' },
-        { property: 'og:image', content: '/favicon.ico' },
-        { property: 'og:type', content: 'website' }
-      ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-      ]
+    title: 'Mobilon',
 
+    titleTemplate: '%s',
+
+    meta: [
+      {
+        charset: 'utf-8'
+      },
+
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1'
+      },
+
+      {
+        name: 'description',
+        content: 'Ремонт телефонів, планшетів і ноутбуків у Солотвині. Заміна дисплеїв, акумуляторів, роз'ємів, налаштування смартфонів та перенесення даних.'
+      },
+
+      {
+        property: 'og:type',
+        content: 'website'
+      },
+
+      {
+        property: 'og:locale',
+        content: 'uk_UA'
+      },
+
+      {
+        property: 'og:site_name',
+        content: 'Mobilon'
+      }
+    ],
+
+    link: [
+      {
+        rel: 'icon',
+        href: '/favicon.ico'
+      }
+    ]
   }
- 
 }
 })

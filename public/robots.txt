@@ -1,2 +1,5 @@
-User-Agent: *
-Allow:'/'
+User-agent: *
+
+Allow: /
+
+Sitemap: https://mobilon-seven.vercel.app/sitemap.xml
