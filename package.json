@@ -13,22 +13,28 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.30",
     "@iconify-json/heroicons": "^1.2.3",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.1.0",
     "@nuxtjs/color-mode": "^4.0.0",
     "@prisma/client": "6.19.3",
+    "ai": "^7.0.52",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
     "exceljs": "^4.4.0",
     "nuxt": "^4.1.0",
+    "openai": "^7.4.0",
     "prisma": "6.19.3",
     "qrcode": "^1.5.4",
     "resend": "^6.12.3",
+    "slugify": "^1.6.9",
     "vue": "^3.5.33",
     "vue-router": "^5.0.6",
     "xlsx": "^0.18.5",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.25.2"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.114",

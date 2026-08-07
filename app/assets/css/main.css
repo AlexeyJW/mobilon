@@ -14,3 +14,30 @@
 html {
   scroll-behavior: smooth;
 }
+@keyframes mobi-breathe {
+
+  0% {
+    transform: scale(1);
+  }
+
+  8% {
+    transform: scale(1.06);
+  }
+
+  16% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+
+}
+
+.mobi-breathe {
+
+  animation: mobi-breathe 6s ease-in-out infinite;
+
+  transform-origin: center;
+
+}

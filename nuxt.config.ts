@@ -11,7 +11,6 @@ export default defineNuxtConfig({
   htmlAttrs: {
     lang: 'uk'
 },
-
   css: ['~/assets/css/main.css'],
 app: {
   head: {

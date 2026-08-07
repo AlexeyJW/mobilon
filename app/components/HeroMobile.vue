@@ -11,7 +11,7 @@
       width="500"
       height="500"
       class="w-[240px] h-auto"
-      alt="Ремонт телефонів у Солотвині Mobilon"
+      alt="Ремонт телефонів у Солотвино Mobilon"
     />
   </div>
     <!-- BADGE -->
@@ -20,12 +20,12 @@
       variant="outline"
       class="mb-4"
     >
-     Ремонт телефонів Samsung, iPhone та Xiaomi у Солотвині
+     Ремонт телефонів Samsung, iPhone та Xiaomi у Солотвино
     </UBadge>
 
     <!-- TITLE -->
     <h1 class="text-2xl font-bold leading-tight mb-4">
-      Ремонт телефонів у Солотвині
+      Ремонт телефонів у Солотвино
     </h1>
 
     <!-- DESCRIPTION -->

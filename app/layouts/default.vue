@@ -198,7 +198,7 @@
         </div>
 
         <div class="border-t border-border mt-8 pt-6 text-center text-muted text-sm">
-          © {{ new Date().getFullYear() }} Mobilon. Всі права захищені.
+          © {{ new Date().getFullYear() }} ФОП Кононенко О.В. Всі права захищені.
         </div>
       </div>
     </footer>
@@ -218,6 +218,10 @@
     </div>
 
     <div class="h-16 md:hidden" />
+    <OrderModal />
+    <MobiButton />
+
+    <MobiChat />
   </div>
 </template>
 

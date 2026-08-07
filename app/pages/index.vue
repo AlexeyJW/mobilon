@@ -1,12 +1,30 @@
 <template>
   <div>
     <RevealOnScroll>
-      <HeroMobile />
-      <BenefitsMobile />
-      <ServicesMobile />
-     <StepsMobile />
-     <ContactMobile />
+      <HeroMobileNew />
     </RevealOnScroll>
+     <RevealOnScroll>
+        <BenefitsMobile />
+     </RevealOnScroll>
+      <RevealOnScroll>
+        
+      </RevealOnScroll>
+      <RevealOnScroll>
+        <ServicesMobileNew />
+      </RevealOnScroll>
+      <RevealOnScroll>
+        <BrandMobile />
+      </RevealOnScroll>
+      <RevealOnScroll>
+        <PopularProductsMobile />
+      </RevealOnScroll>
+      <RevealOnScroll>
+        <StepsMobile />
+      </RevealOnScroll>
+      <RevealOnScroll>
+        <ContactMobile />
+      </RevealOnScroll>
+    
     
   </div>
 </template>    
@@ -29,4 +47,5 @@ useHead({
     }
   ]
 })
+
 </script>

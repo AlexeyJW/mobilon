@@ -65,6 +65,16 @@ watch(() => route.path, () => {
             >
               Закупівлі
             </UButton>
+            <UButton
+  to="/admin/products"
+  icon="i-lucide-smartphone"
+  color="primary"
+  :variant="route.path.startsWith('/admin/products') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Товари
+</UButton>
 
             <USeparator orientation="vertical" class="h-6" />
 
@@ -172,7 +182,7 @@ watch(() => route.path, () => {
             variant="solid"
             block
             class="justify-start"
-            target="_blank"
+           
             rel="noopener noreferrer"
           >
             На сайт
@@ -234,6 +244,16 @@ watch(() => route.path, () => {
           <span class="text-[10px] mt-1">Закупівлі</span>
         </UButton>
 
+        <UButton
+          to="/admin/products"
+          icon="i-lucide-smartphone"
+          color="primary"
+          :variant="route.path.startsWith('/admin/products') ? 'solid' : 'ghost'"
+          class="flex-col h-auto py-1 px-3"
+          size="sm" 
+        >
+          <span class="text-[10px] mt-1">Товари</span>
+        </UButton>
         <UButton
           to="/"
           icon="i-lucide-house"

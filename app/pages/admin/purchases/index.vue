@@ -72,9 +72,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import * as XLSX from 'xlsx'
-
+import type { Product } from '~/types'
 definePageMeta({
   layout: 'admin',
   middleware: 'admin'
@@ -90,7 +90,7 @@ const filterSort = ref('createdAt-desc')
 
 // Стан форми
 const submitting = ref(false)
-const editingItem = ref(null)
+const editingItem = ref<Product | null>(null)
 
 const form = ref({
   name: '',
