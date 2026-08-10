@@ -1,39 +1,72 @@
 import prisma from '../../../../utils/prisma'
 import type { FindProductsInput } from './schema'
 import { normalizeQuery } from './normalizeQuery'
+
 export async function findProducts(input: FindProductsInput) {
+  const query = normalizeQuery(input.query)
 
- 
+  console.log('Original query:', input.query)
+  console.log('Normalized query:', query)
+  console.log('Price range:', input.minPrice, input.maxPrice)
 
- const query = normalizeQuery(input.query)
+  const priceFilter: {
+    gte?: number
+    lte?: number
+  } = {}
 
-console.log('Normalized:', query)
+  // 0 означає, що бюджет не заданий
+  if (input.minPrice && input.minPrice > 0) {
+    priceFilter.gte = input.minPrice
+  }
 
-const products = await prisma.product.findMany({
-  where: {
-    OR: [
-      {
-        name: {
-          contains: query,
-          mode: 'insensitive'
-        }
-      },
-      {
-        brand: {
-          contains: query,
-          mode: 'insensitive'
-        }
-      },
-      {
-        category: {
-          contains: query,
-          mode: 'insensitive'
-        }
-      }
-    ]
-  },
-  take: 5
-})
+  if (input.maxPrice && input.maxPrice > 0) {
+    priceFilter.lte = input.maxPrice
+  }
 
-return products
+  const products = await prisma.product.findMany({
+    where: {
+      AND: [
+        {
+          OR: [
+            {
+              name: {
+                contains: query,
+                mode: 'insensitive'
+              }
+            },
+            {
+              brand: {
+                contains: query,
+                mode: 'insensitive'
+              }
+            },
+            {
+              category: {
+                contains: query,
+                mode: 'insensitive'
+              }
+            }
+          ]
+        },
+
+        ...(Object.keys(priceFilter).length > 0
+          ? [
+              {
+                sellPrice: priceFilter
+              }
+            ]
+          : [])
+      ]
+    },
+
+    orderBy: {
+      sortOrder: 'asc'
+    },
+
+    take: 5
+  })
+
+  console.log('Products found:', products.length)
+
+  return products
 }

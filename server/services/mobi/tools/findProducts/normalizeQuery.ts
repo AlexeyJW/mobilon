@@ -1,4 +1,9 @@
 const aliases: Record<string, string> = {
+  // Багатослівні категорії — ставимо першими
+  'блок живлення': 'Зарядні пристрої',
+  'блок зарядки': 'Зарядні пристрої',
+  'шнур зарядки': 'Кабелі',
+
   // Категорії
   телефон: 'Смартфон',
   телефони: 'Смартфон',
@@ -12,12 +17,17 @@ const aliases: Record<string, string> = {
   bluetooth: 'Навушники',
   tws: 'Навушники',
 
-  зарядка: 'Зарядний пристрій',
-  зарядний: 'Зарядний пристрій',
-  адаптер: 'Зарядний пристрій',
+  зарядка: 'Зарядні пристрої',
+  зарядку: 'Зарядні пристрої',
+  зарядне: 'Зарядні пристрої',
+  зарядний: 'Зарядні пристрої',
+  адаптер: 'Зарядні пристрої',
 
-  кабель: 'Кабель',
-  шнур: 'Кабель',
+  кабель: 'Кабелі',
+  кабелі: 'Кабелі',
+  шнур: 'Кабелі',
+  шнурок: 'Кабелі',
+  шнурки: 'Кабелі',
 
   павербанк: 'Повербанк',
   powerbank: 'Повербанк',
@@ -54,8 +64,36 @@ const aliases: Record<string, string> = {
   realme: 'Realme'
 }
 
-export function normalizeQuery(query: string) {
-  const q = query.trim().toLowerCase()
 
-  return aliases[q] ?? query
-}   
+export function normalizeQuery(query: string) {
+  let q = query.trim().toLowerCase()
+
+  if (!q) {
+    return query
+  }
+
+  // Спочатку перевіряємо повну фразу
+  if (aliases[q]) {
+    return aliases[q]
+  }
+
+  // Потім замінюємо відомі багатослівні фрази
+  const phrases = Object.keys(aliases)
+    .filter(key => key.includes(' '))
+    .sort((a, b) => b.length - a.length)
+
+  for (const phrase of phrases) {
+    if (q.includes(phrase)) {
+      q = q.replace(phrase, aliases[phrase])
+    }
+  }
+
+  // Потім замінюємо окремі слова
+  const words = q.split(/\s+/)
+
+  const normalizedWords = words.map(word => {
+    return aliases[word] ?? word
+  })
+
+  return normalizedWords.join(' ')
+}
