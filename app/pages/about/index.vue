@@ -59,6 +59,9 @@ const faqItems = [
         </div>
       </section>
     </RevealOnScroll>
+    <RevealOnScroll>
+  <StoreGallery />
+</RevealOnScroll>
 
     <!-- SERVICES -->
     <RevealOnScroll>

@@ -396,187 +396,220 @@ onMounted(() => {
     </section>
 
     <!-- ADD / EDIT MODAL -->
-    <UModal v-model:open="isModalOpen">
+    <UModal
+  v-model:open="isModalOpen"
+  :ui="{
+    content: 'w-full max-w-2xl max-h-[90vh]'
+  }"
+>
+  <template #content>
 
-      <template #content>
+    <div class="flex max-h-[90vh] flex-col bg-elevated rounded-xl overflow-hidden">
 
-        <UCard class="bg-elevated">
+      <!-- HEADER -->
+      <div class="shrink-0 px-6 py-4 border-b border-border">
+        <div class="flex items-center justify-between">
 
-          <template #header>
-            <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-default">
+              {{ editingPhoto ? 'Редагувати фото' : 'Додати фото' }}
+            </h3>
 
-              <div>
-                <h3 class="text-xl font-bold text-default">
-                  {{ editingPhoto ? 'Редагувати фото' : 'Додати фото' }}
-                </h3>
+            <p class="text-sm text-muted mt-1">
+              Фото магазину для сторінки «Про нас»
+            </p>
+          </div>
 
-                <p class="text-sm text-muted mt-1">
-                  Фото магазину для сторінки «Про нас»
-                </p>
-              </div>
+          <UButton
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            @click="isModalOpen = false"
+          />
 
-              <UButton
-                icon="i-lucide-x"
-                color="neutral"
-                variant="ghost"
-                @click="isModalOpen = false"
+        </div>
+      </div>
+
+
+      <!-- SCROLLABLE CONTENT -->
+      <div class="flex-1 min-h-0 overflow-y-auto px-6 py-5">
+
+        <div class="space-y-5">
+
+          <!-- UPLOAD -->
+          <div class="space-y-3">
+
+            <label class="text-sm font-medium text-default">
+              Фотографія
+            </label>
+
+            <!-- PREVIEW -->
+            <div
+              v-if="form.imageUrl"
+              class="relative rounded-2xl overflow-hidden border border-border"
+            >
+
+              <img
+                :src="form.imageUrl"
+                alt="Preview"
+                class="w-full aspect-video object-cover"
               />
 
-            </div>
-          </template>
+              <div class="absolute top-3 right-3">
 
-          <div class="space-y-5">
+                <UButton
+                  icon="i-lucide-refresh-cw"
+                  color="neutral"
+                  variant="solid"
+                  size="sm"
+                  :loading="uploading"
+                  as="label"
+                >
+                  Змінити
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    @change="uploadPhoto"
+                  >
+                </UButton>
+
+              </div>
+
+            </div>
+
 
             <!-- UPLOAD -->
-            <div class="space-y-3">
+            <label
+              v-else
+              class="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-8 cursor-pointer hover:bg-muted/40 transition"
+            >
 
-              <label class="text-sm font-medium text-default">
-                Фотографія
-              </label>
+              <UIcon
+                name="i-lucide-upload"
+                class="text-4xl text-muted"
+              />
 
-              <div
-                v-if="form.imageUrl"
-                class="relative rounded-2xl overflow-hidden border border-border"
-              >
+              <div class="text-center">
 
-                <img
-                  :src="form.imageUrl"
-                  alt="Preview"
-                  class="w-full aspect-video object-cover"
-                />
+                <p class="font-medium text-default">
+                  {{
+                    uploading
+                      ? 'Завантаження...'
+                      : 'Виберіть фотографію'
+                  }}
+                </p>
 
-                <div class="absolute top-3 right-3">
-
-                  <UButton
-                    icon="i-lucide-refresh-cw"
-                    color="neutral"
-                    variant="solid"
-                    size="sm"
-                    :loading="uploading"
-                    as="label"
-                  >
-                    Змінити
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      class="hidden"
-                      @change="uploadPhoto"
-                    >
-                  </UButton>
-
-                </div>
+                <p class="text-sm text-muted mt-1">
+                  JPG, PNG або WebP
+                </p>
 
               </div>
 
-              <label
-                v-else
-                class="flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-8 cursor-pointer hover:bg-muted/40 transition"
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                :disabled="uploading"
+                @change="uploadPhoto"
               >
 
-                <UIcon
-                  name="i-lucide-upload"
-                  class="text-4xl text-muted"
-                />
-
-                <div class="text-center">
-
-                  <p class="font-medium text-default">
-                    {{ uploading ? 'Завантаження...' : 'Виберіть фотографію' }}
-                  </p>
-
-                  <p class="text-sm text-muted mt-1">
-                    JPG, PNG або WebP
-                  </p>
-
-                </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  class="hidden"
-                  :disabled="uploading"
-                  @change="uploadPhoto"
-                >
-
-              </label>
-
-            </div>
-
-            <!-- TITLE -->
-            <UFormField label="Назва">
-              <UInput
-                v-model="form.title"
-                placeholder="Наприклад: Наш магазин"
-                class="w-full"
-              />
-            </UFormField>
-
-            <!-- DESCRIPTION -->
-            <UFormField label="Опис">
-              <UTextarea
-                v-model="form.description"
-                placeholder="Короткий опис фотографії"
-                :rows="3"
-                class="w-full"
-              />
-            </UFormField>
-
-            <!-- ORDER + ACTIVE -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              <UFormField label="Порядок">
-                <UInput
-                  v-model.number="form.sortOrder"
-                  type="number"
-                  min="0"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField label="Статус">
-                <div class="flex items-center h-10">
-                  <USwitch
-                    v-model="form.isActive"
-                    label="Показувати на сайті"
-                  />
-                </div>
-              </UFormField>
-
-            </div>
+            </label>
 
           </div>
 
-          <template #footer>
 
-            <div class="flex justify-end gap-3">
+          <!-- TITLE -->
+          <UFormField label="Назва">
 
-              <UButton
-                color="neutral"
-                variant="soft"
-                @click="isModalOpen = false"
-              >
-                Скасувати
-              </UButton>
+            <UInput
+              v-model="form.title"
+              placeholder="Наприклад: Наш магазин"
+              class="w-full"
+            />
 
-              <UButton
-                color="primary"
-                :loading="uploading"
-                :disabled="!form.imageUrl"
-                @click="savePhoto"
-              >
-                {{ editingPhoto ? 'Зберегти' : 'Додати фото' }}
-              </UButton>
+          </UFormField>
 
-            </div>
 
-          </template>
+          <!-- DESCRIPTION -->
+          <UFormField label="Опис">
 
-        </UCard>
+            <UTextarea
+              v-model="form.description"
+              placeholder="Короткий опис фотографії"
+              :rows="3"
+              class="w-full"
+            />
 
-      </template>
+          </UFormField>
 
-    </UModal>
+
+          <!-- ORDER + STATUS -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <UFormField label="Порядок">
+
+              <UInput
+                v-model.number="form.sortOrder"
+                type="number"
+                min="0"
+                class="w-full"
+              />
+
+            </UFormField>
+
+
+            <UFormField label="Статус">
+
+              <div class="flex items-center min-h-10">
+
+                <USwitch
+                  v-model="form.isActive"
+                  label="Показувати на сайті"
+                />
+
+              </div>
+
+            </UFormField>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- FOOTER -->
+      <div class="shrink-0 border-t border-border px-6 py-4 bg-elevated">
+
+        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+
+          <UButton
+            color="neutral"
+            variant="soft"
+            @click="isModalOpen = false"
+          >
+            Скасувати
+          </UButton>
+
+          <UButton
+            color="primary"
+            :loading="uploading"
+            :disabled="!form.imageUrl"
+            @click="savePhoto"
+          >
+            {{ editingPhoto ? 'Зберегти' : 'Додати фото' }}
+          </UButton>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </template>
+</UModal>
 
     <!-- DELETE MODAL -->
     <UModal v-model:open="isDeleteModalOpen">
