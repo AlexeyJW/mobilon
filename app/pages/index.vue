@@ -6,24 +6,19 @@
      <RevealOnScroll>
         <BenefitsMobile />
      </RevealOnScroll>
-      <RevealOnScroll>
+     
         
-      </RevealOnScroll>
       <RevealOnScroll>
-        <ServicesMobileNew />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <BrandMobile />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <PopularProductsMobile />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <StepsMobile />
-      </RevealOnScroll>
-      <RevealOnScroll>
-        <ContactMobile />
-      </RevealOnScroll>
+  <ServicesMobileNew />
+</RevealOnScroll>
+
+<RevealOnScroll>
+  <PopularProductsMobile />
+</RevealOnScroll>
+
+<RevealOnScroll>
+  <BrandMobile />
+</RevealOnScroll>
     
     
   </div>
@@ -43,7 +38,7 @@ useHead({
   link: [
     {
       rel: 'canonical',
-      href: 'https://mobilon-seven.vercel.app'
+     href: '[https://mobilon-seven.vercel.app](https://mobilon-seven.vercel.app)'
     }
   ]
 })
