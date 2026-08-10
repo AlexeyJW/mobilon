@@ -1,0 +1,34 @@
+import cloudinary from '~~/server/utils/cloudinary'
+
+export default defineEventHandler(async (event) => {
+  const formData = await readMultipartFormData(event)
+
+  if (!formData?.length) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Файл не знайдено'
+    })
+  }
+
+  const file = formData.find(item => item.name === 'file')
+
+  if (!file || !file.data) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Файл не знайдено'
+    })
+  }
+
+  const base64 = `data:${file.type};base64,${file.data.toString('base64')}`
+
+  const result = await cloudinary.uploader.upload(base64, {
+    folder: 'mobilon-store'
+  })
+
+  return {
+    imageUrl: result.secure_url,
+    publicId: result.public_id,
+    width: result.width,
+    height: result.height
+  }
+})

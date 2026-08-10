@@ -65,7 +65,8 @@ watch(() => route.path, () => {
             >
               Закупівлі
             </UButton>
-            <UButton
+            
+  <UButton
   to="/admin/products"
   icon="i-lucide-smartphone"
   color="primary"
@@ -74,6 +75,15 @@ watch(() => route.path, () => {
   class="justify-start"
 >
   Товари
+</UButton>
+<UButton
+  to="/admin/content"
+  icon="i-lucide-panels-top-left"
+  color="primary"
+  :variant="route.path.startsWith('/admin/content') ? 'solid' : 'ghost'"
+  size="sm"
+>
+  Контент
 </UButton>
 
             <USeparator orientation="vertical" class="h-6" />
@@ -138,7 +148,16 @@ watch(() => route.path, () => {
           >
             Dashboard
           </UButton>
-          
+          <UButton
+  to="/admin/content"
+  icon="i-lucide-panels-top-left"
+  color="primary"
+  :variant="route.path.startsWith('/admin/content') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Редагування контенту
+</UButton>
           <UButton
             to="/admin/customers"
             icon="i-lucide-users"
@@ -254,6 +273,7 @@ watch(() => route.path, () => {
         >
           <span class="text-[10px] mt-1">Товари</span>
         </UButton>
+        
         <UButton
           to="/"
           icon="i-lucide-house"
