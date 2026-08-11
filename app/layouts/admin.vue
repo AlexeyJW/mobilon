@@ -123,7 +123,15 @@ async function changePassword() {
             >
               Клієнти
             </UButton>
-            
+            <UButton
+  to="/admin/users"
+  icon="i-lucide-users-round"
+  color="primary"
+  :variant="route.path.startsWith('/admin/users') ? 'solid' : 'ghost'"
+  size="sm"
+>
+  Співробітники
+</UButton>
             <UButton
               to="/admin/requests"
               icon="i-lucide-clipboard-list"
@@ -290,7 +298,16 @@ async function changePassword() {
           >
             Клієнти
           </UButton>
-          
+          <UButton
+  to="/admin/users"
+  icon="i-lucide-users-round"
+  color="primary"
+  :variant="route.path.startsWith('/admin/users') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Співробітники
+</UButton>
           <UButton
             to="/admin/requests"
             icon="i-lucide-clipboard-list"

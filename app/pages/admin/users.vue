@@ -91,6 +91,91 @@ function formatDate(date: string) {
 }
 
 onMounted(loadUsers)
+
+
+const showChangePasswordModal = ref(false)
+const changingUserPassword = ref<AdminUser | null>(null)
+const newUserPassword = ref('')
+const changingUserPasswordLoading = ref(false)
+
+function openChangePasswordModal(user: AdminUser) {
+  changingUserPassword.value = user
+  newUserPassword.value = ''
+  showChangePasswordModal.value = true
+}
+
+async function changeUserPassword() {
+  if (!changingUserPassword.value) return
+
+  if (newUserPassword.value.length < 6) {
+    alert('Пароль має містити щонайменше 6 символів')
+    return
+  }
+
+  changingUserPasswordLoading.value = true
+
+  try {
+    await $fetch(
+      `/api/admin/users/${changingUserPassword.value.id}/password`,
+      {
+        method: 'POST',
+        body: {
+          password: newUserPassword.value
+        }
+      }
+    )
+
+    showChangePasswordModal.value = false
+
+    alert(
+      `Пароль користувача "${changingUserPassword.value.name}" змінено`
+    )
+  } catch (error: any) {
+    console.error(error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося змінити пароль'
+    )
+  } finally {
+    changingUserPasswordLoading.value = false
+  }
+}
+
+const changingUserStatus = ref<number | null>(null)
+
+async function toggleUserStatus(user: AdminUser) {
+  changingUserStatus.value = user.id
+
+  try {
+    if (user.active) {
+      await $fetch(`/api/admin/users/${user.id}`, {
+        method: 'DELETE'
+      })
+    } else {
+      await $fetch(`/api/admin/users/${user.id}`, {
+        method: 'PUT',
+        body: {
+          name: user.name,
+          username: user.username,
+          role: user.role,
+          active: true
+        }
+      })
+    }
+
+    await loadUsers()
+  } catch (error: any) {
+    console.error(error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося змінити статус користувача'
+    )
+  } finally {
+    changingUserStatus.value = null
+  }
+}
 </script>
 
 <template>
@@ -156,6 +241,9 @@ onMounted(loadUsers)
               <th class="text-left py-3 px-3">
                 Створено
               </th>
+              <th class="text-right py-3 px-3">
+                Дії
+              </th>
             </tr>
           </thead>
 
@@ -198,6 +286,44 @@ onMounted(loadUsers)
               <td class="py-3 px-3 text-muted">
                 {{ formatDate(user.createdAt) }}
               </td>
+<td class="py-3 px-3 text-right">
+  <div class="flex items-center justify-end gap-1">
+
+    <!-- Змінити пароль -->
+    <UButton
+      icon="i-lucide-key-round"
+      color="neutral"
+      variant="ghost"
+      size="sm"
+      title="Змінити пароль"
+      @click="openChangePasswordModal(user)"
+    />
+
+    <!-- Деактивувати / активувати -->
+    <UButton
+      v-if="user.active"
+      icon="i-lucide-user-x"
+      color="error"
+      variant="ghost"
+      size="sm"
+      title="Деактивувати"
+      :loading="changingUserStatus === user.id"
+      @click="toggleUserStatus(user)"
+    />
+
+    <UButton
+      v-else
+      icon="i-lucide-user-check"
+      color="success"
+      variant="ghost"
+      size="sm"
+      title="Активувати"
+      :loading="changingUserStatus === user.id"
+      @click="toggleUserStatus(user)"
+    />
+
+  </div>
+</td>
             </tr>
           </tbody>
         </table>
@@ -295,4 +421,57 @@ onMounted(loadUsers)
     </UModal>
 
   </div>
+  <UModal v-model:open="showChangePasswordModal">
+  <template #content>
+    <UCard class="w-full max-w-md">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-bold">
+            Змінити пароль
+          </h2>
+
+          <p class="text-sm text-muted mt-1">
+            {{ changingUserPassword?.name }}
+          </p>
+        </div>
+
+        <UButton
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          @click="showChangePasswordModal = false"
+        />
+      </div>
+
+      <div class="space-y-4">
+        <UFormField label="Новий пароль">
+          <UInput
+            v-model="newUserPassword"
+            type="password"
+            placeholder="Мінімум 6 символів"
+            class="w-full"
+          />
+        </UFormField>
+
+        <div class="flex justify-end gap-2 pt-4">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showChangePasswordModal = false"
+          >
+            Скасувати
+          </UButton>
+
+          <UButton
+            color="primary"
+            :loading="changingUserPasswordLoading"
+            @click="changeUserPassword"
+          >
+            Змінити пароль
+          </UButton>
+        </div>
+      </div>
+    </UCard>
+  </template>
+</UModal>
 </template>
