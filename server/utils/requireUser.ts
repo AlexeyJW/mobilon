@@ -1,12 +1,12 @@
-import prisma from '../utils/prisma'
 import crypto from 'crypto'
+import prisma from './prisma'
 
 const ADMIN_SECRET =
   process.env.ADMIN_SECRET || 'admin-secret-default'
 
 const SESSION_MAX_AGE = 60 * 60 * 24
 
-export default defineEventHandler(async (event) => {
+export default async function requireUser(event: any) {
   const session = getCookie(event, 'admin-session')
 
   if (!session) {
@@ -58,9 +58,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const expiresAt = timestamp + SESSION_MAX_AGE * 1000
-
-  if (expiresAt <= Date.now()) {
+  if (timestamp + SESSION_MAX_AGE * 1000 <= Date.now()) {
     throw createError({
       statusCode: 401,
       statusMessage: 'Session expired'
@@ -72,12 +70,13 @@ export default defineEventHandler(async (event) => {
       id: userId
     },
     select: {
-      id: true,
-      name: true,
-      username: true,
-      role: true,
-      active: true
-    }
+    id: true,
+    name: true,
+    username: true,
+    passwordHash: true,
+    role: true,
+    active: true
+}
   })
 
   if (!user || !user.active) {
@@ -87,8 +86,5 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  return {
-    ok: true,
-    user
-  }
-})    
+  return user
+}

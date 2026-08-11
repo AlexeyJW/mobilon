@@ -3,9 +3,88 @@
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
 
+const { data: auth } = await useFetch('/api/auth')
+
+const currentUser = computed(() => auth.value?.user)
+
 watch(() => route.path, () => {
   isMobileMenuOpen.value = false
 })
+
+async function logout() {
+  try {
+    await $fetch('/api/auth-logout', {
+      method: 'POST'
+    })
+
+    await navigateTo('/admin/login')
+  } catch (error) {
+    console.error('Logout failed:', error)
+  }
+}
+const showPasswordModal = ref(false)
+const changingPassword = ref(false)
+
+const passwordForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+function openPasswordModal() {
+  passwordForm.currentPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.confirmPassword = ''
+
+  showPasswordModal.value = true
+}
+
+async function changePassword() {
+  if (
+    !passwordForm.currentPassword ||
+    !passwordForm.newPassword ||
+    !passwordForm.confirmPassword
+  ) {
+    alert('Заповніть усі поля')
+    return
+  }
+
+  if (passwordForm.newPassword.length < 6) {
+    alert('Новий пароль має містити щонайменше 6 символів')
+    return
+  }
+
+  if (
+    passwordForm.newPassword !==
+    passwordForm.confirmPassword
+  ) {
+    alert('Нові паролі не співпадають')
+    return
+  }
+
+  changingPassword.value = true
+
+  try {
+    await $fetch('/api/change-password', {
+      method: 'POST',
+      body: {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      }
+    })
+
+    showPasswordModal.value = false
+
+    alert('Пароль успішно змінено')
+  } catch (error) {
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося змінити пароль'
+    )
+  } finally {
+    changingPassword.value = false
+  }
+}
 </script>
 
 <template>
@@ -113,6 +192,49 @@ watch(() => route.path, () => {
               target="_blank"
               rel="noopener noreferrer"
             />
+           <div
+  v-if="currentUser"
+  class="hidden sm:flex items-center gap-2 mr-2"
+>
+  <UButton
+    color="neutral"
+    variant="ghost"
+    class="flex items-center gap-2"
+    @click="openPasswordModal"
+  >
+    <div class="text-right leading-tight">
+      <div class="text-sm font-medium text-default">
+        {{ currentUser.name }}
+      </div>
+
+      <div class="text-xs text-muted">
+        {{
+          currentUser.role === 'ADMIN'
+            ? 'Адміністратор'
+            : 'Менеджер'
+        }}
+      </div>
+    </div>
+
+    <div
+      class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"
+    >
+      <Icon
+        name="i-lucide-user"
+        class="w-4 h-4 text-primary"
+      />
+    </div>
+  </UButton>
+</div>
+            <UButton
+              icon="i-lucide-log-out"
+              color="primary"
+              variant="ghost"
+              size="sm"
+              @click="logout"
+            >
+              <span class="hidden lg:inline">Вийти</span>
+            </UButton>
 
             <ThemeToggle/>
 
@@ -206,6 +328,16 @@ watch(() => route.path, () => {
           >
             На сайт
           </UButton>
+          <UButton
+            icon="i-lucide-log-out"
+            color="primary"
+            variant="ghost"
+            block
+            class="justify-start"
+            @click="logout"
+          >
+            Вийти
+          </UButton>
         </div>
       </div>
     </header>
@@ -290,5 +422,78 @@ watch(() => route.path, () => {
     </nav>
 
     <div class="h-16 md:hidden" />
+    <UModal v-model:open="showPasswordModal">
+  <template #content>
+    <UCard class="w-full max-w-md">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-bold">
+            Змінити пароль
+          </h2>
+
+          <p class="text-sm text-muted mt-1">
+            {{ currentUser?.name }}
+          </p>
+        </div>
+
+        <UButton
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          @click="showPasswordModal = false"
+        />
+      </div>
+
+      <div class="space-y-4">
+        <UFormField label="Поточний пароль">
+          <UInput
+            v-model="passwordForm.currentPassword"
+            type="password"
+            placeholder="Введіть поточний пароль"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="Новий пароль">
+          <UInput
+            v-model="passwordForm.newPassword"
+            type="password"
+            placeholder="Мінімум 6 символів"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="Підтвердження нового пароля">
+          <UInput
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            placeholder="Повторіть новий пароль"
+            class="w-full"
+          />
+        </UFormField>
+
+        <div class="flex justify-end gap-2 pt-4">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showPasswordModal = false"
+          >
+            Скасувати
+          </UButton>
+
+          <UButton
+            color="primary"
+            :loading="changingPassword"
+            @click="changePassword"
+          >
+            Змінити пароль
+          </UButton>
+        </div>
+      </div>
+    </UCard>
+  </template>
+</UModal>
+
+
   </div>
 </template> 
