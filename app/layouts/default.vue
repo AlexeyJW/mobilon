@@ -166,11 +166,11 @@
             <ul class="space-y-2 text-sm text-muted">
               <li class="flex items-center gap-2">
                 <Icon name="i-lucide-phone" class="w-4 h-4" />
-                <a href="tel:+380123456789">+38 (098 ) 445-52-33</a>
+                <a href="tel:+380984455233">+38 (098 ) 445-52-33</a>
               </li>
               <li class="flex items-center gap-2">
                 <Icon name="i-lucide-mail" class="w-4 h-4" />
-                <a href="mailto:info@mobilon.com">info@mobilon.com</a>
+                <a href="mailto:info@mobilon.com">kononenko.jw@gmail.com</a>
               </li>
               <li class="flex items-center gap-2">
                 <Icon name="i-lucide-map-pin" class="w-4 h-4" />
