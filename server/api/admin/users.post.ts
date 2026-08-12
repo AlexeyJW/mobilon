@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const username = String(body?.username || '').trim()
   const password = String(body?.password || '')
   const role = body?.role === 'ADMIN' ? 'ADMIN' : 'MANAGER'
-
+  const position = String(body?.position || 'Менеджер').trim()
   if (!name || !username || !password) {
     throw createError({
       statusCode: 400,
@@ -47,7 +47,8 @@ export default defineEventHandler(async (event) => {
       username,
       passwordHash,
       role,
-      active: true
+      active: true,
+      position
     },
     select: {
       id: true,
@@ -55,6 +56,7 @@ export default defineEventHandler(async (event) => {
       username: true,
       role: true,
       active: true,
+      position: true,
       createdAt: true
     }
   })

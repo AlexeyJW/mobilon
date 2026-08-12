@@ -9,7 +9,10 @@ interface AdminUser {
   name: string
   username: string
   role: 'ADMIN' | 'MANAGER'
+  position: string
   active: boolean
+  photo: string | null
+  showOnAbout: boolean
   createdAt: string
   updatedAt: string
 }
@@ -19,11 +22,25 @@ const loading = ref(false)
 const showModal = ref(false)
 const saving = ref(false)
 
+const showEditModal = ref(false)
+const editingUser = ref<AdminUser | null>(null)
+const editingUserSaving = ref(false)
+
+const editForm = reactive({
+  name: '',
+  username: '',
+  role: 'MANAGER' as 'ADMIN' | 'MANAGER',
+  position: 'Менеджер',
+  photo: '',
+  showOnAbout: false
+})
+
 const form = reactive({
   name: '',
   username: '',
   password: '',
-  role: 'MANAGER' as 'ADMIN' | 'MANAGER'
+  role: 'MANAGER' as 'ADMIN' | 'MANAGER',
+  position: 'Менеджер'
 })
 
 async function loadUsers() {
@@ -67,7 +84,8 @@ async function createUser() {
         name: form.name,
         username: form.username,
         password: form.password,
-        role: form.role
+        role: form.role,
+        position: form.position
       }
     })
 
@@ -97,6 +115,15 @@ const showChangePasswordModal = ref(false)
 const changingUserPassword = ref<AdminUser | null>(null)
 const newUserPassword = ref('')
 const changingUserPasswordLoading = ref(false)
+
+const photoFile = ref<File | null>(null)
+const photoUploading = ref(false)
+
+function onPhotoSelected(event: Event) {
+  const target = event.target as HTMLInputElement
+
+  photoFile.value = target.files?.[0] || null
+}
 
 function openChangePasswordModal(user: AdminUser) {
   changingUserPassword.value = user
@@ -174,6 +201,96 @@ async function toggleUserStatus(user: AdminUser) {
     )
   } finally {
     changingUserStatus.value = null
+  }
+}
+function openEditModal(user: AdminUser) {
+  photoFile.value = null
+  editingUser.value = user
+
+  editForm.name = user.name
+  editForm.username = user.username
+  editForm.role = user.role
+  editForm.position = user.position || 'Менеджер'
+  editForm.photo = user.photo || ''
+  editForm.showOnAbout = user.showOnAbout
+
+  showEditModal.value = true
+}
+async function saveUser() {
+  if (!editingUser.value) return
+
+  if (!editForm.name || !editForm.username) {
+    alert('Імʼя та логін обовʼязкові')
+    return
+  }
+
+  editingUserSaving.value = true
+
+  try {
+    await $fetch(
+      `/api/admin/users/${editingUser.value.id}`,
+      {
+        method: 'PUT',
+        body: {
+          name: editForm.name,
+          username: editForm.username,
+          role: editForm.role,
+          position: editForm.position,
+          
+          showOnAbout: editForm.showOnAbout
+        }
+      }
+    )
+
+    showEditModal.value = false
+
+    await loadUsers()
+  } catch (error: any) {
+    console.error(error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося зберегти зміни'
+    )
+  } finally {
+    editingUserSaving.value = false
+  }
+}
+
+async function uploadUserPhoto() {
+  if (!editingUser.value || !photoFile.value) {
+    return
+  }
+
+  photoUploading.value = true
+
+  try {
+    const formData = new FormData()
+
+    formData.append('photo', photoFile.value)
+
+    await $fetch(
+      `/api/admin/users/${editingUser.value.id}/photo`,
+      {
+        method: 'POST',
+        body: formData
+      }
+    )
+
+    photoFile.value = null
+
+    await loadUsers()
+
+    alert('Фото успішно завантажено')
+  } catch (error: any) {
+    console.error(error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося завантажити фото'
+    )
+  } finally {
+    photoUploading.value = false
   }
 }
 </script>
@@ -288,7 +405,14 @@ async function toggleUserStatus(user: AdminUser) {
               </td>
 <td class="py-3 px-3 text-right">
   <div class="flex items-center justify-end gap-1">
-
+<UButton
+  icon="i-lucide-pencil"
+  color="neutral"
+  variant="ghost"
+  size="sm"
+  title="Редагувати"
+  @click="openEditModal(user)"
+/>
     <!-- Змінити пароль -->
     <UButton
       icon="i-lucide-key-round"
@@ -333,7 +457,7 @@ async function toggleUserStatus(user: AdminUser) {
     <!-- Створення співробітника -->
     <UModal v-model:open="showModal">
       <template #content>
-        <UCard class="w-full max-w-md">
+      <UCard class="w-full max-w-md max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between mb-6">
             <div>
               <h2 class="text-xl font-bold">
@@ -396,7 +520,30 @@ async function toggleUserStatus(user: AdminUser) {
                 class="w-full"
               />
             </UFormField>
-
+            <UFormField label="Посада">
+              <USelect
+                v-model="form.position"
+                :items="[
+                  {
+                    label: 'Власник',
+                    value: 'Власник'
+                  },
+                  {
+                    label: 'Продавець',
+                    value: 'Продавець'
+                  },
+                  {
+                    label: 'Менеджер',
+                    value: 'Менеджер'
+                  },
+                  {
+                    label: 'Адміністратор',
+                    value: 'Адміністратор'
+                  }
+                ]"
+                class="w-full"
+              />
+            </UFormField>
             <div class="flex justify-end gap-2 pt-4">
               <UButton
                 color="neutral"
@@ -421,6 +568,165 @@ async function toggleUserStatus(user: AdminUser) {
     </UModal>
 
   </div>
+  <UModal v-model:open="showEditModal">
+  <template #content>
+    <UCard class="w-full max-w-md max-h-[90vh] overflow-y-auto">
+
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl font-bold">
+            Редагування співробітника
+          </h2>
+
+          <p class="text-sm text-muted mt-1">
+            {{ editingUser?.name }}
+          </p>
+        </div>
+
+        <UButton
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          @click="showEditModal = false"
+        />
+      </div>
+
+      <div class="space-y-4">
+
+        <UFormField label="Ім'я">
+          <UInput
+            v-model="editForm.name"
+            placeholder="Іван Петренко"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="Логін">
+          <UInput
+            v-model="editForm.username"
+            placeholder="ivan"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="Роль">
+          <USelect
+            v-model="editForm.role"
+            :items="[
+              {
+                label: 'Менеджер',
+                value: 'MANAGER'
+              },
+              {
+                label: 'Адміністратор',
+                value: 'ADMIN'
+              }
+            ]"
+            class="w-full"
+          />
+        </UFormField>
+        <UFormField label="Посада">
+  <USelect
+    v-model="editForm.position"
+    :items="[
+      {
+        label: 'Власник',
+        value: 'Власник'
+      },
+      {
+        label: 'Продавець',
+        value: 'Продавець'
+      },
+      {
+        label: 'Менеджер',
+        value: 'Менеджер'
+      },
+      {
+        label: 'Адміністратор',
+        value: 'Адміністратор'
+      }
+    ]"
+    class="w-full"
+  />
+</UFormField>
+       <UFormField label="Фото співробітника">
+  <div class="space-y-3">
+
+    <div
+      v-if="editForm.photo"
+      class="flex items-center gap-3"
+    >
+      <img
+        :src="editForm.photo"
+        :alt="editForm.name"
+        class="w-20 h-20 rounded-xl object-cover border border-border"
+      >
+
+      <span class="text-sm text-muted">
+        Поточне фото
+      </span>
+    </div>
+
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      class="block w-full text-sm text-muted"
+      @change="onPhotoSelected"
+    />
+
+    <UButton
+      v-if="photoFile"
+      color="primary"
+      variant="soft"
+      :loading="photoUploading"
+      @click="uploadUserPhoto"
+    >
+      Завантажити фото
+    </UButton>
+
+  </div>
+</UFormField> 
+
+        <div class="flex items-center justify-between rounded-lg border border-border p-3">
+          <div>
+            <p class="text-sm font-medium">
+              Показувати на сторінці «Про нас»
+            </p>
+
+            <p class="text-xs text-muted mt-1">
+              Співробітник з'явиться в галереї «Наша команда»
+            </p>
+          </div>
+
+          <USwitch
+            v-model="editForm.showOnAbout"
+          />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4">
+
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showEditModal = false"
+          >
+            Скасувати
+          </UButton>
+
+          <UButton
+            color="primary"
+            :loading="editingUserSaving"
+            @click="saveUser"
+          >
+            Зберегти
+          </UButton>
+
+        </div>
+
+      </div>
+    </UCard>
+  </template>
+</UModal>
   <UModal v-model:open="showChangePasswordModal">
   <template #content>
     <UCard class="w-full max-w-md">

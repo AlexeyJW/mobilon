@@ -170,7 +170,7 @@
               </li>
               <li class="flex items-center gap-2">
                 <Icon name="i-lucide-mail" class="w-4 h-4" />
-                <a href="mailto:info@mobilon.com">kononenko.jw@gmail.com</a>
+                <a href="mailto:kononenko.jw@gmail.com">kononenko.jw@gmail.com</a>
               </li>
               <li class="flex items-center gap-2">
                 <Icon name="i-lucide-map-pin" class="w-4 h-4" />

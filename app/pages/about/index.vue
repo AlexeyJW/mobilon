@@ -1,4 +1,5 @@
-<script setup>
+<script setup lang="ts">
+
 const faqItems = [
   {
     label: 'Чи збережуться мої фото та дані?',
@@ -17,6 +18,31 @@ const faqItems = [
     content: 'Так, допомагаємо з Android-пристроями та iPhone.'
   }
 ]
+interface TeamMember {
+  id: number  
+  name: string
+  role: 'ADMIN' | 'MANAGER'
+  photo: string | null
+}
+
+
+
+const team = ref<TeamMember[]>([])
+
+async function loadTeam() {
+  try {
+    const result = await $fetch<{
+      success: boolean
+      users: TeamMember[]
+    }>('/api/team')
+
+    team.value = result.users
+  } catch (error) {
+    console.error('Failed to load team:', error)
+  }
+}
+
+onMounted(loadTeam)
 </script>
 
 <template>
@@ -101,7 +127,78 @@ const faqItems = [
         </div>
       </section>
     </RevealOnScroll>
+<!-- TEAM -->
+<RevealOnScroll>
+  <section
+    v-if="team.length"
+    class="space-y-8"
+  >
+    <div class="text-center space-y-2">
+      <h2 class="text-3xl font-bold text-default">
+        Наша команда
+      </h2>
 
+      <p class="text-muted max-w-2xl mx-auto">
+        Люди, які допомагають зробити роботу зі смартфоном
+        простою та комфортною.
+      </p>
+
+      <div class="w-20 h-1 bg-primary mx-auto rounded-full" />
+    </div>
+
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+    >
+      <UCard
+        v-for="member in team"
+        :key="member.id"
+        class="bg-elevated border-border overflow-hidden hover:shadow-lg transition-all duration-300"
+      >
+        <div class="space-y-4">
+
+          <!-- Фото -->
+          <div
+            class="aspect-square rounded-2xl overflow-hidden bg-primary/10"
+          >
+            <img
+              v-if="member.photo"
+              :src="member.photo"
+              :alt="member.name"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+
+            <div
+              v-else
+              class="w-full h-full flex items-center justify-center text-primary"
+            >
+              <Icon
+                name="i-lucide-user"
+                class="w-20 h-20"
+              />
+            </div>
+          </div>
+
+          <!-- Дані -->
+          <div class="text-center">
+            <h3 class="text-lg font-bold text-default">
+              {{ member.name }}
+            </h3>
+
+            <p class="text-sm text-primary mt-1">
+              {{
+                member.role === 'ADMIN'
+                  ? 'Адміністратор'
+                  : 'Менеджер'
+              }}
+            </p>
+          </div>
+
+        </div>
+      </UCard>
+    </div>
+  </section>
+</RevealOnScroll>
     <!-- WHY -->
     <RevealOnScroll>
       <section class="space-y-8">
