@@ -10,6 +10,7 @@ export default defineEventHandler(async (event) => {
       name: true,
       username: true,
       role: true,
+      position: true,
       active: true,
       createdAt: true,
       updatedAt: true

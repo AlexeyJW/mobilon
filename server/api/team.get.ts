@@ -10,7 +10,8 @@ export default defineEventHandler(async () => {
       id: true,
       name: true,
       role: true,
-      photo: true
+      photo: true,
+      position: true
     },
     orderBy: {
       name: 'asc'

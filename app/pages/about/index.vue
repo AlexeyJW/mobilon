@@ -23,6 +23,7 @@ interface TeamMember {
   name: string
   role: 'ADMIN' | 'MANAGER'
   photo: string | null
+  position: string | ''
 }
 
 
@@ -37,6 +38,7 @@ async function loadTeam() {
     }>('/api/team')
 
     team.value = result.users
+    console.log('Loaded team:', team.value)
   } catch (error) {
     console.error('Failed to load team:', error)
   }
@@ -186,11 +188,7 @@ onMounted(loadTeam)
             </h3>
 
             <p class="text-sm text-primary mt-1">
-              {{
-                member.role === 'ADMIN'
-                  ? 'Адміністратор'
-                  : 'Менеджер'
-              }}
+             {{member.position}}
             </p>
           </div>
 

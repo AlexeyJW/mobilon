@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const name = String(body?.name || '').trim()
   const username = String(body?.username || '').trim()
   const role = body?.role === 'ADMIN' ? 'ADMIN' : 'MANAGER'
-
+ 
   
   const showOnAbout =
     typeof body?.showOnAbout === 'boolean'
@@ -44,6 +44,12 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'User not found'
     })
   }
+
+  const position =
+  body?.position !== undefined
+    ? String(body.position).trim()
+    : user.position
+
 const photo =
   body?.photo !== undefined
     ? String(body.photo).trim()
@@ -94,6 +100,7 @@ const photo =
       name,
       username,
       role,
+      position,
       active,
       photo,
       showOnAbout
@@ -103,6 +110,7 @@ const photo =
       name: true,
       username: true,
       role: true,
+      position: true,
       active: true,
       photo: true,
       showOnAbout: true,
