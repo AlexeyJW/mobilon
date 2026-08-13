@@ -170,3 +170,32 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model ServiceCategory {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  active    Boolean   @default(true)
+
+  services  Service[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Service {
+  id          Int      @id @default(autoincrement())
+
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+
+  category    String?
+  categoryId  Int?
+  categoryRef ServiceCategory? @relation(fields: [categoryId], references: [id])
+
+  active      Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+

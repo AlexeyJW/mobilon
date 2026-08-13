@@ -192,7 +192,8 @@
 import type { Product } from '~/types'
 
 definePageMeta({
-  layout: 'admin'
+  layout: 'admin',
+  middleware: 'admin'
 })
 
 const toast = useToast()

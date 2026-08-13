@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 
 import findProductsTool from './findProducts'
+import findServicesTool from './findServices'
 import createLeadTool from './createLead'
 
 export const openAITools = {
@@ -13,6 +14,11 @@ export const openAITools = {
 
     execute: findProductsTool.handler
 
+  }),
+   [findServicesTool.name]: tool({
+    description: findServicesTool.description,
+    inputSchema: findServicesTool.schema,
+    execute: findServicesTool.handler
   }),
 
   [createLeadTool.name]: tool({
