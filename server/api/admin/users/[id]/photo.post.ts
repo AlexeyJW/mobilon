@@ -1,14 +1,13 @@
 import prisma from '../../../../utils/prisma'
 import requireAdmin from '../../../../utils/requireAdmin'
-import { mkdir, writeFile } from 'fs/promises'
-import path from 'path'
+import cloudinary from '~~/server/utils/cloudinary'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
 
   const id = Number(event.context.params?.id)
 
-  if (!id) {
+  if (!id || Number.isNaN(id)) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid user ID'
@@ -48,51 +47,51 @@ export default defineEventHandler(async (event) => {
   if (!file.type || !allowedTypes.includes(file.type)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Only JPG, PNG and WebP images are allowed'
+      statusMessage:
+        'Only JPG, PNG and WebP images are allowed'
     })
   }
 
-  const extension =
-    file.type === 'image/png'
-      ? 'png'
-      : file.type === 'image/webp'
-        ? 'webp'
-        : 'jpg'
+  const maxSize = 10 * 1024 * 1024
 
-  const fileName = `user-${id}-${Date.now()}.${extension}`
+  if (file.data.length > maxSize) {
+    throw createError({
+      statusCode: 400,
+      statusMessage:
+        'Фото занадто велике. Максимальний розмір — 10 MB'
+    })
+  }
 
-  const uploadDir = path.join(
-    process.cwd(),
-    'public',
-    'uploads',
-    'team'
-  )
-
-  await mkdir(uploadDir, {
-    recursive: true
+  console.log('TEAM PHOTO UPLOAD:', {
+    userId: id,
+    type: file.type,
+    size: file.data.length
   })
 
-  const filePath = path.join(
-    uploadDir,
-    fileName
-  )
+  const base64 =
+    `data:${file.type};base64,${file.data.toString('base64')}`
 
-  await writeFile(
-    filePath,
-    file.data
-  )
+  const result = await cloudinary.uploader.upload(base64, {
+    folder: 'mobilon-team',
+    public_id: `user-${id}`,
+    overwrite: true
+  })
 
-  const photoUrl = `/uploads/team/${fileName}`
+  console.log(
+    'Cloudinary team photo uploaded:',
+    result.public_id
+  )
 
   await prisma.user.update({
     where: { id },
     data: {
-      photo: photoUrl
+      photo: result.secure_url
     }
   })
 
   return {
     success: true,
-    photo: photoUrl
+    photo: result.secure_url,
+    photoId: result.public_id
   }
 })

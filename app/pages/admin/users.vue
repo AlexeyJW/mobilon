@@ -26,6 +26,8 @@ const showEditModal = ref(false)
 const editingUser = ref<AdminUser | null>(null)
 const editingUserSaving = ref(false)
 
+
+
 const editForm = reactive({
   name: '',
   username: '',
@@ -117,12 +119,25 @@ const newUserPassword = ref('')
 const changingUserPasswordLoading = ref(false)
 
 const photoFile = ref<File | null>(null)
+const photoPreview = ref<string | null>(null)
 const photoUploading = ref(false)
+
 
 function onPhotoSelected(event: Event) {
   const target = event.target as HTMLInputElement
 
-  photoFile.value = target.files?.[0] || null
+  const file = target.files?.[0] || null
+
+  photoFile.value = file
+
+  if (photoPreview.value) {
+    URL.revokeObjectURL(photoPreview.value)
+    photoPreview.value = null
+  }
+
+  if (file) {
+    photoPreview.value = URL.createObjectURL(file)
+  }
 }
 
 function openChangePasswordModal(user: AdminUser) {
@@ -205,6 +220,12 @@ async function toggleUserStatus(user: AdminUser) {
 }
 function openEditModal(user: AdminUser) {
   photoFile.value = null
+
+  if (photoPreview.value) {
+    URL.revokeObjectURL(photoPreview.value)
+    photoPreview.value = null
+  }
+
   editingUser.value = user
 
   editForm.name = user.name
@@ -269,19 +290,29 @@ async function uploadUserPhoto() {
 
     formData.append('photo', photoFile.value)
 
-    await $fetch(
-      `/api/admin/users/${editingUser.value.id}/photo`,
-      {
-        method: 'POST',
-        body: formData
-      }
-    )
+    const result = await $fetch<{
+  success: boolean
+  photo: string
+}>(
+  `/api/admin/users/${editingUser.value.id}/photo`,
+  {
+    method: 'POST',
+    body: formData
+  }
+)
 
-    photoFile.value = null
+editForm.photo = result.photo
 
-    await loadUsers()
+photoFile.value = null
 
-    alert('Фото успішно завантажено')
+if (photoPreview.value) {
+  URL.revokeObjectURL(photoPreview.value)
+  photoPreview.value = null
+}
+
+await loadUsers()
+
+alert('Фото успішно завантажено')
   } catch (error: any) {
     console.error(error)
 
@@ -652,20 +683,82 @@ async function uploadUserPhoto() {
        <UFormField label="Фото співробітника">
   <div class="space-y-3">
 
-    <div
-      v-if="editForm.photo"
-      class="flex items-center gap-3"
-    >
-      <img
-        :src="editForm.photo"
-        :alt="editForm.name"
-        class="w-20 h-20 rounded-xl object-cover border border-border"
-      >
+    <div class="space-y-3">
 
-      <span class="text-sm text-muted">
-        Поточне фото
-      </span>
+  <!-- Нове фото -->
+  <div
+    v-if="photoPreview"
+    class="flex items-center gap-3"
+  >
+    <img
+      :src="photoPreview"
+      :alt="editForm.name"
+      class="w-24 h-24 rounded-xl object-cover border border-primary"
+    >
+
+    <div>
+      <p class="text-sm font-medium text-default">
+        Нове фото
+      </p>
+
+      <p class="text-xs text-muted mt-1">
+        Фото готове до завантаження
+      </p>
     </div>
+  </div>
+
+  <!-- Поточне фото -->
+  <div
+    v-else-if="editForm.photo"
+    class="flex items-center gap-3"
+  >
+    <img
+      :src="editForm.photo"
+      :alt="editForm.name"
+      class="w-24 h-24 rounded-xl object-cover border border-border"
+    >
+
+    <div>
+      <p class="text-sm font-medium text-default">
+        Поточне фото
+      </p>
+
+      <p class="text-xs text-muted mt-1">
+        Це фото зараз використовується
+      </p>
+    </div>
+  </div>
+
+  <!-- Якщо фото немає -->
+  <div
+    v-else
+    class="w-24 h-24 rounded-xl border border-dashed border-border flex items-center justify-center text-muted"
+  >
+    <UIcon
+      name="i-lucide-user"
+      class="w-8 h-8"
+    />
+  </div>
+
+  <input
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    class="block w-full text-sm text-muted"
+    @change="onPhotoSelected"
+  />
+
+  <UButton
+    v-if="photoFile"
+    color="primary"
+    variant="soft"
+    :loading="photoUploading"
+    @click="uploadUserPhoto"
+  >
+    <UIcon name="i-lucide-upload" />
+    Завантажити нове фото
+  </UButton>
+
+</div>
 
     <input
       type="file"
