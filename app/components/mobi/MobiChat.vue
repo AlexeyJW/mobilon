@@ -1,10 +1,21 @@
 <script setup lang="ts">
 const mobi = useMobi()
+
+const open = computed({
+  get: () => mobi.open.value,
+  set: (value: boolean) => {
+    if (value) {
+      mobi.show()
+    } else {
+      mobi.hide()
+    }
+  }
+})
 </script>
 
 <template>
   <UModal
-    v-model:open="mobi.open"
+    v-model:open="open"
     :close="false"
     :dismissible="false"
     :ui="{

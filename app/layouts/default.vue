@@ -206,7 +206,7 @@
     <!-- Мобільна CTA -->
     <div class="fixed bottom-4 left-4 right-4 md:hidden z-40">
       <UButton
-        to="/#contact-form"
+        @click="navigateTo('/#contact-form')"
         color="primary"
         size="lg"
         block

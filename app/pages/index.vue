@@ -19,7 +19,11 @@
 <RevealOnScroll>
   <BrandMobile />
 </RevealOnScroll>
-    
+ 
+<RevealOnScroll>
+
+  <ContactMobile />
+</RevealOnScroll>
     
   </div>
 </template>    
