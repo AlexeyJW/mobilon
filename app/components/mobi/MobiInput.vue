@@ -30,7 +30,7 @@ async function send() {
       <UButton
         icon="i-lucide-send-horizontal"
         size="xl"
-        :loading="mobi.loading"
+      
         @click="send"
       />
 

@@ -164,6 +164,15 @@ async function changePassword() {
   Товари
 </UButton>
 <UButton
+  to="/admin/services"
+  icon="i-lucide-wrench"
+  color="primary"
+  :variant="route.path.startsWith('/admin/services') ? 'solid' : 'ghost'"
+  size="sm"
+>
+  Послуги
+</UButton>
+<UButton
   to="/admin/content"
   icon="i-lucide-panels-top-left"
   color="primary"
@@ -330,7 +339,16 @@ async function changePassword() {
           >
             Закупівлі
           </UButton>
-
+<UButton
+  to="/admin/services"
+  icon="i-lucide-wrench"
+  color="primary"
+  :variant="route.path.startsWith('/admin/services') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Послуги
+</UButton>
           <USeparator orientation="vertical" class="h-6" />
 
           <UButton

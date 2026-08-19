@@ -3,10 +3,7 @@ import { z } from 'zod'
 
 const config = useRuntimeConfig()
 
-console.log('TELEGRAM CONFIG:', {
-  hasToken: Boolean(config.telegramBotToken),
-  chatId: config.telegramChatId
-})
+
 const requestSchema = z.object({
   name: z.string().min(2, 'Імʼя закоротке'),
   phone: z.string().min(5, 'Телефон закороткий'),
@@ -19,11 +16,11 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event)
 
-    console.log('📦 BODY:', body)
+    
 
     const validatedData = requestSchema.parse(body)
 
-    console.log('✅ VALIDATED:', validatedData)
+   
 
     // 1. Знаходимо або створюємо клієнта
     const customer = await prisma.customer.upsert({
@@ -49,7 +46,7 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    console.log('👤 CUSTOMER:', customer.id)
+    
 
     // 2. Зберігаємо заявку
     const request = await prisma.request.create({
@@ -59,7 +56,7 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    console.log('📝 REQUEST:', request.id)
+   
 
     // 3. Відправляємо повідомлення в Telegram
     const config = useRuntimeConfig()
@@ -98,7 +95,7 @@ export default defineEventHandler(async (event) => {
       }
     )
 
-    console.log('✅ TELEGRAM MESSAGE SENT')
+   
 
     return {
       success: true,
