@@ -1,19 +1,20 @@
 <script setup lang="ts">
-const value = ref('all')
+ async function fetchConnection() {
+    try {
+      const response = await $fetch('/api/sync/dclink/dclink-test', {
+        method: 'POST'
+      })
+      console.log('Connection successful:', response)
+    } catch (error) {
+      console.error('Connection failed:', error)
+    }
+  }
 
-const items = [
-  { label: 'Усі', value: 'all' },
-  { label: 'Samsung', value: 'Samsung' },
-  { label: 'Apple', value: 'Apple' }
-]
+  fetchConnection()
 </script>
 
 <template>
   <div class="p-10">
-    <USelect
-      v-model="value"
-      :items="items"
-      class="w-64"
-    />
+    {{response}}
   </div>
 </template>

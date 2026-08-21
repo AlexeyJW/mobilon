@@ -7,7 +7,11 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
-    telegramChatId: process.env.TELEGRAM_CHAT_ID
+    telegramChatId: process.env.TELEGRAM_CHAT_ID,
+    
+    dclinkApiUrl: process.env.DCLINK_API_URL,
+    dclinkLogin: process.env.DCLINK_LOGIN,
+    dclinkPassword: process.env.DCLINK_PASSWORD
   },
 
   sitemap: {

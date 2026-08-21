@@ -188,7 +188,7 @@ model Service {
   name        String
   description String?
   price       Decimal  @db.Decimal(10, 2)
-
+  image       String?
   category    String?
   categoryId  Int?
   categoryRef ServiceCategory? @relation(fields: [categoryId], references: [id])
