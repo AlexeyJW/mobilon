@@ -1,71 +1,50 @@
 import bcrypt from 'bcryptjs'
-import crypto from 'crypto'
 import prisma from '../utils/prisma'
-
-const ADMIN_SECRET =
-  process.env.ADMIN_SECRET || 'admin-secret-default'
-
-const SESSION_MAX_AGE = 60 * 60 * 24
+import { createSession } from '../utils/auth'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  const login = String(body?.login || '').trim()
+  const username = String(body?.username || '').trim()
   const password = String(body?.password || '')
 
-  if (!login || !password) {
+  if (!username || !password) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Логін та пароль обов’язкові'
+      statusMessage: 'Username and password are required'
     })
   }
 
   const user = await prisma.user.findUnique({
     where: {
-      username: login
+      username
     }
   })
 
   if (!user || !user.active) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Невірний логін або пароль'
+      statusMessage: 'Invalid credentials'
     })
   }
 
-  const isValid = await bcrypt.compare(
+  const passwordValid = await bcrypt.compare(
     password,
     user.passwordHash
   )
 
-  if (!isValid) {
+  if (!passwordValid) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Невірний логін або пароль'
+      statusMessage: 'Invalid credentials'
     })
   }
 
-  const payload = `${Date.now()}|${user.id}|${crypto
-    .randomBytes(16)
-    .toString('hex')}`
-
-  const signature = crypto
-    .createHmac('sha256', ADMIN_SECRET)
-    .update(payload)
-    .digest('hex')
-
-  const token = `${payload}.${signature}`
-
-  setCookie(event, 'admin-session', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    sameSite: 'lax',
-    maxAge: SESSION_MAX_AGE
-  })
+  // Створюємо нову серверну сесію
+  await createSession(event, user.id)
 
   return {
-    success: true,
+    ok: true,
     user: {
       id: user.id,
       name: user.name,

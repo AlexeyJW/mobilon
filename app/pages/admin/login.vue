@@ -1,6 +1,6 @@
 <script setup>
 const form = reactive({
-  login: '',
+ username: '',
   password: ''
 })
 
@@ -34,7 +34,7 @@ async function login() {
 
       <div class="space-y-4">
         <UInput
-          v-model="form.login"
+          v-model="form.username"
           placeholder="Логін"
         />
 

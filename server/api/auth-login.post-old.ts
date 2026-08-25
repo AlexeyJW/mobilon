@@ -1,6 +1,11 @@
 import bcrypt from 'bcryptjs'
 import prisma from '../utils/prisma'
-import { createSession } from '../utils/auth'
+import crypto from 'crypto'
+
+const ADMIN_SECRET =
+  process.env.ADMIN_SECRET || 'admin-secret-default'
+
+const SESSION_MAX_AGE = 60 * 60 * 24
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -40,8 +45,22 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Створюємо нову серверну сесію
-  await createSession(event, user.id)
+  const payload = `${Date.now()}|${user.id}`
+
+  const signature = crypto
+    .createHmac('sha256', ADMIN_SECRET)
+    .update(payload)
+    .digest('hex')
+
+  const token = `${payload}.${signature}`
+
+  setCookie(event, 'admin-session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: SESSION_MAX_AGE,
+    path: '/'
+  })
 
   return {
     ok: true,

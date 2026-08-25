@@ -1,94 +1,23 @@
-import prisma from '../utils/prisma'
-import crypto from 'crypto'
-
-const ADMIN_SECRET =
-  process.env.ADMIN_SECRET || 'admin-secret-default'
-
-const SESSION_MAX_AGE = 60 * 60 * 24
+import { getCurrentUser } from '../utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const session = getCookie(event, 'admin-session')
+  const user = await getCurrentUser(event)
 
-  if (!session) {
+  if (!user) {
     throw createError({
       statusCode: 401,
-      statusMessage: 'Unauthorized'
-    })
-  }
-
-  const [payload, signature] = session.split('.')
-
-  if (!payload || !signature) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Invalid session'
-    })
-  }
-
-  const expected = crypto
-    .createHmac('sha256', ADMIN_SECRET)
-    .update(payload)
-    .digest('hex')
-
-  if (
-    signature.length !== expected.length ||
-    !crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected)
-    )
-  ) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Invalid session'
-    })
-  }
-
-  const parts = payload.split('|')
-
-  const timestamp = Number(parts[0])
-  const userId = Number(parts[1])
-
-  if (
-    Number.isNaN(timestamp) ||
-    Number.isNaN(userId)
-  ) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Invalid session'
-    })
-  }
-
-  const expiresAt = timestamp + SESSION_MAX_AGE * 1000
-
-  if (expiresAt <= Date.now()) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Session expired'
-    })
-  }
-
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId
-    },
-    select: {
-      id: true,
-      name: true,
-      username: true,
-      role: true,
-      active: true
-    }
-  })
-
-  if (!user || !user.active) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'User not found or inactive'
+      statusMessage: 'Користувач не авторизований'
     })
   }
 
   return {
     ok: true,
-    user
+    user: {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      position: user.position
+    }
   }
-})    
+})

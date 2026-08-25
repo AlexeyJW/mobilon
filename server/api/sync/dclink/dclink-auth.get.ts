@@ -22,4 +22,4 @@ export async function dclinkRequest(
     method: 'POST',
     body: formData
   })
-}
+}   

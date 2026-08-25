@@ -1,7 +1,9 @@
 import prisma from '../utils/prisma'
 
-export default defineEventHandler(async (event) => {
+import { requireAuth } from '~~/server/utils/auth'
 
+export default defineEventHandler(async (event) => {
+  await requireAuth(event)
   const query = getQuery(event)
   const status = query.status?.toString()
 
