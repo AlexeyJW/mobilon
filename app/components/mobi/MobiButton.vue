@@ -4,8 +4,8 @@ const mobi = useMobi()
 
 <template>
   <UButton
-  icon="i-lucide-message-circle"
-  size="lg"
+  icon="emojione-v1:blond-haired-person"
+  size="xl"
   color="primary"
   class="
     mobi-breathe
@@ -18,6 +18,8 @@ const mobi = useMobi()
   "
   @click="mobi.show()"
 >
-  Порадитись з Мобі
+  
+<UIcon name="i-lucide-message-circle" class="size-5" />
+Порадитись з Мобі
 </UButton>
 </template>
