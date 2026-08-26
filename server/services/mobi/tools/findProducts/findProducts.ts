@@ -55,9 +55,18 @@ export async function findProducts(input: FindProductsInput) {
                 sellPrice: priceFilter
               }
             ]
-          : [])
-      ]
-    },
+          : []),
+           ...(input.excludeProductIds?.length
+        ? [
+            {
+              id: {
+                notIn: input.excludeProductIds
+              }
+            }
+          ]
+        : [])
+    ]
+  },
 
     orderBy: {
       sortOrder: 'asc'

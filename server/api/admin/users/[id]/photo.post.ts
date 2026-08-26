@@ -62,12 +62,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  console.log('TEAM PHOTO UPLOAD:', {
-    userId: id,
-    type: file.type,
-    size: file.data.length
-  })
-
+  
   const base64 =
     `data:${file.type};base64,${file.data.toString('base64')}`
 
@@ -77,10 +72,7 @@ export default defineEventHandler(async (event) => {
     overwrite: true
   })
 
-  console.log(
-    'Cloudinary team photo uploaded:',
-    result.public_id
-  )
+ 
 
   await prisma.user.update({
     where: { id },

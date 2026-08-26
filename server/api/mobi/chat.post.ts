@@ -12,7 +12,8 @@ import mobiAgent from '../../services/mobi/agent'
     return await mobiAgent.chat(
       body.messages,
       body.lead,
-      body.mode
+      body.mode,
+      body.excludeProductIds || []
     )
 
   } catch (e) {

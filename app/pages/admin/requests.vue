@@ -30,7 +30,7 @@ async function updateStatus(id, status) {
 
   loading.value = true
 
-  console.log('STATUS UPDATE', id, status)
+ 
 
   try {
 

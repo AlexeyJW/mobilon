@@ -14,7 +14,6 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     
 
-      console.log('📦 BODY:', body)
   
     // validation
     const validatedData = requestSchema.parse(body)

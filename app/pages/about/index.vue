@@ -38,7 +38,7 @@ async function loadTeam() {
     }>('/api/team')
 
     team.value = result.users
-    console.log('Loaded team:', team.value)
+   
   } catch (error) {
     console.error('Failed to load team:', error)
   }

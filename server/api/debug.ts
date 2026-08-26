@@ -5,8 +5,7 @@ const prisma = new PrismaClient()
 
 export default defineEventHandler(async () => {
   // Перевірка 1: чи існує prisma
-  console.log('Prisma exists?', !!prisma)
-  console.log('Prisma.request exists?', !!prisma?.request)
+
   
   // Перевірка 2: спроба підключення
   try {

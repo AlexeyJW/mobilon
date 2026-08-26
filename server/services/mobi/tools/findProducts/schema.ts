@@ -11,7 +11,15 @@ export const FindProductsSchema = z.object({
   maxPrice: z
     .number()
     .optional()
-    .describe('Максимальна ціна товару, якщо клієнт вказав бюджет або верхню межу')
+    .describe('Максимальна ціна товару, якщо клієнт вказав бюджет або верхню межу'),
+  
+   excludeProductIds: z
+    .array(z.number().int())
+    .optional()
+    .default([])
+    .describe(
+      'ID товарів, які вже були показані клієнту або які клієнт попросив не пропонувати повторно'
+    )
 })
 
 export type FindProductsInput = z.infer<typeof FindProductsSchema>

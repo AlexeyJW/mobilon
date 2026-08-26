@@ -5,11 +5,11 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
 
   const body = await readBody(event)
-  console.log('POST /api/admin/services BODY:', body)
+
 
   const name = String(body?.name || '').trim()
   const description = String(body?.description || '').trim()
-console.log('POST /api/admin/services NAME:', name)
+
   const categoryId =
     body?.categoryId !== null &&
     body?.categoryId !== undefined &&

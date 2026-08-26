@@ -165,12 +165,7 @@ async function createService() {
     alert('Вкажіть коректну ціну')
     return
   }
-console.log('CREATE SERVICE FORM:', {
-  name: form.name,
-  description: form.description,
-  categoryId: form.categoryId,
-  price: form.price
-})
+
   saving.value = true
 
   try {

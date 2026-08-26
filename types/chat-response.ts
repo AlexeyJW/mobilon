@@ -9,4 +9,9 @@ export interface ChatResponse {
 
   mode: ConversationMode
 
+  products?: Array<{
+    id: number
+    name?: string
+   }>
+
 }

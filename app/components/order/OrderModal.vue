@@ -1,9 +1,8 @@
 <script setup lang="ts">
 const order = useOrder()
 
-watch(order.product, (v) => {
-  console.log('MODAL', v)
-})
+
+
 </script>
 
 <template>

@@ -7,9 +7,7 @@ const { product } = defineProps<{
 
 const order = useOrder()
 
-watch(order.product, (v) => {
-  console.log('CARD', v)
-})
+
 </script>
 
 <template>

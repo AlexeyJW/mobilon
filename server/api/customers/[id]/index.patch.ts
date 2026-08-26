@@ -5,8 +5,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event)
 
-  console.log('PATCH ID:', id)
-  console.log('PATCH BODY:', body)
+ 
 
   const updatedRequest = await prisma.customer.update({
     where: {

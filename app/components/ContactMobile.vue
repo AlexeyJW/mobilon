@@ -68,7 +68,7 @@ async function submitForm() {
       body: form
     })
 
-    console.log(response)
+   
 
     // alert('Заявка збережена')
     showToast()

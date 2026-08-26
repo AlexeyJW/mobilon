@@ -33,7 +33,7 @@ async function main() {
     }
   })
 
-  console.log(`Admin created/updated: ${admin.username}`)
+  
 }
 
 main()
