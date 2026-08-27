@@ -71,7 +71,7 @@ export async function getCurrentUser(event: H3Event) {
       user: true
     }
   })
- console.log('Current session:', session)
+ 
   if (!session) {
     return null
   }

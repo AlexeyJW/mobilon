@@ -12,13 +12,20 @@
 >
   Новий товар
 </UButton>
-<UCard>
-<div class="mb-4">
+<UCard class="overflow-visible">
+<div class="mb-4 flex flex-col sm:flex-row gap-3">
     <UInput
       v-model="search"
       icon="i-lucide-search"
       placeholder="Пошук товарів..."
+      class="flex-1"
     />
+    <USelect
+  v-model="statusFilter"
+  :items="statusOptions"
+  class="w-full sm:w-48"
+  :content="{ side: 'bottom', align: 'start' }"
+/>
   </div>
 
   <UTable
@@ -204,7 +211,8 @@ const deleteModal = ref(false)
 const deletingItem = ref<Product | null>(null)
 
 const search = ref('')
-
+const statusFilter = ref('all')
+  
 
 function createEmptyProduct() {
   return {
@@ -236,9 +244,9 @@ function createEmptyProduct() {
 }
 
 const statusOptions = [
-  { label: 'Всі', value: '' },
-  { label: 'Активні', value: true },
-  { label: 'Неактивні', value: false }
+  { label: 'Всі', value: 'all' },
+  { label: 'Активні', value: 'active' },
+  { label: 'Неактивні', value: 'inactive' }
 ]
 
 
@@ -396,13 +404,26 @@ const columns = [
 ]
 
 const filteredProducts = computed(() => {
-  if (!search.value) return products.value
+  let result = products.value
+  // Filter by status
+  if (statusFilter.value === 'active') {
+  result = result.filter(product => product.active)
+}
 
-  return products.value.filter(product =>
-    product.name.toLowerCase().includes(search.value.toLowerCase()) ||
-    product.brand.toLowerCase().includes(search.value.toLowerCase()) ||
-    product.slug.toLowerCase().includes(search.value.toLowerCase())
-  )
+if (statusFilter.value === 'inactive') {
+  result = result.filter(product => !product.active)
+}
+  // Filter by search
+  if (search.value) {
+    const query = search.value.toLowerCase()
+    result = result.filter(product =>
+      product.name.toLowerCase().includes(query) ||
+      product.brand.toLowerCase().includes(query) ||
+      product.slug.toLowerCase().includes(query)
+    )
+  }
+
+  return result
 })
 
 

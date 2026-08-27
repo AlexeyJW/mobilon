@@ -59,9 +59,7 @@ export default defineEventHandler(async (event) => {
     }
   })
 
-  console.log(
-    `Admin ${admin.username} changed password for ${user.username}`
-  )
+  
 
   return {
     success: true

@@ -2,6 +2,11 @@ import type { MobiMessage } from '../../types/mobi'
 import type { LeadDraft } from '../../types/lead'
 import type { ConversationMode } from '../../types/conversation'
 
+interface MobiProduct {
+  id: number
+  name?: string
+}
+
 export const useMobi = () => {
   const open = useState<boolean>('mobi-open', () => false)
 
@@ -25,10 +30,13 @@ export const useMobi = () => {
 
   const lead = useState<LeadDraft>('mobi-lead', () => ({}))
 
-  const mode = useState<ConversationMode>('mobi-mode', () => 'chat')
+  const mode = useState<ConversationMode>(
+    'mobi-mode',
+    () => 'chat'
+  )
 
-  // Товари, які вже були показані клієнту
-  const shownProductIds = useState<number[]>(
+  // Товари, які агент уже показував клієнту
+  const shownProducts = useState<MobiProduct[]>(
     'mobi-shown-products',
     () => []
   )
@@ -67,7 +75,7 @@ export const useMobi = () => {
     lead.value = {}
     mode.value = 'chat'
 
-    shownProductIds.value = []
+    shownProducts.value = []
     rejectedProductIds.value = []
   }
 
@@ -83,12 +91,17 @@ export const useMobi = () => {
     })
   }
 
-  function addShownProductIds(ids: number[]) {
-    shownProductIds.value = Array.from(
-      new Set([
-        ...shownProductIds.value,
-        ...ids
-      ])
+  function addShownProducts(products: MobiProduct[]) {
+    shownProducts.value = Array.from(
+      new Map(
+        [
+          ...shownProducts.value,
+          ...products
+        ].map(product => [
+          product.id,
+          product
+        ])
+      ).values()
     )
   }
 
@@ -110,11 +123,13 @@ export const useMobi = () => {
     addMessage('user', cleanText)
 
     try {
+      // ВАЖЛИВО:
+      // виключаємо тільки відхилені товари.
+      // Показані товари не є забороненими.
       const excludeProductIds = Array.from(
-        new Set([
-          ...shownProductIds.value,
-          ...rejectedProductIds.value
-        ])
+        new Set(
+          rejectedProductIds.value
+        )
       )
 
       const response = await $fetch<{
@@ -122,50 +137,59 @@ export const useMobi = () => {
         lead: LeadDraft
         mode: ConversationMode
 
-        // Бажано, щоб mobiAgent повертав знайдені товари
-        // з їхніми ID.
-        products?: Array<{
-          id: number
-        }>
+        products?: MobiProduct[]
 
-        // Якщо пізніше агент буде явно повертати
-        // відхилені товари.
         rejectedProductIds?: number[]
       }>('/api/mobi/chat', {
         method: 'POST',
+
         body: {
           messages: messages.value,
           lead: lead.value,
           mode: mode.value,
-          excludeProductIds
+
+          excludeProductIds,
+
+          // Передаємо AI товари,
+          // які він уже показував клієнту
+          shownProducts: shownProducts.value
         }
       })
 
-      addMessage('assistant', response.text)
+      addMessage(
+        'assistant',
+        response.text
+      )
 
       lead.value = response.lead
       mode.value = response.mode
 
-      // Запам'ятовуємо товари, які були показані
+      // Зберігаємо товари,
+      // які були показані клієнту
       if (response.products?.length) {
-        addShownProductIds(
-          response.products.map(product => product.id)
+        addShownProducts(
+          response.products
         )
       }
 
-      // Запам'ятовуємо товари, які були відхилені
+      // Зберігаємо відхилені товари
       if (response.rejectedProductIds?.length) {
-        response.rejectedProductIds.forEach(id => {
-          rejectProductId(id)
-        })
+        response.rejectedProductIds.forEach(
+          id => rejectProductId(id)
+        )
       }
+
     } catch (error) {
-      console.error('Mobi send error:', error)
+      console.error(
+        'Mobi send error:',
+        error
+      )
 
       addMessage(
         'assistant',
         'Вибачте, сталася помилка. Спробуйте ще раз.'
       )
+
     } finally {
       loading.value = false
     }
@@ -179,7 +203,7 @@ export const useMobi = () => {
     lead,
     mode,
 
-    shownProductIds,
+    shownProducts,
     rejectedProductIds,
 
     show,
@@ -189,7 +213,7 @@ export const useMobi = () => {
     send,
     addMessage,
 
-    addShownProductIds,
+    addShownProducts,
     rejectProductId
   }
 }
