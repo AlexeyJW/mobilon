@@ -24,7 +24,9 @@
 
   <ContactMobile />
 </RevealOnScroll>
-    
+ <RevealOnScroll>
+  <ContactMap />  
+ </RevealOnScroll>   
   </div>
 </template>    
 <script setup>
