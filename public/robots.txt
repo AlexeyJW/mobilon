@@ -1,5 +1,8 @@
 User-agent: *
-
 Allow: /
 
-Sitemap: https://mobilon-seven.vercel.app/sitemap.xml
+Disallow: /admin
+Disallow: /admin/
+Disallow: /test
+
+Sitemap: https://mobilon.com.ua/sitemap.xml

@@ -15,8 +15,13 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    siteUrl: 'https://mobilon-seven.vercel.app'
-  },
+        siteUrl: 'https://mobilon.com.ua',
+
+        exclude: [
+          '/admin/**',
+          '/test'
+        ]
+},
   htmlAttrs: {
     lang: 'uk'
 },
@@ -27,7 +32,7 @@ app: {
       lang: 'uk'
     },
 
-    title: 'Mobilon',
+    title: 'Mobilon — магазин телефонів та ремонт у Солотвині',
 
     titleTemplate: '%s',
 
@@ -66,6 +71,10 @@ app: {
       {
         rel: 'icon',
         href: '/favicon.ico'
+      },
+      {
+        rel: 'canonical',
+        href: 'https://mobilon.com.ua/'
       }
     ]
   }
