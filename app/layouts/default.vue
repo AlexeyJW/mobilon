@@ -7,7 +7,7 @@
         <div class="flex items-center justify-between h-14 sm:h-16">
           
           <!-- Логотип -->
-         <LogoMobilon/>
+         <LogoMobilon3 size="md"/>
 
           <!-- Десктопна навігація -->
           <nav class="hidden md:flex items-center gap-4 lg:gap-6">
