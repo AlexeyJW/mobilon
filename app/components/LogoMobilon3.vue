@@ -21,7 +21,7 @@ withDefaults(
   >
     <!-- LOGO -->
     <div
-      class="flex items-center whitespace-nowrap font-['Arial_Black',Arial,sans-serif] font-black leading-none tracking-[-0.045em]"
+      class="flex items-center whitespace-nowrap font-['Carlito',Arial,sans-serif] font-bold leading-none tracking-[-0.045em]"
       :class="{
         'text-[28px] sm:text-[30px]': size === 'sm',
         'text-[34px] sm:text-[38px] lg:text-[42px]': size === 'md',
