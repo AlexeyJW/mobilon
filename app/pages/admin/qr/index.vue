@@ -242,16 +242,14 @@ onMounted(() => {
               class="mt-6 flex justify-center"
             >
 
-              <div
-                class="rounded-2xl bg-white p-4 shadow-sm"
+            <div
+                class="w-full max-w-[392px] rounded-2xl bg-white p-4 shadow-sm"
               >
-
                 <canvas
                   ref="canvas"
-                  class="block h-auto w-[280px] sm:w-[360px]"
+                  class="mx-auto block h-auto w-full max-w-[360px]"
                 />
-
-              </div>
+          </div>
 
             </div>
 
