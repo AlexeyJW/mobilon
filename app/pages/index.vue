@@ -31,7 +31,7 @@
 </template>    
 <script setup>
 useSeoMeta({
-  title: 'Ремонт телефонів у Солотвині | Mobilon',
+  title: 'Продаж нових смартфонів та ремонт телефонів у Солотвині | Mobilon',
   description:
     'Ремонт телефонів Samsung, iPhone, Xiaomi та інших брендів у Солотвині. Заміна дисплеїв, акумуляторів, розʼємів, перенесення даних та налаштування смартфонів.',
   ogTitle: 'Ремонт телефонів у Солотвині | Mobilon',
@@ -44,7 +44,7 @@ useHead({
   link: [
     {
       rel: 'canonical',
-     href: '[https://mobilon-seven.vercel.app](https://mobilon-seven.vercel.app)'
+     href: '[https://mobilon.com.ua/](https://mobilon.com.ua/)'
     }
   ]
 })

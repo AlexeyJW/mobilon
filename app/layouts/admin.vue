@@ -124,14 +124,14 @@ async function changePassword() {
               Клієнти
             </UButton>
             <UButton
-  to="/admin/users"
-  icon="i-lucide-users-round"
-  color="primary"
-  :variant="route.path.startsWith('/admin/users') ? 'solid' : 'ghost'"
-  size="sm"
->
-  Співробітники
-</UButton>
+                to="/admin/users"
+                icon="i-lucide-users-round"
+                color="primary"
+                :variant="route.path.startsWith('/admin/users') ? 'solid' : 'ghost'"
+                size="sm"
+              >
+                Співробітники
+            </UButton>
             <UButton
               to="/admin/requests"
               icon="i-lucide-clipboard-list"
@@ -153,34 +153,43 @@ async function changePassword() {
               Закупівлі
             </UButton>
             
-  <UButton
-  to="/admin/products"
-  icon="i-lucide-smartphone"
-  color="primary"
-  :variant="route.path.startsWith('/admin/products') ? 'solid' : 'ghost'"
-  block
-  class="justify-start"
->
-  Товари
-</UButton>
-<UButton
-  to="/admin/services"
-  icon="i-lucide-wrench"
-  color="primary"
-  :variant="route.path.startsWith('/admin/services') ? 'solid' : 'ghost'"
-  size="sm"
->
-  Послуги
-</UButton>
-<UButton
-  to="/admin/content"
-  icon="i-lucide-panels-top-left"
-  color="primary"
-  :variant="route.path.startsWith('/admin/content') ? 'solid' : 'ghost'"
-  size="sm"
->
-  Контент
-</UButton>
+            <UButton
+            to="/admin/products"
+            icon="i-lucide-smartphone"
+            color="primary"
+            :variant="route.path.startsWith('/admin/products') ? 'solid' : 'ghost'"
+            block
+            class="justify-start"
+          >
+            Товари
+          </UButton>
+            <UButton
+              to="/admin/services"
+              icon="i-lucide-wrench"
+              color="primary"
+              :variant="route.path.startsWith('/admin/services') ? 'solid' : 'ghost'"
+              size="sm"
+            >
+              Послуги
+            </UButton>
+             <UButton
+              to="/admin/qr"
+              icon="i-lucide-qr-code"
+              color="primary"
+              :variant="route.path.startsWith('/admin/qr') ? 'solid' : 'ghost'"
+              size="sm"
+            >
+              QR Code
+            </UButton>
+            <UButton
+              to="/admin/content"
+              icon="i-lucide-panels-top-left"
+              color="primary"
+              :variant="route.path.startsWith('/admin/content') ? 'solid' : 'ghost'"
+              size="sm"
+            >
+              Контент
+            </UButton>
 
             <USeparator orientation="vertical" class="h-6" />
 
@@ -349,6 +358,15 @@ async function changePassword() {
 >
   Послуги
 </UButton>
+ <UButton
+              to="/admin/qr"
+              icon="i-lucide-qr-code"
+              color="primary"
+              :variant="route.path.startsWith('/admin/qr') ? 'solid' : 'ghost'"
+              size="sm"
+            >
+              QR Code
+            </UButton>
           <USeparator orientation="vertical" class="h-6" />
 
           <UButton

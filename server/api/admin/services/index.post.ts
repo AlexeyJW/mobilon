@@ -18,6 +18,21 @@ export default defineEventHandler(async (event) => {
       : null
 
   const price = Number(body?.price)
+  const priceFrom = Boolean(body?.priceFrom)
+
+  const sortOrder =
+    body?.sortOrder !== undefined &&
+    body?.sortOrder !== ''
+      ? Number(body.sortOrder)
+      : 0
+ 
+      if (!Number.isInteger(sortOrder) || sortOrder < 0) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: 'Invalid sort order'
+        })
+      }
+
 
   if (!name) {
     throw createError({
@@ -59,18 +74,22 @@ export default defineEventHandler(async (event) => {
   }
 
   const service = await prisma.service.create({
-    data: {
-      name,
-      description: description || null,
-      categoryId,
-      price,
-      active: true
-    },
+   data: {
+          name,
+          description: description || null,
+          categoryId,
+          price,
+          priceFrom,
+          sortOrder,
+          active: true
+        },
     select: {
       id: true,
       name: true,
       description: true,
       price: true,
+      priceFrom: true,
+      sortOrder: true,
       categoryId: true,
       categoryRef: {
         select: {

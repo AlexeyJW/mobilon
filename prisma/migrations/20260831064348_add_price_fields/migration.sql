@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Service" ADD COLUMN     "priceFrom" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "sortOrder" INTEGER NOT NULL DEFAULT 0;

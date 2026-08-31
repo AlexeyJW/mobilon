@@ -17,6 +17,9 @@
             <NuxtLink to="/services" class="text-muted hover:text-default transition-colors text-sm font-medium">
               Послуги
             </NuxtLink>
+            <NuxtLink to="/price" class="text-muted hover:text-default transition-colors text-sm font-medium">
+              Прайс
+            </NuxtLink>
             <NuxtLink to="/about" class="text-muted hover:text-default transition-colors text-sm font-medium">
               Про нас
             </NuxtLink>
@@ -85,6 +88,13 @@
             @click="isMobileMenuOpen = false"
           >
             Послуги
+          </NuxtLink>
+          <NuxtLink 
+            to="/price" 
+            class="block py-2 text-default hover:text-primary transition-colors font-medium"
+            @click="isMobileMenuOpen = false"
+          >
+            Прайс
           </NuxtLink>
           <NuxtLink 
             to="/about" 

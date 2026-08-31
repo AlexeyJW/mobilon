@@ -14,6 +14,9 @@ export default defineEventHandler(async (event) => {
       description: true,
       price: true,
       category: true,
+      categoryId: true,
+      priceFrom: true,
+      sortOrder: true,
       active: true,
       createdAt: true,
       updatedAt: true

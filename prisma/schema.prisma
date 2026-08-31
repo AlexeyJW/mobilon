@@ -188,6 +188,7 @@ model ServiceCategory {
   id        Int       @id @default(autoincrement())
   name      String    @unique
   active    Boolean   @default(true)
+  sortOrder Int       @default(0)
 
   services  Service[]
 
@@ -201,12 +202,15 @@ model Service {
   name        String
   description String?
   price       Decimal  @db.Decimal(10, 2)
+  priceFrom   Boolean  @default(false)
+
   image       String?
   category    String?
   categoryId  Int?
   categoryRef ServiceCategory? @relation(fields: [categoryId], references: [id])
 
   active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
