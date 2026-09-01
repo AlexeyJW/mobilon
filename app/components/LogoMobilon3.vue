@@ -23,6 +23,7 @@ withDefaults(
       'scale-100 origin-left': size === 'md',
       'scale-110 origin-left': size === 'lg',
     }"
+  @click="() => $router.push('/')"
   >
 
     <!-- LOGO -->

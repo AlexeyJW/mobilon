@@ -65,28 +65,32 @@
       <!-- Переваги -->
       <div class="mt-8 grid grid-cols-2 gap-3">
 
-        <div class="rounded-xl bg-elevated border border-border p-3 text-center">
+        <div class="rounded-xl bg-elevated border border-border p-3 text-center"
+        @click="() => $router.push('/products')">
           📱<br>
           <span class="font-medium">
             Смартфони
           </span>
         </div>
 
-        <div class="rounded-xl bg-elevated border border-border p-3 text-center">
+        <div class="rounded-xl bg-elevated border border-border p-3 text-center"
+        @click="() => $router.push('/services')">
           🛠<br>
           <span class="font-medium">
             Ремонт
           </span>
         </div>
 
-        <div class="rounded-xl bg-elevated border border-border p-3 text-center">
+        <div class="rounded-xl bg-elevated border border-border p-3 text-center"
+        @click="() => $router.push('/price')">
           🛡<br>
           <span class="font-medium">
             Захисне скло
           </span>
         </div>
 
-        <div class="rounded-xl bg-elevated border border-border p-3 text-center">
+        <div class="rounded-xl bg-elevated border border-border p-3 text-center"
+        @click="() => $router.push('/products')">
           🎧<br>
           <span class="font-medium">
             Аксесуари

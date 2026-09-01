@@ -6,7 +6,7 @@ const mobi = useMobi()
   <UButton
   icon="emojione-v1:blond-haired-person"
   size="xl"
-  color="primary"
+  color="secondary"
   class="
     mobi-breathe
     fixed

@@ -1,5 +1,6 @@
 <!-- components/BenefitsMobile.vue -->
 <template>
+  <h1 class="text-2xl font-bold text-center mb-6">Чому краще завітати до нас</h1>
   <section class="px-4 py-6">
     <div class="grid grid-cols-2 gap-4 text-center">
       <UCard v-for="item in items" :key="item.title">
