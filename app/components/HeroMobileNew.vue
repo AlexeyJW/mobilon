@@ -16,16 +16,28 @@
       </div>
 
       <!-- Badge -->
-      <div class="flex justify-center">
+       
+      <div class="flex flex-wrap justify-center gap-2">
         <UBadge
           color="primary"
           variant="soft"
           size="lg"
+          @click="() => $router.push('/#contact_map')"
         >
           📍 Солотвино
         </UBadge>
-      </div>
+       
+        <UBadge
+          color="primary"
+          variant="soft"
+          size="lg"
+          href = "tel:+380984455233"
+        >
+          📞 +38 (098 ) 445-52-33
+        </UBadge>
 
+      </div>
+       
       <!-- Заголовок -->
       <h1 class="mt-6 text-center text-4xl font-black leading-tight">
         Магазин смартфонів

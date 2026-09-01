@@ -18,14 +18,22 @@ async function generateQr() {
   generating.value = true
 
   try {
+    const container = canvas.value.parentElement
+
+    if (!container) return
+
+    const size = Math.min(
+      container.clientWidth,
+      360
+    )
+
     await QRCode.toCanvas(
       canvas.value,
       priceUrl,
       {
-        width: 500,
-        margin: 4,
-        errorCorrectionLevel: 'H',
-        type: 'image/png'
+        width: size,
+        margin: 3,
+        errorCorrectionLevel: 'H'
       }
     )
   } catch (error) {
@@ -34,6 +42,20 @@ async function generateQr() {
     generating.value = false
   }
 }
+
+function handleResize() {
+  generateQr()
+}
+
+onMounted(() => {
+  generateQr()
+
+  window.addEventListener('resize', handleResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+})
 
 function downloadQr() {
   if (!canvas.value) return
@@ -242,14 +264,12 @@ onMounted(() => {
               class="mt-6 flex justify-center"
             >
 
-            <div
-                class="w-full max-w-[392px] rounded-2xl bg-white p-4 shadow-sm"
-              >
-                <canvas
-                  ref="canvas"
-                  class="mx-auto block h-auto w-full max-w-[360px]"
-                />
-          </div>
+            <div class="w-full max-w-[360px] mx-auto rounded-2xl bg-white p-3 sm:p-4 shadow-sm">
+              <canvas
+                ref="canvas"
+                class="block w-full h-auto"
+              />
+            </div>
 
             </div>
 

@@ -20,7 +20,7 @@ const googleMapsUrl =
         </p>
       </div>
 
-      <div class="overflow-hidden rounded-2xl border border-default shadow-sm">
+      <div class="overflow-hidden rounded-2xl border border-default shadow-sm" id="contact_map">
         <iframe
           :src="`https://www.google.com/maps?q=${latitude},${longitude}&z=17&output=embed`"
           width="100%"
