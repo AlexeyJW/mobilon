@@ -27,14 +27,19 @@
           📍 Солотвино
         </UBadge>
        
-        <UBadge
-          color="primary"
-          variant="soft"
-          size="lg"
-          href = "tel:+380984455233"
+       <a
+          href="tel:+380984455233"
+          class="inline-flex"
         >
-          📞 +38 (098 ) 445-52-33
-        </UBadge>
+          <UBadge
+            color="primary"
+            variant="soft"
+            size="lg"
+            class="cursor-pointer"
+          >
+            📞 +38 (098) 445-52-33
+          </UBadge>
+        </a>
 
       </div>
        
