@@ -23,9 +23,7 @@
             <NuxtLink to="/about" class="text-muted hover:text-default transition-colors text-sm font-medium">
               Про нас
             </NuxtLink>
-            <NuxtLink to="/contacts" class="text-muted hover:text-default transition-colors text-sm font-medium">
-              Контакти
-            </NuxtLink>
+          
           </nav>
 
           <!-- Права частина -->
@@ -103,14 +101,7 @@
           >
             Про нас
           </NuxtLink>
-          <NuxtLink 
-            to="/contacts" 
-            class="block py-2 text-default hover:text-primary transition-colors font-medium"
-            @click="isMobileMenuOpen = false"
-          >
-            Контакти
-          </NuxtLink>
-          
+         
           <div class="w-px h-6 bg-border mx-1" />
           
           <UButton
