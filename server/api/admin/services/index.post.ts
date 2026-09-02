@@ -9,7 +9,11 @@ export default defineEventHandler(async (event) => {
 
   const name = String(body?.name || '').trim()
   const description = String(body?.description || '').trim()
-
+const image =
+  typeof body?.image === 'string' &&
+  body.image.trim()
+    ? body.image.trim()
+    : null
   const categoryId =
     body?.categoryId !== null &&
     body?.categoryId !== undefined &&
@@ -74,20 +78,22 @@ export default defineEventHandler(async (event) => {
   }
 
   const service = await prisma.service.create({
-   data: {
-          name,
-          description: description || null,
-          categoryId,
-          price,
-          priceFrom,
-          sortOrder,
-          active: true
-        },
+  data: {
+        name,
+        description: description || null,
+        image,
+        categoryId,
+        price,
+        priceFrom,
+        sortOrder,
+        active: true
+      },
     select: {
       id: true,
       name: true,
       description: true,
       price: true,
+      image: true,
       priceFrom: true,
       sortOrder: true,
       categoryId: true,

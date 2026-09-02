@@ -18,6 +18,16 @@ export default defineEventHandler(async (event) => {
   const name = String(body?.name || '').trim()
   const description = String(body?.description || '').trim()
 
+  // -------------------------
+  // Image
+  // -------------------------
+
+  const image =
+    typeof body?.image === 'string' &&
+    body.image.trim()
+      ? body.image.trim()
+      : null
+
   const price = Number(body?.price)
 
   const priceFrom =
@@ -111,6 +121,7 @@ export default defineEventHandler(async (event) => {
       data: {
         name,
         description: description || null,
+        image,
         price,
         priceFrom,
         sortOrder,
@@ -122,6 +133,7 @@ export default defineEventHandler(async (event) => {
         id: true,
         name: true,
         description: true,
+        image: true,
         price: true,
         priceFrom: true,
         sortOrder: true,

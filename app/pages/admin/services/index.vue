@@ -23,6 +23,7 @@ interface Service {
   name: string
   description: string | null
   price: string | number
+  image: string | null
   priceFrom: boolean
   sortOrder: number
   category: string | null
@@ -69,7 +70,8 @@ const form = reactive({
   categoryId: null as number | null,
   price: '',
   priceFrom: false,
-  sortOrder: 0
+  sortOrder: 0,
+  image: ''
 })
 
 const editForm = reactive({
@@ -79,7 +81,8 @@ const editForm = reactive({
   price: '',
   priceFrom: false,
   sortOrder: 0,
-  active: true
+  active: true,
+  image: '' 
 })
 
 /* ==================================================
@@ -149,6 +152,66 @@ async function loadServices() {
   }
 }
 
+async function uploadServiceImage(file: File) {
+  const formData = new FormData()
+
+  formData.append('file', file)
+
+  const result = await $fetch<{
+    imageUrl: string
+    imageId: string
+    width: number
+    height: number
+  }>('/api/admin/services/upload', {
+    method: 'POST',
+    body: formData
+  })
+
+  return result.imageUrl
+}
+
+async function handleServiceImageUpload(
+  event: Event,
+  mode: 'create' | 'edit'
+) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) {
+    return
+  }
+
+  if (!file.type.startsWith('image/')) {
+    alert('Оберіть зображення')
+    input.value = ''
+    return
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    alert('Максимальний розмір фото — 10 МБ')
+    input.value = ''
+    return
+  }
+
+  try {
+    const imageUrl = await uploadServiceImage(file)
+
+    if (mode === 'create') {
+      form.image = imageUrl
+    } else {
+      editForm.image = imageUrl
+    }
+  } catch (error: any) {
+    console.error('Failed to upload service image:', error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося завантажити фото'
+    )
+  } finally {
+    input.value = ''
+  }
+}
 /* ==================================================
    INITIAL LOAD
 ================================================== */
@@ -171,6 +234,7 @@ function openCreateModal() {
   form.price = ''
   form.priceFrom = false
   form.sortOrder = 0
+  form.image = ''
 
   showModal.value = true
 }
@@ -208,6 +272,7 @@ async function createService() {
         price,
         priceFrom: form.priceFrom,
         sortOrder: form.sortOrder,
+        image: form.image || null,
         active: true
       }
     })
@@ -241,6 +306,7 @@ function openEditModal(service: Service) {
   editForm.priceFrom = service.priceFrom
   editForm.sortOrder = service.sortOrder
   editForm.active = service.active
+  editForm.image = service.image || ''
 
   showEditModal.value = true
 }
@@ -285,6 +351,7 @@ async function updateService() {
           price,
           priceFrom: editForm.priceFrom,
           sortOrder: editForm.sortOrder,
+          image: editForm.image || null,  
           active: editForm.active
         }
       }
@@ -521,7 +588,9 @@ function formatDate(date: string) {
 
           <thead>
             <tr class="border-b border-border">
-
+              <th class="w-20 px-3 py-3 text-center">
+                Фото
+              </th>
               <th class="px-3 py-3 text-left">
                 Послуга
               </th>
@@ -560,7 +629,25 @@ function formatDate(date: string) {
               :key="service.id"
               class="border-b border-border last:border-0"
             >
+              <td class="px-3 py-3">
+  <div
+    class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted"
+  >
+    <img
+      v-if="service.image"
+      :src="service.image"
+      :alt="service.name"
+      class="h-full w-full object-cover"
+      loading="lazy"
+    />
 
+    <UIcon
+      v-else
+      name="i-lucide-image"
+      class="size-6 text-muted"
+    />
+  </div>
+</td>
               <td class="px-3 py-3">
 
                 <p class="font-medium text-default">
@@ -872,6 +959,60 @@ function formatDate(date: string) {
               />
 
             </UFormField>
+            <UFormField label="Фото">
+
+  <div class="space-y-3">
+
+    <div
+      v-if="form.image"
+      class="relative overflow-hidden rounded-xl border border-border"
+    >
+      <img
+        :src="form.image"
+        alt="Фото послуги"
+        class="h-48 w-full object-cover"
+      />
+
+      <UButton
+        icon="i-lucide-x"
+        color="error"
+        variant="solid"
+        size="sm"
+        class="absolute right-2 top-2"
+        @click="form.image = ''"
+      />
+    </div>
+
+    <label
+      v-else
+      class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition hover:border-primary"
+    >
+      <UIcon
+        name="i-lucide-image-plus"
+        class="mb-2 size-8 text-muted"
+      />
+
+      <span class="text-sm font-medium">
+        Додати фото
+      </span>
+
+      <span class="mt-1 text-xs text-muted">
+        JPG, PNG або WEBP до 10 МБ
+      </span>
+
+      <input
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="
+          handleServiceImageUpload($event, 'create')
+        "
+      />
+    </label>
+
+  </div>
+
+</UFormField>
 
             <UFormField label="Ціна">
 
@@ -1005,7 +1146,60 @@ function formatDate(date: string) {
               />
 
             </UFormField>
+<UFormField label="Фото">
 
+  <div class="space-y-3">
+
+    <div
+      v-if="editForm.image"
+      class="relative overflow-hidden rounded-xl border border-border"
+    >
+      <img
+        :src="editForm.image"
+        alt="Фото послуги"
+        class="h-48 w-full object-cover"
+      />
+
+      <UButton
+        icon="i-lucide-x"
+        color="error"
+        variant="solid"
+        size="sm"
+        class="absolute right-2 top-2"
+        @click="editForm.image = ''"
+      />
+    </div>
+
+    <label
+      v-else
+      class="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-center transition hover:border-primary"
+    >
+      <UIcon
+        name="i-lucide-image-plus"
+        class="mb-2 size-8 text-muted"
+      />
+
+      <span class="text-sm font-medium">
+        Додати фото
+      </span>
+
+      <span class="mt-1 text-xs text-muted">
+        JPG, PNG або WEBP до 10 МБ
+      </span>
+
+      <input
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="
+          handleServiceImageUpload($event, 'edit')
+        "
+      />
+    </label>
+
+  </div>
+
+</UFormField>
             <UFormField label="Ціна">
 
               <UInput

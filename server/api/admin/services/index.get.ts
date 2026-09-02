@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
       name: true,
       description: true,
       price: true,
+      image: true,
       category: true,
       categoryId: true,
       priceFrom: true,
