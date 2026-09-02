@@ -5,9 +5,15 @@ export default defineEventHandler(async (event) => {
   await requireAdmin(event)
 
   const services = await prisma.service.findMany({
-    orderBy: {
-      createdAt: 'desc'
-    },
+    orderBy: [
+      {
+        sortOrder: 'asc'
+      },
+      {
+        createdAt: 'desc'
+      }
+    ],
+
     select: {
       id: true,
       name: true,
@@ -19,7 +25,14 @@ export default defineEventHandler(async (event) => {
       sortOrder: true,
       active: true,
       createdAt: true,
-      updatedAt: true
+      updatedAt: true,
+
+      categoryRef: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
     }
   })
 

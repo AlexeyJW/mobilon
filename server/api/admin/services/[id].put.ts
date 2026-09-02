@@ -6,53 +6,42 @@ export default defineEventHandler(async (event) => {
 
   const id = Number(event.context.params?.id)
 
-  if (!id || Number.isNaN(id)) {
+  if (!Number.isInteger(id)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid service id'
+      statusMessage: 'Invalid service ID'
     })
   }
 
   const body = await readBody(event)
 
-  const service = await prisma.service.findUnique({
-    where: { id }
-  })
-
-  if (!service) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Service not found'
-    })
-  }
-
   const name = String(body?.name || '').trim()
   const description = String(body?.description || '').trim()
 
-  const categoryId =
-    body?.categoryId !== null &&
-    body?.categoryId !== undefined &&
-    body?.categoryId !== ''
-      ? Number(body.categoryId)
-      : null
-
   const price = Number(body?.price)
-
-  const active =
-    typeof body?.active === 'boolean'
-      ? body.active
-      : service.active
 
   const priceFrom =
     typeof body?.priceFrom === 'boolean'
       ? body.priceFrom
-      : service.priceFrom
+      : false
 
   const sortOrder =
     body?.sortOrder !== undefined &&
     body?.sortOrder !== ''
       ? Number(body.sortOrder)
-      : service.sortOrder
+      : 0
+
+  const categoryId =
+    body?.categoryId !== undefined &&
+    body?.categoryId !== null &&
+    body?.categoryId !== ''
+      ? Number(body.categoryId)
+      : null
+
+  const active =
+    typeof body?.active === 'boolean'
+      ? body.active
+      : true
 
   // -------------------------
   // Validation
@@ -73,16 +62,9 @@ export default defineEventHandler(async (event) => {
   }
 
   if (
-    categoryId !== null &&
-    (!Number.isInteger(categoryId) || categoryId <= 0)
+    !Number.isInteger(sortOrder) ||
+    sortOrder < 0
   ) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Invalid category'
-    })
-  }
-
-  if (!Number.isInteger(sortOrder) || sortOrder < 0) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Invalid sort order'
@@ -94,65 +76,72 @@ export default defineEventHandler(async (event) => {
   // -------------------------
 
   if (categoryId !== null) {
-    const categoryRef = await prisma.serviceCategory.findUnique({
-      where: {
-        id: categoryId
-      }
-    })
+    const category =
+      await prisma.serviceCategory.findUnique({
+        where: {
+          id: categoryId
+        }
+      })
 
-    if (!categoryRef || !categoryRef.active) {
+    if (!category) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Category not found or inactive'
+        statusMessage: 'Category not found'
+      })
+    }
+
+    if (!category.active) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Category is inactive'
       })
     }
   }
 
   // -------------------------
-  // Update
+  // Update service
   // -------------------------
 
-  const updatedService = await prisma.service.update({
-    where: {
-      id
-    },
-
-    data: {
-      name,
-      description: description || null,
-      categoryId,
-      price,
-      priceFrom,
-      sortOrder,
-      active
-    },
-
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      price: true,
-
-      categoryId: true,
-
-      categoryRef: {
-        select: {
-          id: true,
-          name: true
-        }
+  const service =
+    await prisma.service.update({
+      where: {
+        id
       },
 
-      priceFrom: true,
-      sortOrder: true,
-      active: true,
+      data: {
+        name,
+        description: description || null,
+        price,
+        priceFrom,
+        sortOrder,
+        categoryId,
+        active
+      },
 
-      createdAt: true,
-      updatedAt: true
-    }
-  })
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        priceFrom: true,
+        sortOrder: true,
+        category: true,
+        categoryId: true,
+        active: true,
+        createdAt: true,
+        updatedAt: true,
+
+        categoryRef: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    })
 
   return {
     success: true,
-    service: updatedService
+    service
   }
 })
