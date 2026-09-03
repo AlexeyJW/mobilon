@@ -67,64 +67,111 @@
         </div>
       </div>
 
-      <!-- Мобільне меню -->
-      <div 
-        v-if="isMobileMenuOpen" 
-        class="md:hidden bg-default"
-      >
-        <div class="container mx-auto px-4 py-4 space-y-3">
-          <NuxtLink 
-            to="/" 
-            class="block py-2 text-default hover:text-primary transition-colors font-medium"
-            @click="isMobileMenuOpen = false"
-          >
-            Головна
-          </NuxtLink>
-          <NuxtLink 
-            to="/services" 
-            class="block py-2 text-default hover:text-primary transition-colors font-medium"
-            @click="isMobileMenuOpen = false"
-          >
-            Послуги
-          </NuxtLink>
-          <NuxtLink 
-            to="/price" 
-            class="block py-2 text-default hover:text-primary transition-colors font-medium"
-            @click="isMobileMenuOpen = false"
-          >
-            Прайс
-          </NuxtLink>
-          <NuxtLink 
-            to="/about" 
-            class="block py-2 text-default hover:text-primary transition-colors font-medium"
-            @click="isMobileMenuOpen = false"
-          >
-            Про нас
-          </NuxtLink>
-         
-          <div class="w-px h-6 bg-border mx-1" />
-          
-          <UButton
-            to="/admin"
-            icon="i-lucide-shield"
-            color="primary"
-            variant="solid"
-            block
-            @click="isMobileMenuOpen = false"
-          >
-            Адмінка
-          </UButton>
+     <!-- Мобільне меню -->
+<Transition
+    enter-active-class="transition-all duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]"
+    enter-from-class="opacity-0 -translate-y-4 max-h-0"
+    enter-to-class="opacity-100 translate-y-0 max-h-[600px]"
+    leave-active-class="transition-all duration-250 ease-in"
+    leave-from-class="opacity-100 translate-y-0 max-h-[600px]"
+    leave-to-class="opacity-0 -translate-y-4 max-h-0"
+  >
+  <div
+    v-if="isMobileMenuOpen"
+     class="absolute left-0 right-0 top-full md:hidden bg-default overflow-hidden shadow-lg"
+  >
+    <div class="container mx-auto px-4 py-4 space-y-1">
 
-          <UButton
-            to="/#contact-form"
-            color="primary"
-            block
-            @click="isMobileMenuOpen = false"
-          >
-            Замовити
-          </UButton>
-        </div>
-      </div>
+      <NuxtLink
+        to="/"
+       
+        :class="[
+          'block rounded-lg px-3 py-2 font-medium transition-colors',
+          isActive('/')
+            ? 'text-primary bg-primary/10'
+            : 'text-default hover:text-primary hover:bg-primary/5'
+         ]"
+        @click="isMobileMenuOpen = false"
+      >
+        Головна
+      </NuxtLink>
+ <NuxtLink
+        to="/products"
+         :class="[
+          'block rounded-lg px-3 py-2 font-medium transition-colors',
+          isActive('/products')
+            ? 'text-primary bg-primary/10'
+            : 'text-default hover:text-primary hover:bg-primary/5'
+         ]"
+        @click="isMobileMenuOpen = false"
+      >
+        Товари
+      </NuxtLink>
+
+      <NuxtLink
+        to="/services"
+         :class="[
+          'block rounded-lg px-3 py-2 font-medium transition-colors',
+          isActive('/services')
+            ? 'text-primary bg-primary/10'
+            : 'text-default hover:text-primary hover:bg-primary/5'
+         ]"
+        @click="isMobileMenuOpen = false"
+      >
+        Послуги
+      </NuxtLink>
+
+      <NuxtLink
+        to="/price"
+         :class="[
+          'block rounded-lg px-3 py-2 font-medium transition-colors',
+          isActive('/price')
+            ? 'text-primary bg-primary/10'
+            : 'text-default hover:text-primary hover:bg-primary/5'
+         ]"
+        @click="isMobileMenuOpen = false"
+      >
+        Прайс
+      </NuxtLink>
+
+      <NuxtLink
+        to="/about"
+         :class="[
+          'block rounded-lg px-3 py-2 font-medium transition-colors',
+          isActive('/about')
+            ? 'text-primary bg-primary/10'
+            : 'text-default hover:text-primary hover:bg-primary/5'
+         ]"
+        @click="isMobileMenuOpen = false"
+      >
+        Про нас
+      </NuxtLink>
+
+      <div class="w-px h-6 bg-border mx-1" />
+
+      <UButton
+        to="/admin"
+        icon="i-lucide-shield"
+        color="primary"
+        variant="solid"
+        block
+        @click="isMobileMenuOpen = false"
+      >
+        Адмінка
+      </UButton>
+
+      <UButton
+        to="/#contact-form"
+        color="primary"
+        block
+        @click="isMobileMenuOpen = false"
+      >
+        Замовити
+      </UButton>
+
+    </div>
+  </div>
+</Transition>
     </header>
 
     <!-- Основний контент -->
@@ -226,10 +273,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const isMobileMenuOpen = ref(false)
+const route = useRoute()
+const isActive = (path: string) => {
+  return route.path === path
+}
 
-watch(() => useRoute().path, () => {
+
+watch(() => route.path, () => {
   isMobileMenuOpen.value = false
 })
 </script>
