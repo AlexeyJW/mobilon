@@ -274,14 +274,18 @@
 </template>
 
 <script setup lang="ts">
-const isMobileMenuOpen = ref(false)
 const route = useRoute()
+
+const isMobileMenuOpen = ref(false)
+
 const isActive = (path: string) => {
   return route.path === path
 }
 
-
-watch(() => route.path, () => {
-  isMobileMenuOpen.value = false
-})
+watch(
+  () => route.path,
+  () => {
+    isMobileMenuOpen.value = false
+  }
+)
 </script>
