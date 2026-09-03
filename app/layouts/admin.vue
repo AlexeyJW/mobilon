@@ -1,5 +1,5 @@
 <!-- layouts/admin.vue -->
-<script setup>
+<script setup lang="ts">
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
 const isActive = (path: string) => {
