@@ -1489,4 +1489,3 @@ function formatDate(date: string) {
 
   </div>
 </template>
-

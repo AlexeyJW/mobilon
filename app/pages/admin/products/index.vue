@@ -224,6 +224,8 @@ function createEmptyProduct() {
     brand: '',
     category: '',
 
+    specifications: {},
+
     buyPrice: 0,
     sellPrice: 0,
     quantity: 0,
@@ -268,16 +270,54 @@ function openCreateModal() {
   isModalOpen.value = true
 }
 
-function editProduct(product: Product) {
-  editingItem.value = product
+async function editProduct(product: Product) {
+  try {
+    editingItem.value = product
 
-  form.value = {
-    ...product
+    const fullProduct = await $fetch(
+      `/api/products/${product.id}`
+    )
+
+    const specifications: Record<string, any> = {}
+
+    for (const item of fullProduct.specifications || []) {
+      if (item.valueNumber !== null) {
+        specifications[item.specification.key] =
+          item.valueNumber
+      }
+      else if (item.valueBoolean !== null) {
+        specifications[item.specification.key] =
+          item.valueBoolean
+      }
+      else if (item.option) {
+        specifications[item.specification.key] =
+          item.option.value
+      }
+      else if (item.valueText !== null) {
+        specifications[item.specification.key] =
+          item.valueText
+      }
+    }
+
+    form.value = {
+      ...fullProduct,
+      specifications
+    }
+
+    isModalOpen.value = true
+
+  } catch (error) {
+
+    console.error('Помилка завантаження товару:', error)
+
+    toast.add({
+      title: 'Помилка',
+      description: 'Не вдалося завантажити характеристики товару',
+      color: 'error',
+      icon: 'i-lucide-circle-alert'
+    })
   }
-
-  isModalOpen.value = true
 }
-
 function closeCreateModal() {
   
   isModalOpen.value = false
@@ -291,10 +331,10 @@ async function saveProduct() {
     submitting.value = true
 
     if (editingItem.value) {
-      await $fetch(`/api/products/by-slug/${editingItem.value.slug}`, {
-        method: 'PUT',
-        body: form.value
-      })
+     await $fetch(`/api/products/${editingItem.value.id}`, {
+  method: 'PUT',
+  body: form.value
+})
     } else {
       await $fetch('/api/products', {
         method: 'POST',

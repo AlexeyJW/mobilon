@@ -57,9 +57,16 @@ model PurchaseItem {
 model Product {
   id Int @id @default(autoincrement())
 
-  name             String
-  brand            String
-  category         String
+  name String
+
+  brand    String
+  brandId  Int?
+  brandRef Brand? @relation(fields: [brandId], references: [id])
+
+  category    String
+  categoryId  Int?
+  categoryRef Category? @relation(fields: [categoryId], references: [id])
+
   slug             String? @unique
   shortDescription String?
   description      String?
@@ -78,11 +85,142 @@ model Product {
 
   active Boolean @default(true)
 
-  sortOrder     Int      @default(0)
+  sortOrder     Int  @default(0)
   featuredOrder Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  leads         Lead[]
+
+  specifications ProductSpecification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads Lead[]
+
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([active, quantity])
+}
+
+model Brand {
+  id Int @id @default(autoincrement())
+
+  name String
+  slug String @unique
+
+  active Boolean @default(true)
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+
+  name String
+  slug String @unique
+
+  parentId Int?
+  parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryChildren")
+
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  products       Product[]
+  specifications CategorySpecification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SpecificationType {
+  TEXT
+  NUMBER
+  BOOLEAN
+  SELECT
+  MULTISELECT
+}
+
+model Specification {
+  id Int @id @default(autoincrement())
+
+  name String
+  key  String @unique
+
+  type SpecificationType
+  unit String?
+
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  options    SpecificationOption[]
+  categories CategorySpecification[]
+  products   ProductSpecification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SpecificationOption {
+  id Int @id @default(autoincrement())
+
+  specificationId Int
+  specification   Specification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+
+  label String
+  value String
+
+  sortOrder Int @default(0)
+
+  productSpecifications ProductSpecification[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([specificationId, value])
+  @@index([specificationId])
+}
+
+model CategorySpecification {
+  id Int @id @default(autoincrement())
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  specificationId Int
+  specification   Specification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+
+  required  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  @@unique([categoryId, specificationId])
+  @@index([categoryId])
+  @@index([specificationId])
+}
+
+model ProductSpecification {
+  id Int @id @default(autoincrement())
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  specificationId Int
+  specification   Specification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+
+  optionId Int?
+  option   SpecificationOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+
+  valueText    String?
+  valueNumber  Float?
+  valueBoolean Boolean?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, specificationId])
+  @@index([productId])
+  @@index([specificationId])
+  @@index([optionId])
 }
 
 model Order {
@@ -164,57 +302,54 @@ model User {
   active       Boolean  @default(true)
   showOnAbout  Boolean  @default(true)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  sessions     Session[]
+  sessions Session[]
 }
 
 model Session {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  tokenHash String   @unique
+  tokenHash String @unique
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   revokedAt DateTime?
 }
 
 model ServiceCategory {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  active    Boolean   @default(true)
-  sortOrder Int       @default(0)
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
 
-  services  Service[]
+  services Service[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Service {
-  id          Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   name        String
   description String?
-  price       Decimal  @db.Decimal(10, 2)
-  priceFrom   Boolean  @default(false)
+  price       Decimal @db.Decimal(10, 2)
+  priceFrom   Boolean @default(false)
 
   image       String?
   category    String?
   categoryId  Int?
   categoryRef ServiceCategory? @relation(fields: [categoryId], references: [id])
 
-  active      Boolean  @default(true)
-  sortOrder   Int      @default(0)
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
-
-
-

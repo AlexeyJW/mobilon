@@ -14,6 +14,9 @@
             <NuxtLink to="/" class="text-muted hover:text-default transition-colors text-sm font-medium">
               Головна
             </NuxtLink>
+            <NuxtLink to="/catalog" class="text-muted hover:text-default transition-colors text-sm font-medium">
+              Товари
+            </NuxtLink>
             <NuxtLink to="/services" class="text-muted hover:text-default transition-colors text-sm font-medium">
               Послуги
             </NuxtLink>
@@ -96,10 +99,10 @@
         Головна
       </NuxtLink>
  <NuxtLink
-        to="/products"
+        to="/catalog"
          :class="[
           'block rounded-lg px-3 py-2 font-medium transition-colors',
-          isActive('/products')
+          isActive('/catalog')
             ? 'text-primary bg-primary/10'
             : 'text-default hover:text-primary hover:bg-primary/5'
          ]"
