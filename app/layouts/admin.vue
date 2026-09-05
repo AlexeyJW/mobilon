@@ -369,6 +369,16 @@ async function changePassword() {
   Послуги
 </UButton>
  <UButton
+            to="/admin/catalog"
+            icon="i-lucide-users"
+            color="primary"
+            :variant="route.path.startsWith('/admin/catalog') ? 'solid' : 'ghost'"
+            block
+            class="justify-start"
+          >
+            Редагування категорій
+          </UButton>
+ <UButton
               to="/admin/qr"
               icon="i-lucide-qr-code"
               color="primary"
