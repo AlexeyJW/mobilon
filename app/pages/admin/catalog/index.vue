@@ -26,11 +26,60 @@ const {
   }
 )
 
+/* ==================================================
+   MODALS
+================================================== */
+
 const categoryModal = ref(false)
 const specificationModal = ref(false)
+const categorySpecificationsModal = ref(false)
+
+const categoryEditModal = ref(false)
+const categoryEditSaving = ref(false)
+
+const editingCategory = ref<any>(null)
+
+const categoryEditForm = ref({
+  name: '',
+  slug: '',
+  parentId: null as number | null,
+  sortOrder: 0,
+  active: true
+})
+
+/* ==================================================
+   SAVING
+================================================== */
 
 const categorySaving = ref(false)
 const specificationSaving = ref(false)
+
+const specificationEditModal = ref(false)
+const specificationEditSaving = ref(false)
+
+const editingSpecification = ref<any>(null)
+
+const specificationEditForm = ref({
+  name: '',
+  key: '',
+  type: 'TEXT',
+  unit: '',
+  sortOrder: 0,
+  active: true,
+
+  options: [] as {
+    id?: number
+    label: string
+    value: string
+    sortOrder: number
+  }[]
+})
+
+const categorySpecificationsSaving = ref(false)
+
+/* ==================================================
+   CATEGORY FORM
+================================================== */
 
 const categoryForm = ref({
   name: '',
@@ -39,6 +88,10 @@ const categoryForm = ref({
   sortOrder: 0,
   active: true
 })
+
+/* ==================================================
+   SPECIFICATION FORM
+================================================== */
 
 const specificationForm = ref({
   name: '',
@@ -77,6 +130,68 @@ const specificationTypes = [
   }
 ]
 
+/* ==================================================
+   CATEGORY OPTIONS
+================================================== */
+function openCategoryEditModal(category: any) {
+  editingCategory.value = category
+
+  categoryEditForm.value = {
+    name: category.name ?? '',
+    slug: category.slug ?? '',
+    parentId: category.parentId ?? null,
+    sortOrder: category.sortOrder ?? 0,
+    active: category.active ?? true
+  }
+
+  categoryEditModal.value = true
+}
+
+async function saveCategoryEdit() {
+  if (!editingCategory.value) {
+    return
+  }
+
+  try {
+    categoryEditSaving.value = true
+
+    await $fetch(
+      `/api/admin/catalog/categories/${editingCategory.value.id}`,
+      {
+        method: 'PUT',
+        body: categoryEditForm.value
+      }
+    )
+
+    await refreshCategories()
+
+    categoryEditModal.value = false
+
+    toast.add({
+      title: 'Категорію оновлено',
+      description: categoryEditForm.value.name,
+      color: 'success',
+      icon: 'i-lucide-check-circle'
+    })
+  }
+  catch (error: any) {
+    console.error(error)
+
+    toast.add({
+      title: 'Помилка',
+      description:
+        error?.data?.message ||
+        error?.message ||
+        'Не вдалося оновити категорію',
+      color: 'error'
+    })
+  }
+  finally {
+    categoryEditSaving.value = false
+  }
+}
+
+
 const categoryOptions = computed(() => {
   return categories.value.map(category => ({
     label: category.name,
@@ -84,8 +199,9 @@ const categoryOptions = computed(() => {
   }))
 })
 
-const categorySpecificationsModal = ref(false)
-const categorySpecificationsSaving = ref(false)
+/* ==================================================
+   CATEGORY SPECIFICATIONS
+================================================== */
 
 const selectedCategoryForSpecifications = ref<any>(null)
 
@@ -93,9 +209,11 @@ const categorySpecificationsForm = ref<
   {
     specificationId: number
     required: boolean
+    filterable: boolean
     sortOrder: number
   }[]
 >([])
+
 function openCategorySpecifications(category: any) {
   selectedCategoryForSpecifications.value = category
 
@@ -103,8 +221,9 @@ function openCategorySpecifications(category: any) {
     (category.specifications || []).map(
       (item: any) => ({
         specificationId: item.specificationId,
-        required: item.required,
-        sortOrder: item.sortOrder
+        required: item.required ?? false,
+        filterable: item.filterable ?? false,
+        sortOrder: item.sortOrder ?? 0
       })
     )
 
@@ -134,6 +253,7 @@ function toggleSpecification(
     categorySpecificationsForm.value.push({
       specificationId,
       required: false,
+      filterable: false,
       sortOrder:
         categorySpecificationsForm.value.length
     })
@@ -167,6 +287,18 @@ function setSpecificationRequired(
   if (!item) return
 
   item.required = value
+}
+
+function setSpecificationFilterable(
+  specificationId: number,
+  value: boolean
+) {
+  const item =
+    getCategorySpecification(specificationId)
+
+  if (!item) return
+
+  item.filterable = value
 }
 
 async function saveCategorySpecifications() {
@@ -207,7 +339,8 @@ async function saveCategorySpecifications() {
     toast.add({
       title: 'Помилка',
       description:
-        error?.data?.statusMessage ||
+        error?.data?.message ||
+        error?.message ||
         'Не вдалося зберегти характеристики',
       color: 'error'
     })
@@ -216,6 +349,10 @@ async function saveCategorySpecifications() {
     categorySpecificationsSaving.value = false
   }
 }
+
+/* ==================================================
+   CATEGORY
+================================================== */
 
 function openCategoryModal() {
   categoryForm.value = {
@@ -227,33 +364,6 @@ function openCategoryModal() {
   }
 
   categoryModal.value = true
-}
-
-function openSpecificationModal() {
-  specificationForm.value = {
-    name: '',
-    key: '',
-    type: 'TEXT',
-    unit: '',
-    sortOrder: 0,
-    active: true,
-    options: []
-  }
-
-  specificationModal.value = true
-}
-
-function addSpecificationOption() {
-  specificationForm.value.options.push({
-    label: '',
-    value: '',
-    sortOrder:
-      specificationForm.value.options.length
-  })
-}
-
-function removeSpecificationOption(index: number) {
-  specificationForm.value.options.splice(index, 1)
 }
 
 async function saveCategory() {
@@ -279,10 +389,13 @@ async function saveCategory() {
     })
   }
   catch (error: any) {
+    console.error(error)
+
     toast.add({
       title: 'Помилка',
       description:
-        error?.data?.statusMessage ||
+        error?.data?.message ||
+        error?.message ||
         'Не вдалося створити категорію',
       color: 'error'
     })
@@ -290,6 +403,207 @@ async function saveCategory() {
   finally {
     categorySaving.value = false
   }
+}
+
+/* ==================================================
+   SPECIFICATION
+================================================== */
+const specificationDeletingId =
+  ref<number | null>(null)
+
+async function deleteSpecification(
+  specification: any
+) {
+  const confirmed =
+    confirm(
+      `Видалити характеристику "${specification.name}"?`
+    )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    specificationDeletingId.value =
+      specification.id
+
+    await $fetch(
+      `/api/admin/catalog/specifications/${specification.id}`,
+      {
+        method: 'DELETE'
+      }
+    )
+
+    await refreshSpecifications()
+    await refreshCategories()
+
+    toast.add({
+      title:
+        'Характеристику видалено',
+      description:
+        specification.name,
+      color: 'success',
+      icon:
+        'i-lucide-check-circle'
+    })
+  }
+  catch (error: any) {
+    console.error(error)
+
+    toast.add({
+      title: 'Не вдалося видалити',
+      description:
+        error?.data?.message ||
+        error?.message ||
+        'Характеристика використовується',
+      color: 'error',
+      icon:
+        'i-lucide-circle-alert'
+    })
+  }
+  finally {
+    specificationDeletingId.value =
+      null
+  }
+}
+
+function openSpecificationModal() {
+  specificationForm.value = {
+    name: '',
+    key: '',
+    type: 'TEXT',
+    unit: '',
+    sortOrder: 0,
+    active: true,
+    options: []
+  }
+
+  specificationModal.value = true
+}
+
+function openSpecificationEditModal(specification: any) {
+  editingSpecification.value = specification
+
+  specificationEditForm.value = {
+    name: specification.name ?? '',
+    key: specification.key ?? '',
+    type: specification.type ?? 'TEXT',
+    unit: specification.unit ?? '',
+    sortOrder: specification.sortOrder ?? 0,
+    active: specification.active ?? true,
+
+    options: (specification.options || []).map(
+      (option: any) => ({
+        id: option.id,
+        label: option.label ?? '',
+        value: option.value ?? '',
+        sortOrder: option.sortOrder ?? 0
+      })
+    )
+  }
+
+  specificationEditModal.value = true
+}
+
+function addSpecificationEditOption() {
+  specificationEditForm.value.options.push({
+    label: '',
+    value: '',
+    sortOrder:
+      specificationEditForm.value.options.length
+  })
+}
+
+function removeSpecificationEditOption(
+  index: number
+) {
+  specificationEditForm.value.options.splice(
+    index,
+    1
+  )
+}
+
+async function saveSpecificationEdit() {
+  if (!editingSpecification.value) {
+    return
+  }
+
+  try {
+    specificationEditSaving.value = true
+
+    await $fetch(
+      `/api/admin/catalog/specifications/${editingSpecification.value.id}`,
+      {
+        method: 'PUT',
+
+        body: {
+          ...specificationEditForm.value,
+
+          unit:
+            specificationEditForm.value.unit
+              ?.trim() || null,
+
+          options:
+            specificationEditForm.value.options.map(
+              (option, index) => ({
+                id: option.id,
+                label: option.label.trim(),
+                value: option.value.trim(),
+                sortOrder: index
+              })
+            )
+        }
+      }
+    )
+
+    await refreshSpecifications()
+
+    /*
+      Важливо також оновити categories,
+      тому що всередині категорій у нас
+      вкладені specification.
+    */
+
+    await refreshCategories()
+
+    specificationEditModal.value = false
+
+    toast.add({
+      title: 'Характеристику оновлено',
+      description:
+        specificationEditForm.value.name,
+      color: 'success',
+      icon: 'i-lucide-check-circle'
+    })
+  }
+  catch (error: any) {
+    console.error(error)
+
+    toast.add({
+      title: 'Помилка',
+      description:
+        error?.data?.message ||
+        error?.message ||
+        'Не вдалося оновити характеристику',
+      color: 'error'
+    })
+  }
+  finally {
+    specificationEditSaving.value = false
+  }
+}
+
+function addSpecificationOption() {
+  specificationForm.value.options.push({
+    label: '',
+    value: '',
+    sortOrder:
+      specificationForm.value.options.length
+  })
+}
+
+function removeSpecificationOption(index: number) {
+  specificationForm.value.options.splice(index, 1)
 }
 
 async function saveSpecification() {
@@ -315,10 +629,13 @@ async function saveSpecification() {
     })
   }
   catch (error: any) {
+    console.error(error)
+
     toast.add({
       title: 'Помилка',
       description:
-        error?.data?.statusMessage ||
+        error?.data?.message ||
+        error?.message ||
         'Не вдалося створити характеристику',
       color: 'error'
     })
@@ -337,7 +654,9 @@ async function saveSpecification() {
       description="Категорії та характеристики товарів"
     />
 
-    <!-- Категорії -->
+    <!-- ==================================================
+         CATEGORIES
+    ================================================== -->
 
     <UiSectionCard
       title="Категорії"
@@ -358,7 +677,7 @@ async function saveSpecification() {
         <div
           v-for="category in categories"
           :key="category.id"
-          class="flex items-center justify-between border rounded-xl p-4"
+          class="flex items-center justify-between gap-4 border rounded-xl p-4"
         >
 
           <div>
@@ -378,33 +697,46 @@ async function saveSpecification() {
 
           </div>
 
-          <div class="flex items-center gap-2">
-            <UButton
-            size="sm"
-            variant="soft"
-            icon="i-lucide-list-checks"
-            @click="
-                openCategorySpecifications(category)
-            "
-            >
-            Характеристики
-            ({{ category.specifications?.length || 0 }})
-            </UButton>
-            <UBadge
-              :color="
-                category.active
-                  ? 'success'
-                  : 'neutral'
-              "
-            >
-              {{
-                category.active
-                  ? 'Активна'
-                  : 'Вимкнена'
-              }}
-            </UBadge>
+        <div class="flex items-center gap-2">
 
-          </div>
+  <UButton
+    size="sm"
+    variant="soft"
+    icon="i-lucide-list-checks"
+    @click="
+      openCategorySpecifications(category)
+    "
+  >
+    Характеристики
+    ({{ category.specifications?.length || 0 }})
+  </UButton>
+
+  <UButton
+    size="sm"
+    variant="soft"
+    color="neutral"
+    icon="i-lucide-pencil"
+    @click="openCategoryEditModal(category)"
+  >
+    Редагувати
+  </UButton>
+
+
+  <UBadge
+    :color="
+      category.active
+        ? 'success'
+        : 'neutral'
+    "
+  >
+    {{
+      category.active
+        ? 'Активна'
+        : 'Вимкнена'
+    }}
+  </UBadge>
+
+</div>
 
         </div>
 
@@ -412,7 +744,9 @@ async function saveSpecification() {
 
     </UiSectionCard>
 
-    <!-- Характеристики -->
+    <!-- ==================================================
+         SPECIFICATIONS
+    ================================================== -->
 
     <UiSectionCard
       title="Характеристики"
@@ -462,19 +796,50 @@ async function saveSpecification() {
 
             </div>
 
-            <UBadge
-              :color="
-                spec.active
-                  ? 'success'
-                  : 'neutral'
-              "
-            >
-              {{
-                spec.active
-                  ? 'Активна'
-                  : 'Вимкнена'
-              }}
-            </UBadge>
+            <div
+  class="flex items-center gap-2"
+>
+
+  <UButton
+    size="sm"
+    color="neutral"
+    variant="soft"
+    icon="i-lucide-pencil"
+    @click="
+      openSpecificationEditModal(spec)
+    "
+  >
+    Редагувати
+  </UButton>
+<UButton
+  size="sm"
+  color="error"
+  variant="soft"
+  icon="i-lucide-trash-2"
+  :loading="
+    specificationDeletingId === spec.id
+  "
+  @click="
+    deleteSpecification(spec)
+  "
+>
+  Видалити
+</UButton>
+  <UBadge
+    :color="
+      spec.active
+        ? 'success'
+        : 'neutral'
+    "
+  >
+    {{
+      spec.active
+        ? 'Активна'
+        : 'Вимкнена'
+    }}
+  </UBadge>
+
+</div>
 
           </div>
 
@@ -500,7 +865,9 @@ async function saveSpecification() {
 
     </UiSectionCard>
 
-    <!-- Modal Category -->
+    <!-- ==================================================
+         MODAL CATEGORY
+    ================================================== -->
 
     <UModal v-model:open="categoryModal">
 
@@ -542,12 +909,14 @@ async function saveSpecification() {
           </UFormField>
 
           <UFormField label="Порядок">
+
             <UInput
               v-model.number="
                 categoryForm.sortOrder
               "
               type="number"
             />
+
           </UFormField>
 
           <UCheckbox
@@ -585,7 +954,9 @@ async function saveSpecification() {
 
     </UModal>
 
-    <!-- Modal Specification -->
+    <!-- ==================================================
+         MODAL SPECIFICATION
+    ================================================== -->
 
     <UModal
       v-model:open="specificationModal"
@@ -606,41 +977,51 @@ async function saveSpecification() {
         <div class="space-y-5">
 
           <UFormField label="Назва">
+
             <UInput
               v-model="specificationForm.name"
               placeholder="Потужність зарядки"
             />
+
           </UFormField>
 
           <UFormField label="Key">
+
             <UInput
               v-model="specificationForm.key"
               placeholder="charging_power"
             />
+
           </UFormField>
 
           <UFormField label="Тип">
+
             <USelect
               v-model="specificationForm.type"
               :items="specificationTypes"
               class="w-full"
             />
+
           </UFormField>
 
           <UFormField label="Одиниця">
+
             <UInput
               v-model="specificationForm.unit"
               placeholder="Вт"
             />
+
           </UFormField>
 
           <UFormField label="Порядок">
+
             <UInput
               v-model.number="
                 specificationForm.sortOrder
               "
               type="number"
             />
+
           </UFormField>
 
           <UCheckbox
@@ -648,7 +1029,7 @@ async function saveSpecification() {
             label="Активна"
           />
 
-          <!-- Options -->
+          <!-- OPTIONS -->
 
           <div
             v-if="
@@ -742,23 +1123,295 @@ async function saveSpecification() {
       </template>
 
     </UModal>
-   <UModal
-  v-model:open="categorySpecificationsModal"
+
+    <!-- ==================================================
+         MODAL CATEGORY SPECIFICATIONS
+    ================================================== -->
+
+    <UModal
+      v-model:open="categorySpecificationsModal"
+      :ui="{
+        content:
+          'max-w-3xl max-h-[90vh] overflow-y-auto'
+      }"
+    >
+
+      <template #header>
+
+        <div>
+
+          <h2 class="text-xl font-semibold">
+            Характеристики категорії
+          </h2>
+
+          <p class="text-sm text-muted mt-1">
+            {{
+              selectedCategoryForSpecifications
+                ?.name
+            }}
+          </p>
+
+        </div>
+
+      </template>
+
+      <template #body>
+
+        <div class="space-y-3">
+
+          <div
+            v-for="spec in specifications"
+            :key="spec.id"
+            class="border rounded-xl p-4"
+          >
+
+            <div
+              class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+
+              <div class="flex items-start gap-3">
+
+                <UCheckbox
+                  :model-value="
+                    isSpecificationSelected(
+                      spec.id
+                    )
+                  "
+                  @update:model-value="
+                    toggleSpecification(
+                      spec.id,
+                      Boolean($event)
+                    )
+                  "
+                />
+
+                <div>
+
+                  <div class="font-medium">
+                    {{ spec.name }}
+                  </div>
+
+                  <div class="text-xs text-muted">
+
+                    {{ spec.key }}
+                    ·
+                    {{ spec.type }}
+
+                    <span v-if="spec.unit">
+                      · {{ spec.unit }}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div
+                v-if="
+                  isSpecificationSelected(
+                    spec.id
+                  )
+                "
+                class="flex flex-wrap items-center gap-4 pl-7 sm:pl-0"
+              >
+
+                <UCheckbox
+                  :model-value="
+                    getCategorySpecification(
+                      spec.id
+                    )?.required ?? false
+                  "
+                  label="Обов'язкова"
+                  @update:model-value="
+                    setSpecificationRequired(
+                      spec.id,
+                      Boolean($event)
+                    )
+                  "
+                />
+
+                <UCheckbox
+                  :model-value="
+                    getCategorySpecification(
+                      spec.id
+                    )?.filterable ?? false
+                  "
+                  label="У фільтрах"
+                  @update:model-value="
+                    setSpecificationFilterable(
+                      spec.id,
+                      Boolean($event)
+                    )
+                  "
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div
+            v-if="!specifications.length"
+            class="text-center text-muted py-8"
+          >
+            Характеристик ще немає
+          </div>
+
+        </div>
+
+      </template>
+
+      <template #footer>
+
+        <div class="flex justify-end gap-3 w-full">
+
+          <UButton
+            color="neutral"
+            variant="soft"
+            @click="
+              categorySpecificationsModal = false
+            "
+          >
+            Скасувати
+          </UButton>
+
+          <UButton
+            icon="i-lucide-save"
+            :loading="
+              categorySpecificationsSaving
+            "
+            @click="
+              saveCategorySpecifications
+            "
+          >
+            Зберегти
+          </UButton>
+
+        </div>
+
+      </template>
+
+    </UModal>
+
+    <!-- ==================================================
+     MODAL CATEGORY EDIT
+================================================== -->
+
+<UModal v-model:open="categoryEditModal">
+
+  <template #header>
+    <h2 class="text-xl font-semibold">
+      Редагування категорії
+    </h2>
+  </template>
+
+  <template #body>
+
+    <div class="space-y-5">
+
+      <UFormField label="Назва">
+        <UInput
+          v-model="categoryEditForm.name"
+          placeholder="Планшети"
+        />
+      </UFormField>
+
+      <UFormField label="Slug">
+        <UInput
+          v-model="categoryEditForm.slug"
+          placeholder="tablets"
+        />
+      </UFormField>
+
+      <UFormField
+        label="Батьківська категорія"
+      >
+
+        <USelect
+          v-model="categoryEditForm.parentId"
+          :items="
+            categoryOptions.filter(
+              item =>
+                item.value !== editingCategory?.id
+            )
+          "
+          placeholder="Без батьківської категорії"
+          class="w-full"
+        />
+
+      </UFormField>
+
+      <UFormField label="Порядок">
+
+        <UInput
+          v-model.number="
+            categoryEditForm.sortOrder
+          "
+          type="number"
+        />
+
+      </UFormField>
+
+      <UCheckbox
+        v-model="categoryEditForm.active"
+        label="Активна"
+      />
+
+    </div>
+
+  </template>
+
+  <template #footer>
+
+    <div class="flex justify-end gap-3">
+
+      <UButton
+        color="neutral"
+        variant="soft"
+        @click="categoryEditModal = false"
+      >
+        Скасувати
+      </UButton>
+
+      <UButton
+        :loading="categoryEditSaving"
+        icon="i-lucide-save"
+        @click="saveCategoryEdit"
+      >
+        Зберегти
+      </UButton>
+
+    </div>
+
+  </template>
+
+</UModal>
+<!-- ==================================================
+     MODAL SPECIFICATION EDIT
+================================================== -->
+
+<UModal
+  v-model:open="specificationEditModal"
   :ui="{
-    content: 'max-w-2xl max-h-[90vh] overflow-y-auto'
+    content:
+      'max-w-2xl max-h-[90vh] overflow-y-auto'
   }"
 >
+
   <template #header>
 
     <div>
       <h2 class="text-xl font-semibold">
-        Характеристики категорії
+        Редагування характеристики
       </h2>
 
-      <p class="text-sm text-muted mt-1">
-        {{
-          selectedCategoryForSpecifications?.name
-        }}
+      <p
+        v-if="editingSpecification"
+        class="text-sm text-muted mt-1"
+      >
+        {{ editingSpecification.name }}
       </p>
     </div>
 
@@ -766,78 +1419,194 @@ async function saveSpecification() {
 
   <template #body>
 
-    <div class="space-y-3">
+    <div class="space-y-5">
+
+      <!-- NAME -->
+
+      <UFormField label="Назва">
+
+        <UInput
+          v-model="
+            specificationEditForm.name
+          "
+          placeholder="Тип дисплея"
+        />
+
+      </UFormField>
+
+      <!-- KEY -->
+
+      <UFormField
+        label="Key"
+        description="Системна назва характеристики. Не змінюйте без необхідності."
+      >
+
+        <UInput
+          v-model="
+            specificationEditForm.key
+          "
+          placeholder="display_type"
+        />
+
+      </UFormField>
+
+      <!-- TYPE -->
+
+      <UFormField label="Тип">
+
+        <USelect
+          v-model="
+            specificationEditForm.type
+          "
+          :items="specificationTypes"
+          class="w-full"
+        />
+
+      </UFormField>
+
+      <!-- UNIT -->
+
+      <UFormField
+        label="Одиниця виміру"
+      >
+
+        <UInput
+          v-model="
+            specificationEditForm.unit
+          "
+          placeholder="ГБ, Вт, мА·год..."
+        />
+
+      </UFormField>
+
+      <!-- SORT -->
+
+      <UFormField label="Порядок">
+
+        <UInput
+          v-model.number="
+            specificationEditForm.sortOrder
+          "
+          type="number"
+        />
+
+      </UFormField>
+
+      <!-- ACTIVE -->
+
+      <UCheckbox
+        v-model="
+          specificationEditForm.active
+        "
+        label="Активна"
+      />
+
+      <!-- ==========================================
+           OPTIONS
+      ========================================== -->
 
       <div
-        v-for="spec in specifications"
-        :key="spec.id"
-        class="border rounded-xl p-4"
+        v-if="
+          specificationEditForm.type ===
+            'SELECT' ||
+          specificationEditForm.type ===
+            'MULTISELECT'
+        "
+        class="space-y-3"
       >
 
         <div
-          class="flex items-start justify-between gap-4"
+          class="flex items-center justify-between"
         >
 
-          <div class="flex items-start gap-3">
+          <div>
 
-            <UCheckbox
-              :model-value="
-                isSpecificationSelected(spec.id)
-              "
-              @update:model-value="
-                toggleSpecification(
-                  spec.id,
-                  Boolean($event)
-                )
-              "
-            />
+            <h3 class="font-semibold">
+              Варіанти
+            </h3>
 
-            <div>
-
-              <div class="font-medium">
-                {{ spec.name }}
-              </div>
-
-              <div class="text-xs text-muted">
-                {{ spec.key }}
-                ·
-                {{ spec.type }}
-
-                <span v-if="spec.unit">
-                  · {{ spec.unit }}
-                </span>
-              </div>
-
-            </div>
+            <p
+              class="text-sm text-muted mt-1"
+            >
+              Значення, які можна вибирати
+              для цієї характеристики
+            </p>
 
           </div>
 
-          <UCheckbox
-            v-if="
-              isSpecificationSelected(spec.id)
+          <UButton
+            type="button"
+            size="sm"
+            variant="soft"
+            icon="i-lucide-plus"
+            @click="
+              addSpecificationEditOption
             "
-            :model-value="
-              getCategorySpecification(spec.id)
-                ?.required || false
-            "
-            label="Обов'язкова"
-            @update:model-value="
-              setSpecificationRequired(
-                spec.id,
-                Boolean($event)
+          >
+            Додати
+          </UButton>
+
+        </div>
+
+        <!-- OPTION -->
+
+        <div
+          v-for="
+            (option, index)
+            in specificationEditForm.options
+          "
+          :key="
+            option.id ?? `new-${index}`
+          "
+          class="
+            grid
+            grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]
+            gap-2
+            items-center
+          "
+        >
+
+          <UInput
+            v-model="option.label"
+            placeholder="Назва"
+          />
+
+          <UInput
+            v-model="option.value"
+            placeholder="value"
+          />
+
+          <UButton
+            type="button"
+            icon="i-lucide-trash-2"
+            color="error"
+            variant="soft"
+            @click="
+              removeSpecificationEditOption(
+                index
               )
             "
           />
 
         </div>
 
-      </div>
+        <div
+          v-if="
+            !specificationEditForm.options.length
+          "
+          class="
+            rounded-lg
+            border
+            border-dashed
+            p-5
+            text-center
+            text-sm
+            text-muted
+          "
+        >
+          Варіантів ще немає
+        </div>
 
-      <div
-        v-if="!specifications.length"
-        class="text-center text-muted py-8"
-      >
-        Характеристик ще немає
       </div>
 
     </div>
@@ -846,24 +1615,30 @@ async function saveSpecification() {
 
   <template #footer>
 
-    <div class="flex justify-end gap-3 w-full">
+    <div
+      class="flex justify-end gap-3 w-full"
+    >
 
       <UButton
+        type="button"
         color="neutral"
         variant="soft"
         @click="
-          categorySpecificationsModal = false
+          specificationEditModal = false
         "
       >
         Скасувати
       </UButton>
 
       <UButton
-        icon="i-lucide-save"
+        type="button"
         :loading="
-          categorySpecificationsSaving
+          specificationEditSaving
         "
-        @click="saveCategorySpecifications"
+        icon="i-lucide-save"
+        @click="
+          saveSpecificationEdit
+        "
       >
         Зберегти
       </UButton>
@@ -871,6 +1646,7 @@ async function saveSpecification() {
     </div>
 
   </template>
+
 </UModal>
   </div>
 </template>

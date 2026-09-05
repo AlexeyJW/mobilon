@@ -144,6 +144,48 @@ function toggleSpecificationValue(
   }
 }
 
+function getProductSpecificationValue(
+  product: any,
+  key: string
+): string | number | boolean | null {
+
+  const item = product.specifications?.find(
+    (spec: any) =>
+      spec.specification?.key === key
+  )
+
+  if (!item) {
+    return null
+  }
+
+  if (
+    item.valueNumber !== null &&
+    item.valueNumber !== undefined
+  ) {
+    return item.valueNumber
+  }
+
+  if (
+    item.valueBoolean !== null &&
+    item.valueBoolean !== undefined
+  ) {
+    return item.valueBoolean
+  }
+
+  if (item.option) {
+    return item.option.value
+  }
+
+  if (
+    item.valueText !== null &&
+    item.valueText !== undefined
+  ) {
+    return item.valueText
+  }
+
+  return null
+}
+
 /* ==============================
    BRANDS
 ============================== */
@@ -177,12 +219,15 @@ const categories = computed(() => {
 ============================== */
 
 const filteredProducts = computed(() => {
-  const q =
-    search.value
-      .trim()
-      .toLowerCase()
+  const q = search.value
+    .trim()
+    .toLowerCase()
 
   return products.value.filter(product => {
+
+    // =========================
+    // ПОШУК
+    // =========================
 
     if (
       q &&
@@ -199,12 +244,20 @@ const filteredProducts = computed(() => {
       return false
     }
 
+    // =========================
+    // БРЕНД
+    // =========================
+
     if (
       brand.value !== 'all' &&
       product.brand !== brand.value
     ) {
       return false
     }
+
+    // =========================
+    // КАТЕГОРІЯ
+    // =========================
 
     if (
       category.value !== 'all' &&
@@ -213,56 +266,47 @@ const filteredProducts = computed(() => {
       return false
     }
 
-    return true
+    // =========================
+    // ХАРАКТЕРИСТИКИ
+    // =========================
+
     for (
-  const [key, selectedValues]
-  of Object.entries(selectedSpecifications.value)
-) {
-  if (!selectedValues.length) {
-    continue
-  }
+      const [key, selectedValues]
+      of Object.entries(
+        selectedSpecifications.value
+      )
+    ) {
 
-  const productSpecification =
-    product.specifications?.find(
-      (item: any) =>
-        item.specification?.key === key
-    )
+      // Для цього фільтра нічого не вибрано
+      if (!selectedValues.length) {
+        continue
+      }
 
-  if (!productSpecification) {
-    return false
-  }
+      const productValue =
+        getProductSpecificationValue(
+          product,
+          key
+        )
 
-  let productValue:
-    | string
-    | number
-    | boolean
-    | null = null
+      // У товару взагалі немає такої характеристики
+      if (productValue === null) {
+        return false
+      }
 
-  if (productSpecification.valueNumber !== null) {
-    productValue =
-      productSpecification.valueNumber
-  }
-  else if (
-    productSpecification.valueBoolean !== null
-  ) {
-    productValue =
-      productSpecification.valueBoolean
-  }
-  else if (productSpecification.option) {
-    productValue =
-      productSpecification.option.value
-  }
-  else if (
-    productSpecification.valueText !== null
-  ) {
-    productValue =
-      productSpecification.valueText
-  }
+      // Товар повинен відповідати хоча б
+      // одному значенню всередині цього фільтра
+      const matches =
+        selectedValues.some(
+          selectedValue =>
+            selectedValue === productValue
+        )
 
-  if (!selectedValues.includes(productValue as any)) {
-    return false
-  }
-}
+      if (!matches) {
+        return false
+      }
+    }
+
+    return true
   })
 })
 </script>

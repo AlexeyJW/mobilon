@@ -18,23 +18,25 @@ export default defineEventHandler(async (event) => {
     },
 
     include: {
-      specifications: {
-        orderBy: {
-          sortOrder: 'asc'
-        },
-
-        include: {
-          specification: {
-            include: {
-              options: {
-                orderBy: {
-                  sortOrder: 'asc'
-                }
-              }
-            }
+    specifications: {
+  where: {
+    filterable: true
+  },
+  orderBy: {
+    sortOrder: 'asc'
+  },
+  include: {
+    specification: {
+      include: {
+        options: {
+          orderBy: {
+            sortOrder: 'asc'
           }
         }
       }
+    }
+  }
+} 
     }
   })
 

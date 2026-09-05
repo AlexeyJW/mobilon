@@ -190,8 +190,10 @@ model CategorySpecification {
   specificationId Int
   specification   Specification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
 
-  required  Boolean @default(false)
-  sortOrder Int     @default(0)
+  required   Boolean @default(false)
+  filterable Boolean @default(false)
+
+  sortOrder Int @default(0)
 
   @@unique([categoryId, specificationId])
   @@index([categoryId])

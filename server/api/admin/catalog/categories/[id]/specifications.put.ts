@@ -97,6 +97,9 @@ export default defineEventHandler(async (event) => {
 
             required:
               Boolean(item.required),
+              
+            filterable: 
+              Boolean(item.filterable),
 
             sortOrder:
               item.sortOrder !== undefined
