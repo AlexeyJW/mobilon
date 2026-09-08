@@ -82,9 +82,7 @@ export default defineEventHandler(
 
     try {
       const result =
-        parseInvoiceExcel(
-          file.data
-        )
+      await parseInvoiceExcel(file.data)
 
       return {
         fileName: filename,

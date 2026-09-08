@@ -1,7 +1,10 @@
-import { createRequire } from 'node:module'
+export async function parseInvoiceExcel(
+  buffer: Buffer
+) {
+  const XLSX = await import('xlsx')
 
-const require = createRequire(import.meta.url)
-const XLSX = require('xlsx')
+  // далі твій існуючий код
+}
 
 type ExcelCell =
   | string
