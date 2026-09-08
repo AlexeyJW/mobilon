@@ -375,10 +375,14 @@ function createRawObject(
 export async function parseInvoiceExcel(
   buffer: Buffer
 ) {
-  const XLSX =
-    await import(
-      'xlsx/dist/xlsx.full.min.js'
-    )
+  const XLSXModule =
+  await import(
+    'xlsx/dist/xlsx.full.min.js'
+  )
+
+const XLSX =
+  (XLSXModule as any).default ??
+  XLSXModule
 
   const workbook =
     XLSX.read(
