@@ -1,11 +1,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  nitro: {
-    externals: {
-      external: ['xlsx']
-    }
-  },
+  
   modules: ['@nuxt/ui','@nuxt/image','@nuxtjs/sitemap','@nuxtjs/color-mode'],
    colorMode: {
     classSuffix: ''

@@ -375,22 +375,10 @@ function createRawObject(
 export async function parseInvoiceExcel(
   buffer: Buffer
 ) {
-  /*
-    ВАЖЛИВО:
-
-    xlsx завантажується тільки тоді,
-    коли реально викликається імпорт Excel.
-
-    Немає:
-    import XLSX from 'xlsx'
-    createRequire(...)
-    require('xlsx')
-
-    Це потрібно для коректної роботи
-    Nitro / Vercel serverless.
-  */
   const XLSX =
-    await import('xlsx')
+    await import(
+      'xlsx/dist/xlsx.full.min.js'
+    )
 
   const workbook =
     XLSX.read(
