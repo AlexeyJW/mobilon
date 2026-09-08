@@ -1,15 +1,8 @@
-export async function parseInvoiceExcel(
-  buffer: Buffer
-) {
-  const XLSX = await import('xlsx')
-
-  // далі твій існуючий код
-}
-
 type ExcelCell =
   | string
   | number
   | boolean
+  | Date
   | null
 
 interface DetectedColumns {
@@ -129,15 +122,9 @@ function normalizeNumber(
     String(value)
       .replace(/\u00a0/g, '')
       .replace(/\s/g, '')
-      .replace(
-        /[₴грнuahUAH]/g,
-        ''
-      )
+      .replace(/[₴грнuahUAH]/g, '')
       .replace(',', '.')
-      .replace(
-        /[^\d.-]/g,
-        ''
-      )
+      .replace(/[^\d.-]/g, '')
 
   if (!cleaned) {
     return null
@@ -171,11 +158,8 @@ function matchHeader(
       normalizeText(alias)
 
     return (
-      normalized ===
-        normalizedAlias ||
-      normalized.includes(
-        normalizedAlias
-      )
+      normalized === normalizedAlias ||
+      normalized.includes(normalizedAlias)
     )
   })
 }
@@ -183,22 +167,20 @@ function matchHeader(
 function detectColumns(
   headers: ExcelCell[]
 ): DetectedColumns {
-  const result:
-    DetectedColumns = {
-      name: null,
-      category: null,
-      quantity: null,
-      price: null,
-      sku: null,
-      supplierCode: null,
-      barcode: null
-    }
+  const result: DetectedColumns = {
+    name: null,
+    category: null,
+    quantity: null,
+    price: null,
+    sku: null,
+    supplierCode: null,
+    barcode: null
+  }
 
   headers.forEach(
     (header, index) => {
       for (
-        const key of
-        Object.keys(
+        const key of Object.keys(
           aliases
         ) as Array<
           keyof DetectedColumns
@@ -237,20 +219,14 @@ function scoreHeaderRow(
     }
   }
 
-  /*
-    Назва товару для нас
-    найважливіша.
-  */
+  // Назва товару — найважливіша
   if (
     detected.name !== null
   ) {
     score += 3
   }
 
-  /*
-    Кількість і ціна теж дуже
-    важливі для накладної.
-  */
+  // Кількість і ціна також важливі
   if (
     detected.quantity !== null
   ) {
@@ -279,10 +255,8 @@ function findHeaderRow(
     DetectedColumns | null =
       null
 
-  /*
-    Заголовки накладної можуть
-    бути не в першому рядку.
-  */
+  // Шукаємо заголовок серед
+  // перших 30 рядків
   const limit =
     Math.min(
       rows.length,
@@ -312,8 +286,7 @@ function findHeaderRow(
     ) {
       bestIndex = index
       bestScore = score
-      bestColumns =
-        detected
+      bestColumns = detected
     }
   }
 
@@ -327,10 +300,8 @@ function findHeaderRow(
 
   return {
     index: bestIndex,
-    columns:
-      bestColumns,
-    score:
-      bestScore
+    columns: bestColumns,
+    score: bestScore
   }
 }
 
@@ -401,9 +372,26 @@ function createRawObject(
    PARSER
 ================================================== */
 
-export function parseInvoiceExcel(
+export async function parseInvoiceExcel(
   buffer: Buffer
 ) {
+  /*
+    ВАЖЛИВО:
+
+    xlsx завантажується тільки тоді,
+    коли реально викликається імпорт Excel.
+
+    Немає:
+    import XLSX from 'xlsx'
+    createRequire(...)
+    require('xlsx')
+
+    Це потрібно для коректної роботи
+    Nitro / Vercel serverless.
+  */
+  const XLSX =
+    await import('xlsx')
+
   const workbook =
     XLSX.read(
       buffer,
@@ -423,10 +411,9 @@ export function parseInvoiceExcel(
     )
   }
 
-  /*
-    Шукаємо перший
-    непорожній лист.
-  */
+  /* ==================================================
+     FIND FIRST NON-EMPTY SHEET
+  ================================================== */
 
   let selectedSheetName:
     string | null = null
@@ -521,9 +508,9 @@ export function parseInvoiceExcel(
           row,
           index
         ) => {
-          /*
-            NAME
-          */
+          /* ------------------------------
+             NAME
+          ------------------------------ */
 
           const name =
             stringCell(
@@ -533,9 +520,9 @@ export function parseInvoiceExcel(
                 .name
             ) ?? ''
 
-          /*
-            CATEGORY FROM SUPPLIER
-          */
+          /* ------------------------------
+             CATEGORY FROM SUPPLIER
+          ------------------------------ */
 
           const supplierCategory =
             stringCell(
@@ -545,9 +532,9 @@ export function parseInvoiceExcel(
                 .category
             )
 
-          /*
-            QUANTITY
-          */
+          /* ------------------------------
+             QUANTITY
+          ------------------------------ */
 
           const quantity =
             normalizeNumber(
@@ -559,9 +546,9 @@ export function parseInvoiceExcel(
               )
             )
 
-          /*
-            BUY PRICE
-          */
+          /* ------------------------------
+             BUY PRICE
+          ------------------------------ */
 
           const buyPrice =
             normalizeNumber(
@@ -573,9 +560,9 @@ export function parseInvoiceExcel(
               )
             )
 
-          /*
-            SKU
-          */
+          /* ------------------------------
+             SKU
+          ------------------------------ */
 
           const sku =
             stringCell(
@@ -585,9 +572,9 @@ export function parseInvoiceExcel(
                 .sku
             )
 
-          /*
-            SUPPLIER CODE
-          */
+          /* ------------------------------
+             SUPPLIER CODE
+          ------------------------------ */
 
           const supplierCode =
             stringCell(
@@ -597,9 +584,9 @@ export function parseInvoiceExcel(
                 .supplierCode
             )
 
-          /*
-            BARCODE
-          */
+          /* ------------------------------
+             BARCODE
+          ------------------------------ */
 
           const barcode =
             stringCell(
@@ -639,18 +626,11 @@ export function parseInvoiceExcel(
           }
 
           /*
-            Реальний номер рядка
-            у файлі Excel.
+            Реальний номер рядка Excel.
 
-            index + 1:
-            тому що dataRows
-            починається після header.
-
-            + header.index
-            + ще 1 через індексацію
-            з нуля.
+            header.index має індексацію з 0.
+            dataRows починається після header.
           */
-
           const rowNumber =
             header.index +
             index +
@@ -667,17 +647,11 @@ export function parseInvoiceExcel(
 
             parsed: {
               name,
-
               supplierCategory,
-
               quantity,
-
               buyPrice,
-
               sku,
-
               supplierCode,
-
               barcode
             },
 
@@ -685,8 +659,8 @@ export function parseInvoiceExcel(
 
             status:
               warnings.length
-                ? 'warning'
-                : 'ready'
+                ? 'warning' as const
+                : 'ready' as const
           }
         }
       )
@@ -698,12 +672,11 @@ export function parseInvoiceExcel(
       .filter(row => {
         /*
           Без назви товару рядок
-          нам поки не потрібен.
+          не імпортуємо.
 
-          Це також відсікає більшість
-          підсумків і службових рядків.
+          Також це прибирає більшість
+          службових рядків.
         */
-
         if (
           !row.parsed.name
         ) {
@@ -711,10 +684,9 @@ export function parseInvoiceExcel(
         }
 
         /*
-          Відсікаємо типові
+          Прибираємо типові
           підсумкові рядки.
         */
-
         const normalizedName =
           normalizeText(
             row.parsed.name
