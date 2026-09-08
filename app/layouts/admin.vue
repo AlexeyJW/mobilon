@@ -367,7 +367,19 @@ async function changePassword() {
   class="justify-start"
 >
   Послуги
+</UButton>''
+
+<UButton
+  to='/admin/import'
+  icon='i-lucide-file-spreadsheet'
+  color="primary"
+  :variant="route.path.startsWith('/admin/import') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Імпорт Excel
 </UButton>
+
  <UButton
             to="/admin/catalog"
             icon="i-lucide-users"

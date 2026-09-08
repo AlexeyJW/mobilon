@@ -675,70 +675,134 @@ async function saveSpecification() {
       <div class="space-y-3">
 
         <div
-          v-for="category in categories"
-          :key="category.id"
-          class="flex items-center justify-between gap-4 border rounded-xl p-4"
-        >
+  v-for="category in categories"
+  :key="category.id"
+  class="border rounded-xl p-4"
+>
 
-          <div>
-
-            <div class="font-semibold">
-              {{ category.name }}
-            </div>
-
-            <div class="text-sm text-muted">
-              {{ category.slug }}
-            </div>
-
-            <div class="text-xs text-muted mt-1">
-              Товарів:
-              {{ category._count?.products || 0 }}
-            </div>
-
-          </div>
-
-        <div class="flex items-center gap-2">
-
-  <UButton
-    size="sm"
-    variant="soft"
-    icon="i-lucide-list-checks"
-    @click="
-      openCategorySpecifications(category)
+  <div
+    class="
+      flex
+      flex-col
+      gap-4
+      sm:flex-row
+      sm:items-center
+      sm:justify-between
     "
   >
-    Характеристики
-    ({{ category.specifications?.length || 0 }})
-  </UButton>
 
-  <UButton
-    size="sm"
-    variant="soft"
-    color="neutral"
-    icon="i-lucide-pencil"
-    @click="openCategoryEditModal(category)"
-  >
-    Редагувати
-  </UButton>
+    <!-- INFO -->
 
+    <div class="min-w-0">
 
-  <UBadge
-    :color="
-      category.active
-        ? 'success'
-        : 'neutral'
-    "
-  >
-    {{
-      category.active
-        ? 'Активна'
-        : 'Вимкнена'
-    }}
-  </UBadge>
+      <div
+        class="
+          font-semibold
+          text-base
+          sm:text-lg
+          break-words
+        "
+      >
+        {{ category.name }}
+      </div>
+
+      <div
+        class="
+          text-sm
+          text-muted
+          mt-1
+          break-all
+        "
+      >
+        {{ category.slug }}
+      </div>
+
+      <div
+        class="
+          text-xs
+          text-muted
+          mt-1
+        "
+      >
+        Товарів:
+        {{ category._count?.products || 0 }}
+      </div>
+
+    </div>
+
+    <!-- ACTIONS -->
+
+    <div
+      class="
+        flex
+        flex-wrap
+        items-center
+        gap-2
+        w-full
+        sm:w-auto
+        sm:justify-end
+        sm:shrink-0
+      "
+    >
+
+      <UButton
+        size="sm"
+        variant="soft"
+        icon="i-lucide-list-checks"
+        class="
+          flex-1
+          justify-center
+          sm:flex-none
+        "
+        @click="
+          openCategorySpecifications(category)
+        "
+      >
+        Характеристики
+        ({{ category.specifications?.length || 0 }})
+      </UButton>
+
+      <UButton
+        size="sm"
+        color="neutral"
+        variant="soft"
+        icon="i-lucide-pencil"
+        class="
+          flex-1
+          justify-center
+          sm:flex-none
+        "
+        @click="
+          openCategoryEditModal(category)
+        "
+      >
+        Редагувати
+      </UButton>
+
+      <UBadge
+        :color="
+          category.active
+            ? 'success'
+            : 'neutral'
+        "
+        class="
+          w-full
+          justify-center
+          sm:w-auto
+        "
+      >
+        {{
+          category.active
+            ? 'Активна'
+            : 'Вимкнена'
+        }}
+      </UBadge>
+
+    </div>
+
+  </div>
 
 </div>
-
-        </div>
 
       </div>
 
@@ -764,102 +828,167 @@ async function saveSpecification() {
 
       <div class="space-y-3">
 
-        <div
-          v-for="spec in specifications"
-          :key="spec.id"
-          class="border rounded-xl p-4"
-        >
-
-          <div
-            class="flex items-start justify-between gap-4"
-          >
-
-            <div>
-
-              <div class="font-semibold">
-                {{ spec.name }}
-              </div>
-
-              <div class="text-sm text-muted">
-                key:
-                {{ spec.key }}
-              </div>
-
-              <div class="text-sm text-muted mt-1">
-                Тип:
-                {{ spec.type }}
-
-                <span v-if="spec.unit">
-                  · {{ spec.unit }}
-                </span>
-              </div>
-
-            </div>
-
-            <div
-  class="flex items-center gap-2"
+      <div
+  v-for="spec in specifications"
+  :key="spec.id"
+  class="border rounded-xl p-4"
 >
 
-  <UButton
-    size="sm"
-    color="neutral"
-    variant="soft"
-    icon="i-lucide-pencil"
-    @click="
-      openSpecificationEditModal(spec)
+  <div
+    class="
+      flex
+      flex-col
+      gap-4
+      sm:flex-row
+      sm:items-start
+      sm:justify-between
     "
   >
-    Редагувати
-  </UButton>
-<UButton
-  size="sm"
-  color="error"
-  variant="soft"
-  icon="i-lucide-trash-2"
-  :loading="
-    specificationDeletingId === spec.id
-  "
-  @click="
-    deleteSpecification(spec)
-  "
->
-  Видалити
-</UButton>
-  <UBadge
-    :color="
-      spec.active
-        ? 'success'
-        : 'neutral'
+
+    <!-- LEFT -->
+
+    <div class="min-w-0">
+
+      <div
+        class="
+          font-semibold
+          text-base
+          sm:text-lg
+          break-words
+        "
+      >
+        {{ spec.name }}
+      </div>
+
+      <div
+        class="
+          text-sm
+          text-muted
+          mt-1
+          break-all
+        "
+      >
+        key:
+        {{ spec.key }}
+      </div>
+
+      <div
+        class="
+          text-sm
+          text-muted
+          mt-1
+        "
+      >
+        Тип:
+        {{ spec.type }}
+
+        <span v-if="spec.unit">
+          · {{ spec.unit }}
+        </span>
+      </div>
+
+    </div>
+
+    <!-- ACTIONS -->
+
+    <div
+      class="
+        flex
+        flex-wrap
+        items-center
+        gap-2
+        w-full
+        sm:w-auto
+        sm:justify-end
+        sm:shrink-0
+      "
+    >
+
+      <UButton
+        size="sm"
+        color="neutral"
+        variant="soft"
+        icon="i-lucide-pencil"
+        class="
+          flex-1
+          justify-center
+          sm:flex-none
+        "
+        @click="
+          openSpecificationEditModal(spec)
+        "
+      >
+        Редагувати
+      </UButton>
+
+      <UButton
+        size="sm"
+        color="error"
+        variant="soft"
+        icon="i-lucide-trash-2"
+        class="
+          flex-1
+          justify-center
+          sm:flex-none
+        "
+        :loading="
+          specificationDeletingId === spec.id
+        "
+        @click="
+          deleteSpecification(spec)
+        "
+      >
+        Видалити
+      </UButton>
+
+      <UBadge
+        :color="
+          spec.active
+            ? 'success'
+            : 'neutral'
+        "
+        class="
+          w-full
+          justify-center
+          sm:w-auto
+        "
+      >
+        {{
+          spec.active
+            ? 'Активна'
+            : 'Вимкнена'
+        }}
+      </UBadge>
+
+    </div>
+
+  </div>
+
+  <!-- OPTIONS -->
+
+  <div
+    v-if="spec.options?.length"
+    class="
+      flex
+      flex-wrap
+      gap-2
+      mt-4
     "
   >
-    {{
-      spec.active
-        ? 'Активна'
-        : 'Вимкнена'
-    }}
-  </UBadge>
+
+    <UBadge
+      v-for="option in spec.options"
+      :key="option.id"
+      color="neutral"
+      variant="soft"
+      class="max-w-full"
+    >
+      {{ option.label }}
+    </UBadge>
+
+  </div>
 
 </div>
-
-          </div>
-
-          <div
-            v-if="spec.options?.length"
-            class="flex flex-wrap gap-2 mt-3"
-          >
-
-            <UBadge
-              v-for="option in spec.options"
-              :key="option.id"
-              color="neutral"
-              variant="soft"
-            >
-              {{ option.label }}
-            </UBadge>
-
-          </div>
-
-        </div>
 
       </div>
 
