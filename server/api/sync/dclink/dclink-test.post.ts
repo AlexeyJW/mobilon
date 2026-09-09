@@ -12,9 +12,7 @@ export default defineEventHandler(async () => {
 
   const url = 'https://api.dclink.com.ua/api/GetRefItems/json'
 
-  console.log('URL:', url)
-  console.log('LOGIN:', JSON.stringify(config.dclinkLogin))
-  console.log('PASSWORD LENGTH:', String(config.dclinkPassword).length)
+
 
   const response = await $fetch.raw(url, {
     method: 'POST',

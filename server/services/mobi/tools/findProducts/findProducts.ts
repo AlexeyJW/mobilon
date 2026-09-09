@@ -115,9 +115,6 @@ function extractProductLine(tokens: string[]) {
 export async function findProducts(input: FindProductsInput) {
   const query = normalizeQuery(input.query)
 
-  console.log('Original query:', input.query)
-  console.log('Normalized query:', query)
-  console.log('Price range:', input.minPrice, input.maxPrice)
 
   const normalizedQuery = normalizeText(query)
 
@@ -128,17 +125,11 @@ export async function findProducts(input: FindProductsInput) {
   const brand = extractBrand(tokens)
 
   const productLine = extractProductLine(tokens)
-  console.log('Detected product line:', productLine)
+
   const model = extractModel(tokens)
   const storage = extractStorage(normalizedQuery)
   const ram = extractRam(normalizedQuery)
 
-  console.log('Search tokens:', tokens)
-  console.log('Detected brand:', brand)
-  console.log('Detected model:', model)
-  console.log('Detected RAM:', ram)
-  console.log('Detected storage:', storage)
-console.log('Exclude product IDs:', input.excludeProductIds)
   const priceFilter: {
     gte?: number
     lte?: number
@@ -225,7 +216,7 @@ console.log('Exclude product IDs:', input.excludeProductIds)
     take: 50
   })
 
-  console.log('Candidates found:', candidates.length)
+
 
   // --------------------------------------------------
   // Ранжування
@@ -319,14 +310,7 @@ console.log('Exclude product IDs:', input.excludeProductIds)
     })
     .sort((a, b) => b.score - a.score)
 
-  console.log(
-    'Ranking:',
-    ranked.map(item => ({
-      id: item.product.id,
-      name: item.product.name,
-      score: item.score
-    }))
-  )
+ 
 
   // --------------------------------------------------
   // Фінальна фільтрація
@@ -372,13 +356,8 @@ console.log('Exclude product IDs:', input.excludeProductIds)
   })
   .slice(0, 5)
   .map(item => item.product)
-  console.log(
-    'Final products:',
-    results.map(product => ({
-      id: product.id,
-      name: product.name
-    }))
-  )
+
+
 
   return results
 }

@@ -302,9 +302,7 @@ export function parseSpecifications(
     parseRamStorage(
       normalized
     )
-console.log('IMPORT PRODUCT:', productName)
-console.log('NORMALIZED:', normalized)
-console.log('MEMORY:', memory)
+
   for (
     const relation
     of categorySpecifications
@@ -316,12 +314,7 @@ console.log('MEMORY:', memory)
       spec.key
         .toLowerCase()
         .trim()
-console.log(
-  'SPEC:',
-  spec.name,
-  '| KEY:',
-  key
-)
+
     /* ==================================================
        RAM
     ================================================== */
@@ -585,9 +578,6 @@ console.log(
       }
     }
   }
-console.log(
-  'PARSED SPECS:',
-  result
-)
+
   return result
 }

@@ -101,14 +101,14 @@ async function changePassword() {
             <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span class="text-primary-inverted font-bold text-sm">A</span>
             </div>
-            <span class="text-default font-bold hidden sm:block">Admin</span>
+           
           </NuxtLink>
 
           <!-- Десктопна навігація -->
           <nav class="hidden md:flex items-center gap-2">
             <UButton
               to="/admin"
-              icon="i-lucide-layout-dashboard"
+           
               color="primary"
               :variant="route.path === '/admin' ? 'solid' : 'ghost'"
               size="sm"
@@ -118,7 +118,7 @@ async function changePassword() {
             
             <UButton
               to="/admin/customers"
-              icon="i-lucide-users"
+             
               color="primary"
               :variant="route.path.startsWith('/admin/customers') ? 'solid' : 'ghost'"
               size="sm"
@@ -127,7 +127,7 @@ async function changePassword() {
             </UButton>
             <UButton
                 to="/admin/users"
-                icon="i-lucide-users-round"
+                
                 color="primary"
                 :variant="route.path.startsWith('/admin/users') ? 'solid' : 'ghost'"
                 size="sm"
@@ -136,7 +136,7 @@ async function changePassword() {
             </UButton>
             <UButton
               to="/admin/requests"
-              icon="i-lucide-clipboard-list"
+              
               color="primary"
               :variant="route.path.startsWith('/admin/requests') ? 'solid' : 'ghost'"
               size="sm"
@@ -147,7 +147,7 @@ async function changePassword() {
             <!-- Нова кнопка "Закупівлі" -->
             <UButton
               to="/admin/purchases"
-              icon="i-lucide-shopping-cart"
+              
               color="primary"
               :variant="route.path.startsWith('/admin/purchases') ? 'solid' : 'ghost'"
               size="sm"
@@ -157,7 +157,7 @@ async function changePassword() {
             
             <UButton
             to="/admin/products"
-            icon="i-lucide-smartphone"
+            
             color="primary"
             :variant="route.path.startsWith('/admin/products') ? 'solid' : 'ghost'"
             block
@@ -165,9 +165,19 @@ async function changePassword() {
           >
             Товари
           </UButton>
+          <UButton
+  to='/admin/import'
+ 
+  color="primary"
+  :variant="route.path.startsWith('/admin/import') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Імпорт_Excel
+</UButton>
             <UButton
               to="/admin/services"
-              icon="i-lucide-wrench"
+             
               color="primary"
               :variant="route.path.startsWith('/admin/services') ? 'solid' : 'ghost'"
               size="sm"
@@ -176,16 +186,16 @@ async function changePassword() {
             </UButton>
              <UButton
               to="/admin/qr"
-              icon="i-lucide-qr-code"
+              
               color="primary"
               :variant="route.path.startsWith('/admin/qr') ? 'solid' : 'ghost'"
               size="sm"
             >
-              QR Code
+              QR
             </UButton>
             <UButton
               to="/admin/content"
-              icon="i-lucide-panels-top-left"
+              
               color="primary"
               :variant="route.path.startsWith('/admin/content') ? 'solid' : 'ghost'"
               size="sm"
@@ -197,14 +207,14 @@ async function changePassword() {
 
             <UButton
               to="/"
-              icon="i-lucide-house"
+             
               color="primary"
               variant="ghost"
               size="sm"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span class="hidden lg:inline">На сайт</span>
+              <span class="hidden lg:inline">На_сайт</span>
             </UButton>
           </nav>
 
@@ -367,7 +377,7 @@ async function changePassword() {
   class="justify-start"
 >
   Послуги
-</UButton>''
+</UButton>
 
 <UButton
   to='/admin/import'

@@ -33,9 +33,7 @@ export async function sendTelegramMessage(text: string) {
       )
     }
 
-    console.log(
-      `Telegram message sent successfully. Message ID: ${response.result?.message_id}`
-    )
+  
 
     return response
   } catch (error) {
