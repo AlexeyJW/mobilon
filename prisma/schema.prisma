@@ -340,6 +340,7 @@ model Service {
   id Int @id @default(autoincrement())
 
   name        String
+  slug        String? @unique
   description String?
   price       Decimal @db.Decimal(10, 2)
   priceFrom   Boolean @default(false)

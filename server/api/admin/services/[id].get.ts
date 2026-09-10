@@ -1,18 +1,28 @@
 import { prisma } from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
-  const id = Number(getRouterParam(event, 'id'))
+  const param = getRouterParam(event, 'id')
 
-  if (!Number.isInteger(id)) {
+  if (!param) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Некоректний ID послуги'
+      statusMessage: 'Не вказано ID або slug послуги'
     })
   }
 
-  const service = await prisma.service.findUnique({
+  const isNumericId = /^\d+$/.test(param)
+
+  const service = await prisma.service.findFirst({
     where: {
-      id
+      OR: isNumericId
+        ? [
+            { id: Number(param) },
+            { slug: param }
+          ]
+        : [
+            { slug: param }
+          ],
+      active: true
     },
     include: {
       categoryRef: true
@@ -23,13 +33,6 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 404,
       statusMessage: 'Послугу не знайдено'
-    })
-  }
-
-  if (!service.active) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Послуга недоступна'
     })
   }
 
