@@ -63,6 +63,65 @@ useSeoMeta({
   ogImage: () => service.value?.image ?? ''
 })
 
+useHead(() => {
+  if (!service.value || !service.value.slug) {
+    return {}
+  }
+
+  const price = Number(service.value.price)
+
+  return {
+    script: [
+      {
+        type: 'application/ld+json',
+
+        innerHTML: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Service',
+
+          name: service.value.name,
+
+          description:
+            service.value.description ??
+            `${service.value.name} у магазині Mobilon у Солотвині`,
+
+          url: `https://mobilon.com.ua/services/${service.value.slug}`,
+
+          image: service.value.image || undefined,
+
+        provider: {
+          '@type': 'LocalBusiness',
+          name: 'Mobilon',
+          url: 'https://mobilon.com.ua',
+          telephone: '+380984455233',
+
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'вул. Дружби Народів, 3',
+            addressLocality: 'Солотвино',
+            addressRegion: 'Закарпатська область',
+            addressCountry: 'UA'
+          }
+        },
+
+          areaServed: {
+            '@type': 'Place',
+            name: 'Солотвино, Закарпатська область, Україна'
+          },
+
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'UAH',
+            price: price,
+            url: `https://mobilon.com.ua/services/${service.value.slug}`,
+            availability: 'https://schema.org/InStock'
+          }
+        })
+      }
+    ]
+  }
+})
+
 
 </script>
 
