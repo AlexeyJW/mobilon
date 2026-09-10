@@ -16,13 +16,17 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-        siteUrl: 'https://mobilon.com.ua',
+      siteUrl: 'https://mobilon.com.ua',
 
-        exclude: [
-          '/admin/**',
-          '/test'
-        ]
-},
+      exclude: [
+        '/admin/**',
+        '/test'
+      ],
+
+      sources: [
+        '/api/__sitemap__/urls'
+      ]
+    },
   htmlAttrs: {
     lang: 'uk'
 },
