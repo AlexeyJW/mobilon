@@ -52,6 +52,50 @@ useSeoMeta({
 
   ogImage: () => product.value?.imageUrl ?? ''
 })
+useHead(() => {
+  if (!product.value) return {}
+
+  const price = Number(product.value.sellPrice)
+
+  return {
+    script: [
+      {
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.value.name,
+          image: product.value.imageUrl
+            ? [product.value.imageUrl]
+            : undefined,
+          description:
+            product.value.shortDescription ??
+            product.value.description ??
+            product.value.name,
+
+          brand: product.value.brand
+            ? {
+                '@type': 'Brand',
+                name: product.value.brand
+              }
+            : undefined,
+
+          offers: {
+            '@type': 'Offer',
+            url: `https://mobilon.com.ua/products/${product.value.slug}`,
+            priceCurrency: 'UAH',
+            price: price,
+            availability:
+              product.value.quantity > 0
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            itemCondition: 'https://schema.org/NewCondition'
+          }
+        })
+      }
+    ]
+  }
+})
 </script>
 
 <template>
