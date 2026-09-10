@@ -44,7 +44,7 @@ useHead({
   link: [
     {
       rel: 'canonical',
-     href: '[https://mobilon.com.ua/](https://mobilon.com.ua/)'
+     href: "https://mobilon.com.ua/"
     }
   ]
 })
