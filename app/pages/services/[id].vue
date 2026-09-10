@@ -2,8 +2,10 @@
 interface Service {
   id: number
   name: string
+  slug: string | null
   description: string | null
   price: string | number
+
   priceFrom: boolean
   category: string | null
   image: string | null
@@ -23,7 +25,13 @@ if (error.value || !data.value?.service) {
 }
 
 const service = computed(() => data.value!.service)
+const routeParam = String(route.params.id)
 
+if (/^\d+$/.test(routeParam) && service.value.slug) {
+  await navigateTo(`/services/${service.value.slug}`, {
+    redirectCode: 301
+  })
+}
 // SEO meta
 useSeoMeta({
   title: () => {
