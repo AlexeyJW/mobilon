@@ -73,10 +73,7 @@ app: {
         rel: 'icon',
         href: '/favicon.ico'
       },
-      {
-        rel: 'canonical',
-        href: 'https://mobilon.com.ua/'
-      }
+      
     ]
   }
 }
