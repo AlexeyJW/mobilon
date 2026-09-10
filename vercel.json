@@ -1,4 +1,17 @@
 {
   "buildCommand": "nuxt build",
-  "outputDirectory": ".output"
+  "outputDirectory": ".output",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "mobilon-seven.vercel.app"
+        }
+      ],
+      "destination": "https://mobilon.com.ua/:path*",
+      "permanent": true
+    }
+  ]
 }
