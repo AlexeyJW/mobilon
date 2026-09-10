@@ -19,15 +19,38 @@ if (error.value) {
 }
 
 useSeoMeta({
-  title: () => product.value?.name ?? 'Товар',
-  description: () =>
-    product.value?.shortDescription ??
-    'Інтернет-магазин Mobilon',
-  ogTitle: () => product.value?.name ?? 'Mobilon',
-  ogDescription: () =>
-    product.value?.shortDescription ??
-    'Інтернет-магазин Mobilon',
-  ogImage: () => product.value?.imageUrl ?? '',
+  title: () => {
+    if (!product.value) return 'Товар | Mobilon'
+
+    return `${product.value.name} — купити в Солотвині | Mobilon`
+  },
+
+  description: () => {
+    if (!product.value) {
+      return 'Смартфони та аксесуари в магазині Mobilon у Солотвині'
+    }
+
+    const price = Number(product.value.sellPrice)
+
+    return `Купити ${product.value.name} у Солотвині. Ціна ${price} грн. ${product.value.shortDescription ?? ''} Замовлення в магазині Mobilon.`
+  },
+
+  ogTitle: () => {
+    if (!product.value) return 'Mobilon'
+
+    return `${product.value.name} | Mobilon`
+  },
+
+  ogDescription: () => {
+    if (!product.value) {
+      return 'Смартфони та аксесуари в магазині Mobilon у Солотвині'
+    }
+
+    return product.value.shortDescription ??
+      `Купити ${product.value.name} у магазині Mobilon`
+  },
+
+  ogImage: () => product.value?.imageUrl ?? ''
 })
 </script>
 
