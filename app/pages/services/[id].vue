@@ -2,6 +2,7 @@
 interface Service {
   id: number
   name: string
+  slug: string | null
   description: string | null
 
   seoText: string | null
@@ -51,9 +52,14 @@ if (/^\d+$/.test(routeParam) && service.value.slug) {
 // SEO meta
 useSeoMeta({
   title: () => {
-    if (!service.value) return 'Послуга | Mobilon'
+    if (!service.value) {
+      return 'Послуга | Mobilon'
+    }
 
-    return `${service.value.name} у Солотвині | Mobilon`
+    return (
+      service.value.metaTitle ||
+      `${service.value.name} у Солотвині | Mobilon`
+    )
   },
 
   description: () => {
@@ -61,19 +67,33 @@ useSeoMeta({
       return 'Послуги Mobilon у Солотвині'
     }
 
+    if (service.value.metaDescription) {
+      return service.value.metaDescription
+    }
+
     const price = Number(service.value.price)
 
-    return `${service.value.name} у Солотвині. ${service.value.description ?? ''} Вартість ${service.value.priceFrom ? 'від ' : ''}${price} грн. Mobilon.`
+    return `${service.value.name} у Солотвині. ${
+      service.value.description ?? ''
+    } Вартість ${
+      service.value.priceFrom ? 'від ' : ''
+    }${price} грн. Mobilon.`
   },
 
   ogTitle: () => {
-    if (!service.value) return 'Mobilon'
+    if (!service.value) {
+      return 'Mobilon'
+    }
 
-    return `${service.value.name} | Mobilon`
+    return (
+      service.value.metaTitle ||
+      `${service.value.name} | Mobilon`
+    )
   },
 
   ogDescription: () =>
-    service.value?.description ??
+    service.value?.metaDescription ||
+    service.value?.description ||
     'Послуги Mobilon у Солотвині',
 
   ogImage: () => service.value?.image ?? ''
@@ -180,15 +200,14 @@ useHead(() => {
 
           <!-- Інформація -->
           <div class="flex flex-col">
-
-            <UBadge
-              v-if="service.category"
-              color="primary"
-              variant="soft"
-              class="self-start mb-4"
-            >
-              {{ service.category }}
-            </UBadge>
+          <UBadge
+            v-if="service.categoryRef?.name || service.category"
+            color="primary"
+            variant="soft"
+            class="self-start mb-4"
+          >
+            {{ service.categoryRef?.name || service.category }}
+          </UBadge>
 
             <h1 class="text-3xl md:text-4xl font-black text-default">
               {{ service.name }}
@@ -201,6 +220,7 @@ useHead(() => {
             <div class="mt-auto pt-8">
 
               <div class="text-2xl font-bold text-default mb-5">
+                {{ service.priceFrom ? 'від ' : '' }}
                 {{ Number(service.price).toLocaleString('uk-UA') }} грн
               </div>
 
@@ -217,7 +237,62 @@ useHead(() => {
 
         </div>
       </UCard>
+<div
+  v-if="service.seoText || service.duration || service.whatIncluded"
+  class="mt-10 space-y-8"
+>
 
+  <!-- Детальний опис -->
+  <section v-if="service.seoText">
+    <h2 class="text-2xl font-bold text-default mb-4">
+      Про послугу
+    </h2>
+
+    <p class="text-muted leading-7 whitespace-pre-line">
+      {{ service.seoText }}
+    </p>
+  </section>
+
+  <!-- Тривалість -->
+  <section v-if="service.duration">
+    <UCard>
+      <div class="flex gap-4 items-start">
+
+        <div
+          class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+        >
+          <UIcon
+            name="i-lucide-clock"
+            class="size-5 text-primary"
+          />
+        </div>
+
+        <div>
+          <h2 class="font-bold text-lg text-default">
+            Скільки часу займає
+          </h2>
+
+          <p class="mt-1 text-muted">
+            {{ service.duration }}
+          </p>
+        </div>
+
+      </div>
+    </UCard>
+  </section>
+
+  <!-- Що входить -->
+  <section v-if="service.whatIncluded">
+    <h2 class="text-2xl font-bold text-default mb-4">
+      Що входить у послугу
+    </h2>
+
+    <div class="text-muted leading-7 whitespace-pre-line">
+      {{ service.whatIncluded }}
+    </div>
+  </section>
+
+</div>
     </div>
   </div>
 </template>
