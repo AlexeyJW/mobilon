@@ -2,13 +2,29 @@
 interface Service {
   id: number
   name: string
-  slug: string | null
   description: string | null
-  price: string | number
 
-  priceFrom: boolean
-  category: string | null
+  seoText: string | null
+  duration: string | null
+  whatIncluded: string | null
+  metaTitle: string | null
+  metaDescription: string | null
+
+  price: string | number
   image: string | null
+  priceFrom: boolean
+  sortOrder: number
+  category: string | null
+  categoryId: number | null
+
+  categoryRef?: {
+    id: number
+    name: string
+  } | null
+
+  active: boolean
+  createdAt: string
+  updatedAt: string
 }
 const route = useRoute()
 

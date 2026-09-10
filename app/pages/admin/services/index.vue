@@ -22,16 +22,25 @@ interface Service {
   id: number
   name: string
   description: string | null
+
+  seoText: string | null
+  duration: string | null
+  whatIncluded: string | null
+  metaTitle: string | null
+  metaDescription: string | null
+
   price: string | number
   image: string | null
   priceFrom: boolean
   sortOrder: number
   category: string | null
   categoryId: number | null
+
   categoryRef?: {
     id: number
     name: string
   } | null
+
   active: boolean
   createdAt: string
   updatedAt: string
@@ -67,6 +76,11 @@ const editingCategory = ref<Category | null>(null)
 const form = reactive({
   name: '',
   description: '',
+  seoText: '',
+duration: '',
+whatIncluded: '',
+metaTitle: '',
+metaDescription: '',
   categoryId: null as number | null,
   price: '',
   priceFrom: false,
@@ -77,6 +91,11 @@ const form = reactive({
 const editForm = reactive({
   name: '',
   description: '',
+  seoText: '',
+  duration: '',
+  whatIncluded: '',
+  metaTitle: '',
+  metaDescription: '',
   categoryId: null as number | null,
   price: '',
   priceFrom: false,
@@ -230,6 +249,11 @@ onMounted(async () => {
 function openCreateModal() {
   form.name = ''
   form.description = ''
+  form.seoText = ''
+form.duration = ''
+form.whatIncluded = ''
+form.metaTitle = ''
+form.metaDescription = ''
   form.categoryId = null
   form.price = ''
   form.priceFrom = false
@@ -268,6 +292,11 @@ async function createService() {
       body: {
         name: form.name,
         description: form.description,
+        seoText: form.seoText,
+duration: form.duration,
+whatIncluded: form.whatIncluded,
+metaTitle: form.metaTitle,
+metaDescription: form.metaDescription,
         categoryId: form.categoryId,
         price,
         priceFrom: form.priceFrom,
@@ -301,6 +330,11 @@ function openEditModal(service: Service) {
 
   editForm.name = service.name
   editForm.description = service.description || ''
+  editForm.seoText = service.seoText || ''
+editForm.duration = service.duration || ''
+editForm.whatIncluded = service.whatIncluded || ''
+editForm.metaTitle = service.metaTitle || ''
+editForm.metaDescription = service.metaDescription || ''
   editForm.categoryId = service.categoryId
   editForm.price = String(service.price)
   editForm.priceFrom = service.priceFrom
@@ -347,6 +381,11 @@ async function updateService() {
         body: {
           name: editForm.name,
           description: editForm.description,
+          seoText: editForm.seoText,
+duration: editForm.duration,
+whatIncluded: editForm.whatIncluded,
+metaTitle: editForm.metaTitle,
+metaDescription: editForm.metaDescription,
           categoryId: editForm.categoryId,
           price,
           priceFrom: editForm.priceFrom,
@@ -899,8 +938,8 @@ function formatDate(date: string) {
       <template #content>
 
         <UCard
-          class="w-full max-w-md max-h-[90vh] overflow-y-auto"
-        >
+  class="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+>
 
           <div
             class="mb-6 flex items-center justify-between"
@@ -948,7 +987,56 @@ function formatDate(date: string) {
               />
 
             </UFormField>
+            <UFormField label="Розгорнутий опис">
+  <UTextarea
+    v-model="form.seoText"
+    placeholder="Детально опишіть послугу: для кого вона, як виконується, які проблеми вирішує..."
+    :rows="6"
+    class="w-full"
+  />
+</UFormField>
 
+<UFormField label="Тривалість">
+  <UInput
+    v-model="form.duration"
+    placeholder="Наприклад: 30–60 хвилин"
+    class="w-full"
+  />
+</UFormField>
+
+<UFormField label="Що входить у послугу">
+  <UTextarea
+    v-model="form.whatIncluded"
+    placeholder="Наприклад: діагностика, демонтаж, встановлення, перевірка роботи"
+    :rows="4"
+    class="w-full"
+  />
+</UFormField>
+
+<UFormField label="SEO Title">
+  <UInput
+    v-model="form.metaTitle"
+    placeholder="Наприклад: Заміна дисплею телефону у Солотвині | Mobilon"
+    class="w-full"
+  />
+
+  <template #description>
+    Якщо залишити порожнім — title буде створено автоматично
+  </template>
+</UFormField>
+
+<UFormField label="SEO Description">
+  <UTextarea
+    v-model="form.metaDescription"
+    placeholder="Короткий опис сторінки для Google"
+    :rows="3"
+    class="w-full"
+  />
+
+  <template #description>
+    Якщо залишити порожнім — description буде створено автоматично
+  </template>
+</UFormField>
             <UFormField label="Категорія">
 
               <USelect
@@ -1135,7 +1223,56 @@ function formatDate(date: string) {
               />
 
             </UFormField>
+<UFormField label="Розгорнутий опис">
+  <UTextarea
+    v-model="editForm.seoText"
+    placeholder="Детальний опис послуги"
+    :rows="6"
+    class="w-full"
+  />
+</UFormField>
 
+<UFormField label="Тривалість">
+  <UInput
+    v-model="editForm.duration"
+    placeholder="Наприклад: 30–60 хвилин"
+    class="w-full"
+  />
+</UFormField>
+
+<UFormField label="Що входить у послугу">
+  <UTextarea
+    v-model="editForm.whatIncluded"
+    placeholder="Що входить у вартість послуги"
+    :rows="4"
+    class="w-full"
+  />
+</UFormField>
+
+<UFormField label="SEO Title">
+  <UInput
+    v-model="editForm.metaTitle"
+    placeholder="Заміна дисплею телефону у Солотвині | Mobilon"
+    class="w-full"
+  />
+
+  <template #description>
+    Якщо порожньо — використовується автоматичний title
+  </template>
+</UFormField>
+
+<UFormField label="SEO Description">
+  <UTextarea
+    v-model="editForm.metaDescription"
+    placeholder="Опис сторінки для Google"
+    :rows="3"
+    class="w-full"
+  />
+
+  <template #description>
+    Якщо порожньо — використовується автоматичний description
+  </template>
+</UFormField>
             <UFormField label="Категорія">
 
               <USelect

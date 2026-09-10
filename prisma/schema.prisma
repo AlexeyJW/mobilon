@@ -342,6 +342,14 @@ model Service {
   name        String
   slug        String? @unique
   description String?
+
+  seoText          String?
+  duration         String?
+  whatIncluded     String?
+  metaTitle        String?
+  metaDescription  String?
+
+  
   price       Decimal @db.Decimal(10, 2)
   priceFrom   Boolean @default(false)
 

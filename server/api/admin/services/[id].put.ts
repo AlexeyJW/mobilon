@@ -18,6 +18,12 @@ export default defineEventHandler(async (event) => {
   const name = String(body?.name || '').trim()
   const description = String(body?.description || '').trim()
 
+  const seoText = String(body?.seoText || '').trim()
+  const duration = String(body?.duration || '').trim()
+  const whatIncluded = String(body?.whatIncluded || '').trim()
+  const metaTitle = String(body?.metaTitle || '').trim()
+  const metaDescription = String(body?.metaDescription || '').trim()
+
   // -------------------------
   // Image
   // -------------------------
@@ -121,6 +127,11 @@ export default defineEventHandler(async (event) => {
       data: {
         name,
         description: description || null,
+        seoText: seoText || null,
+        duration: duration || null,
+        whatIncluded: whatIncluded || null,
+        metaTitle: metaTitle || null,
+        metaDescription: metaDescription || null,
         image,
         price,
         priceFrom,
@@ -133,6 +144,12 @@ export default defineEventHandler(async (event) => {
         id: true,
         name: true,
         description: true,
+        slug: true,
+        seoText: true,
+        duration: true,
+        whatIncluded: true,
+        metaTitle: true,
+        metaDescription: true,
         image: true,
         price: true,
         priceFrom: true,
