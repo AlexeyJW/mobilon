@@ -126,7 +126,7 @@ loading.value = false
           </UButton>
 
           <UButton
-            :to="`/services/${service.id}`"
+           :to="`/services/${service.slug}`"
             color="neutral"
             variant="outline"
             class="flex-1"
