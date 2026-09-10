@@ -4,10 +4,10 @@ interface Service {
   name: string
   description: string | null
   price: string | number
+  priceFrom: boolean
   category: string | null
   image: string | null
 }
-
 const route = useRoute()
 
 const { data, error } = await useFetch<{
@@ -23,6 +23,39 @@ if (error.value || !data.value?.service) {
 }
 
 const service = computed(() => data.value!.service)
+
+// SEO meta
+useSeoMeta({
+  title: () => {
+    if (!service.value) return 'Послуга | Mobilon'
+
+    return `${service.value.name} у Солотвині | Mobilon`
+  },
+
+  description: () => {
+    if (!service.value) {
+      return 'Послуги Mobilon у Солотвині'
+    }
+
+    const price = Number(service.value.price)
+
+    return `${service.value.name} у Солотвині. ${service.value.description ?? ''} Вартість ${service.value.priceFrom ? 'від ' : ''}${price} грн. Mobilon.`
+  },
+
+  ogTitle: () => {
+    if (!service.value) return 'Mobilon'
+
+    return `${service.value.name} | Mobilon`
+  },
+
+  ogDescription: () =>
+    service.value?.description ??
+    'Послуги Mobilon у Солотвині',
+
+  ogImage: () => service.value?.image ?? ''
+})
+
+
 </script>
 
 <template>
