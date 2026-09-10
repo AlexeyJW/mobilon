@@ -12,7 +12,22 @@ export default defineEventHandler(async () => {
     }
   })
 
-  return products.map(product => ({
-    loc: `/products/${product.slug}`
-  }))
+  const services = await prisma.service.findMany({
+    where: {
+      active: true
+    },
+    select: {
+      id: true
+    }
+  })
+
+  return [
+    ...products.map(product => ({
+      loc: `/products/${product.slug}`
+    })),
+
+    ...services.map(service => ({
+      loc: `/services/${service.id}`
+    }))
+  ]
 })
