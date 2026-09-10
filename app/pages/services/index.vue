@@ -2,6 +2,7 @@
 interface Service {
   id: number
   name: string
+  slug: string | null
   description: string | null
   price: string | number
   category: string | null
