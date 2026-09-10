@@ -14,10 +14,13 @@ export default defineEventHandler(async () => {
 
   const services = await prisma.service.findMany({
     where: {
-      active: true
+      active: true,
+      slug: {
+        not: null
+      }
     },
     select: {
-      id: true
+      slug: true
     }
   })
 
@@ -27,7 +30,7 @@ export default defineEventHandler(async () => {
     })),
 
     ...services.map(service => ({
-      loc: `/services/${service.id}`
+      loc: `/services/${service.slug}`
     }))
   ]
 })
