@@ -3,6 +3,17 @@
   "outputDirectory": ".output",
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "mobilon-seven.vercel.app"
+        }
+      ],
+      "destination": "https://mobilon.com.ua/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {
