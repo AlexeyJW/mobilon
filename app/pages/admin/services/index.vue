@@ -69,6 +69,9 @@ const showCategoryEditModal = ref(false)
 const editingService = ref<Service | null>(null)
 const editingCategory = ref<Category | null>(null)
 
+const seoGenerating = ref(false)
+const editSeoGenerating = ref(false)
+
 /* ==================================================
    SERVICE FORMS
 ================================================== */
@@ -567,6 +570,108 @@ function formatDate(date: string) {
   return new Date(date)
     .toLocaleDateString('uk-UA')
 }
+
+// SEO generation with Mobi
+
+async function generateSeoForCreate() {
+  if (!form.name.trim()) {
+    alert('Спочатку вкажіть назву послуги')
+    return
+  }
+
+  seoGenerating.value = true
+
+  try {
+    const categoryName =
+      categories.value.find(
+        category => category.id === form.categoryId
+      )?.name || ''
+
+    const result = await $fetch<{
+      success: boolean
+      seo: {
+        seoText: string
+        whatIncluded: string
+        metaTitle: string
+        metaDescription: string
+      }
+    }>('/api/admin/services/generate-seo', {
+      method: 'POST',
+      body: {
+        name: form.name,
+        description: form.description,
+        category: categoryName,
+        price: form.price,
+        priceFrom: form.priceFrom,
+        duration: form.duration
+      }
+    })
+
+    form.seoText = result.seo.seoText
+    form.whatIncluded = result.seo.whatIncluded
+    form.metaTitle = result.seo.metaTitle
+    form.metaDescription = result.seo.metaDescription
+  } catch (error: any) {
+    console.error('SEO generation failed:', error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося згенерувати SEO'
+    )
+  } finally {
+    seoGenerating.value = false
+  }
+}
+
+async function generateSeoForEdit() {
+  if (!editForm.name.trim()) {
+    alert('Спочатку вкажіть назву послуги')
+    return
+  }
+
+  editSeoGenerating.value = true
+
+  try {
+    const categoryName =
+      categories.value.find(
+        category => category.id === editForm.categoryId
+      )?.name || ''
+
+    const result = await $fetch<{
+      success: boolean
+      seo: {
+        seoText: string
+        whatIncluded: string
+        metaTitle: string
+        metaDescription: string
+      }
+    }>('/api/admin/services/generate-seo', {
+      method: 'POST',
+      body: {
+        name: editForm.name,
+        description: editForm.description,
+        category: categoryName,
+        price: editForm.price,
+        priceFrom: editForm.priceFrom,
+        duration: editForm.duration
+      }
+    })
+
+    editForm.seoText = result.seo.seoText
+    editForm.whatIncluded = result.seo.whatIncluded
+    editForm.metaTitle = result.seo.metaTitle
+    editForm.metaDescription = result.seo.metaDescription
+  } catch (error: any) {
+    console.error('SEO generation failed:', error)
+
+    alert(
+      error?.data?.statusMessage ||
+      'Не вдалося згенерувати SEO'
+    )
+  } finally {
+    editSeoGenerating.value = false
+  }
+}
 </script>
 
 <template>
@@ -987,6 +1092,19 @@ function formatDate(date: string) {
               />
 
             </UFormField>
+<UButton
+  icon="i-lucide-sparkles"
+  color="primary"
+  variant="soft"
+  block
+  :loading="seoGenerating"
+  @click="generateSeoForCreate"
+>
+  Згенерувати SEO з Мобі
+</UButton>
+
+
+
             <UFormField label="Розгорнутий опис">
   <UTextarea
     v-model="form.seoText"
@@ -1223,6 +1341,18 @@ function formatDate(date: string) {
               />
 
             </UFormField>
+
+<UButton
+  icon="i-lucide-sparkles"
+  color="primary"
+  variant="soft"
+  block
+  :loading="editSeoGenerating"
+  @click="generateSeoForEdit"
+>
+  Згенерувати SEO з Мобі
+</UButton>
+
 <UFormField label="Розгорнутий опис">
   <UTextarea
     v-model="editForm.seoText"
