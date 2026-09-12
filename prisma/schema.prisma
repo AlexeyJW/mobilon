@@ -13,22 +13,213 @@ model BonusTransaction {
   customerId Int
   customer   Customer @relation(fields: [customerId], references: [id])
 
+  // +50 = нарахування
+  // -100 = списання
   amount Int
+
+  // Поки optional, тому що в базі вже можуть бути старі записи
+  type BonusTransactionType?
+
+  // Старе поле поки залишаємо
   reason String
 
+  // Нове нормальне пояснення операції
+  description String?
+
+  // Продаж, через який виникла операція
+  purchaseId Int?
+  purchase   Purchase? @relation(fields: [purchaseId], references: [id])
+
+  // Політика, яка діяла в момент операції
+  policyId Int?
+  policy   BonusPolicy? @relation(fields: [policyId], references: [id])
+
+  // Знімок % на момент операції
+  rewardPercentSnapshot Decimal? @db.Decimal(5, 2)
+
   createdAt DateTime @default(now())
+
+  @@index([customerId])
+  @@index([purchaseId])
+  @@index([policyId])
+  @@index([createdAt])
+}
+
+model BonusPolicy {
+  id Int @id @default(autoincrement())
+
+  // Наприклад 5 = 5%
+  rewardPercent Decimal @db.Decimal(5, 2)
+
+  // Максимальна частина покупки,
+  // яку дозволено оплатити бонусами.
+  // Наприклад 20 = 20%
+  maxRedeemPercent Decimal @db.Decimal(5, 2)
+
+  // Мінімальна сума покупки,
+  // з якої нараховуються бонуси
+  minPurchaseAmount Decimal? @db.Decimal(10, 2)
+
+  // Мінімальна кількість бонусів,
+  // яку дозволено використати
+  minRedeemPoints Int?
+
+  // Через скільки днів після покупки
+  // бонуси можна використовувати
+  activationDelayDays Int @default(0)
+
+  // null = бонуси не згорають
+  expirationDays Int?
+
+  // Чи нараховувати за ці категорії
+  rewardProducts Boolean @default(true)
+  rewardServices Boolean @default(true)
+
+  // Чи давати нові бонуси на частину,
+  // яка була оплачена старими бонусами
+  rewardOnBonusPaidPart Boolean @default(false)
+
+  // Період дії політики
+  validFrom DateTime
+  validTo   DateTime?
+
+  createdAt DateTime @default(now())
+
+  transactions BonusTransaction[]
+  purchases    Purchase[]
+
+  @@index([validFrom])
+  @@index([validTo])
 }
 
 model Customer {
-  id                Int                @id @default(autoincrement())
-  name              String
-  phone             String             @unique
-  visits            Int                @default(0)
-  points            Int                @default(0)
-  notes             String?
-  createdAt         DateTime           @default(now())
+  id    Int    @id @default(autoincrement())
+  name  String
+  phone String @unique
+
+  visits Int @default(0)
+  points Int @default(0)
+
+  notes String?
+
+  loyaltyActive  Boolean @default(false)
+  cardToken      String? @unique
+  telegramChatId String?
+
+  active    Boolean   @default(true)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   requests          Request[]
   bonusTransactions BonusTransaction[]
+  purchases         Purchase[]
+
+  @@index([active])
+}
+
+enum BonusTransactionType {
+  PURCHASE_REWARD
+  PURCHASE_PAYMENT
+  REFUND
+  ADMIN_ADJUSTMENT
+  EXPIRED
+  INITIAL_BALANCE
+}
+
+model Purchase {
+  id Int @id @default(autoincrement())
+
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  // Повна сума фіскального чека
+  totalAmount Decimal @db.Decimal(10, 2)
+
+  // Скільки бонусів використали
+  bonusUsed Int @default(0)
+
+  // Скільки реально було сплачено після бонусів
+  paidAmount Decimal @db.Decimal(10, 2)
+
+  // Скільки бонусів отримав клієнт
+  bonusEarned Int @default(0)
+
+  // Політика, яка діяла на момент покупки
+  policyId Int?
+  policy   BonusPolicy? @relation(fields: [policyId], references: [id])
+
+  // Зберігаємо параметри розрахунку на момент продажу
+  rewardPercentSnapshot    Decimal? @db.Decimal(5, 2)
+  maxRedeemPercentSnapshot Decimal? @db.Decimal(5, 2)
+
+  // Дані фіскального чека
+  fiscalReceiptNumber String?
+  fiscalDeviceNumber  String?
+  fiscalReceiptDate   DateTime?
+  fiscalReceiptUrl    String?
+
+  source PurchaseSource @default(MANUAL)
+  status PurchaseStatus @default(COMPLETED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bonusTransactions BonusTransaction[]
+  items             PurchaseLine[]
+
+  // Один фіскальний чек не можна зарахувати двічі
+  @@unique([fiscalDeviceNumber, fiscalReceiptNumber])
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([policyId])
+}
+
+enum PurchaseSource {
+  MANUAL
+  FISCAL_QR
+}
+
+enum PurchaseStatus {
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+model PurchaseLine {
+  id Int @id @default(autoincrement())
+
+  purchaseId Int
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  productId Int?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  serviceId Int?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  name String
+
+  type PurchaseLineType
+
+  quantity Decimal @db.Decimal(10, 3)
+
+  unitPrice  Decimal @db.Decimal(10, 2)
+  totalPrice Decimal @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([purchaseId])
+  @@index([productId])
+  @@index([serviceId])
+}
+
+enum PurchaseLineType {
+  PRODUCT
+  SERVICE
+  OTHER
 }
 
 model Request {
@@ -93,7 +284,8 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  leads Lead[]
+  leads         Lead[]
+  purchaseLines PurchaseLine[]
 
   @@index([brandId])
   @@index([categoryId])
@@ -343,23 +535,23 @@ model Service {
   slug        String? @unique
   description String?
 
-  seoText          String?
-  duration         String?
-  whatIncluded     String?
-  metaTitle        String?
-  metaDescription  String?
+  seoText         String?
+  duration        String?
+  whatIncluded    String?
+  metaTitle       String?
+  metaDescription String?
 
-  
-  price       Decimal @db.Decimal(10, 2)
-  priceFrom   Boolean @default(false)
+  price     Decimal @db.Decimal(10, 2)
+  priceFrom Boolean @default(false)
 
   image       String?
   category    String?
   categoryId  Int?
   categoryRef ServiceCategory? @relation(fields: [categoryId], references: [id])
 
-  active    Boolean @default(true)
-  sortOrder Int     @default(0)
+  active        Boolean        @default(true)
+  sortOrder     Int            @default(0)
+  purchaseLines PurchaseLine[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -293,18 +293,18 @@ async function changePassword() {
       </div>
 
       <!-- Мобільне меню -->
-    <Transition
-    enter-active-class="transition-all duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]"
-    enter-from-class="opacity-0 -translate-y-4 max-h-0"
-    enter-to-class="opacity-100 translate-y-0 max-h-[600px]"
-    leave-active-class="transition-all duration-250 ease-in"
-    leave-from-class="opacity-100 translate-y-0 max-h-[600px]"
-    leave-to-class="opacity-0 -translate-y-4 max-h-0"
-  />
-      <div 
-        v-if="isMobileMenuOpen" 
-        class="absolute left-0 right-0 top-full md:hidden bg-default overflow-hidden shadow-lg"
-      >
+   <Transition
+  enter-active-class="transition-all duration-350 ease-[cubic-bezier(0.22,1,0.36,1)]"
+  enter-from-class="opacity-0 -translate-y-4 max-h-0"
+  enter-to-class="opacity-100 translate-y-0 max-h-[600px]"
+  leave-active-class="transition-all duration-250 ease-in"
+  leave-from-class="opacity-100 translate-y-0 max-h-[600px]"
+  leave-to-class="opacity-0 -translate-y-4 max-h-0"
+>
+  <div 
+    v-if="isMobileMenuOpen" 
+    class="absolute left-0 right-0 top-full md:hidden bg-default overflow-hidden shadow-lg"
+  >
         <div class="container mx-auto px-4 py-4 space-y-1">
           <UButton
             to="/admin"
@@ -435,6 +435,8 @@ async function changePassword() {
           </UButton>
         </div>
       </div>
+
+    </Transition>
     </header>
 
     <!-- Основний контент -->
