@@ -1,4 +1,6 @@
 <script setup lang="ts">
+
+
 definePageMeta({
   layout: 'admin',
   middleware: 'admin'
@@ -87,6 +89,8 @@ const saleForm = reactive({
   price: 1000,
   bonusUsed: 0
 })
+
+
 
 async function createTestSale() {
   const price = Number(saleForm.price)
@@ -185,6 +189,46 @@ watch(
     immediate: true
   }
 )
+// bonus card customer
+
+const cardSaving = ref(false)
+
+async function createBonusCard() {
+  if (!customer.value) {
+    return
+  }
+
+  cardSaving.value = true
+
+  try {
+    await $fetch(
+      `/api/admin/customers/${customer.value.id}/card`,
+      {
+        method: 'POST'
+      }
+    )
+
+    toast.add({
+      title: 'Бонусну картку створено',
+      color: 'success'
+    })
+
+    await refresh()
+  } catch (error: any) {
+    toast.add({
+      title: 'Не вдалося створити картку',
+      description:
+        error?.data?.statusMessage ||
+        'Помилка створення бонусної картки',
+      color: 'error'
+    })
+  } finally {
+    cardSaving.value = false
+  }
+}
+
+//=======
+
 
 function formatMoney(value: number | string) {
   return new Intl.NumberFormat('uk-UA', {
@@ -533,6 +577,38 @@ async function adjustBonus() {
     />
   </div>
 </UCard>
+
+<div class="flex flex-wrap gap-2 mt-4">
+  <UButton
+    v-if="!customer.cardToken"
+    icon="i-lucide-credit-card"
+    :loading="cardSaving"
+    @click="createBonusCard"
+  >
+    Створити бонусну картку
+  </UButton>
+
+  <template v-else>
+    <UBadge
+      color="success"
+      variant="soft"
+      size="lg"
+    >
+      Бонусна картка активна
+    </UBadge>
+
+    <UButton
+      :to="`/bonus/${customer.cardToken}`"
+      target="_blank"
+      icon="i-lucide-external-link"
+      variant="soft"
+    >
+      Відкрити бонусну картку
+    </UButton>
+  </template>
+</div>
+
+
 <!-- Створення тестової покупки -->
  <UCard>
   <template #header>
