@@ -125,6 +125,18 @@ async function changePassword() {
             >
               Клієнти
             </UButton>
+
+<UButton
+  to="/admin/scan"
+  color="primary"
+  :variant="route.path.startsWith('/admin/scan') ? 'solid' : 'ghost'"
+  size="sm"
+  icon="i-lucide-scan-line"
+>
+  Сканер
+</UButton>
+
+
             <UButton
                 to="/admin/users"
                 
@@ -336,6 +348,18 @@ async function changePassword() {
           >
             Клієнти
           </UButton>
+
+<UButton
+  to="/admin/scan"
+  icon="i-lucide-scan-line"
+  color="primary"
+  :variant="route.path.startsWith('/admin/scan') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Сканер картки
+</UButton>
+
           <UButton
   to="/admin/users"
   icon="i-lucide-users-round"
