@@ -57,15 +57,20 @@ async function startScanner() {
         // Помилки окремих кадрів ігноруємо
       }
     )
-  } catch (error) {
-    scanning.value = false
+ } catch (error: any) {
+  scanning.value = false
 
-    toast.add({
-      title: 'Не вдалося запустити камеру',
-      description: 'Перевір дозвіл браузера на використання камери.',
-      color: 'error'
-    })
-  }
+  console.error('CAMERA ERROR:', error)
+
+  toast.add({
+    title: 'Не вдалося запустити камеру',
+    description:
+      error?.message ||
+      String(error) ||
+      'Невідома помилка камери',
+    color: 'error'
+  })
+}
 }
 
 async function stopScanner() {
