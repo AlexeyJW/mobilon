@@ -20,9 +20,74 @@ export default defineEventHandler(async (event) => {
   const customerId = Number(body.customerId)
   const bonusUsed = Number(body.bonusUsed || 0)
 
-  const items = Array.isArray(body.items)
-    ? body.items as SaleItemInput[]
-    : []
+
+  
+const source =
+  body.source === 'FISCAL_QR'
+    ? 'FISCAL_QR'
+    : 'MANUAL'
+
+const fiscalReceiptNumber =
+  String(body.fiscalReceiptNumber || '').trim()
+
+const fiscalDeviceNumber =
+  String(body.fiscalDeviceNumber || '').trim()
+
+const fiscalReceiptUrl =
+  String(body.fiscalReceiptUrl || '').trim()
+
+const fiscalReceiptDate =
+  body.fiscalReceiptDate
+    ? new Date(body.fiscalReceiptDate)
+    : null
+
+const rewardAmount =
+  body.rewardAmount === null ||
+  body.rewardAmount === undefined
+    ? null
+    : Number(body.rewardAmount)
+
+const rewardEnabled =
+  body.rewardEnabled !== false
+  let items = Array.isArray(body.items)
+  ? body.items as SaleItemInput[]
+  : []
+if (
+  source === 'FISCAL_QR' &&
+  fiscalReceiptDate &&
+  Number.isNaN(fiscalReceiptDate.getTime())
+) {
+  throw createError({
+    statusCode: 400,
+    statusMessage: 'Некоректна дата фіскального чека'
+  })
+}
+if (source === 'FISCAL_QR') {
+  const fiscalTotal = Number(body.totalAmount)
+
+  if (!Number.isFinite(fiscalTotal) || fiscalTotal <= 0) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Некоректна сума фіскального чека'
+    })
+  }
+
+  if (!fiscalReceiptNumber || !fiscalDeviceNumber) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Відсутні дані фіскального чека'
+    })
+  }
+
+  items = [
+    {
+      type: 'OTHER',
+      name: `Фіскальний чек №${fiscalReceiptNumber}`,
+      quantity: 1,
+      unitPrice: fiscalTotal
+    }
+  ]
+}
 
   /* ==================================================
      VALIDATION
@@ -41,7 +106,16 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Некоректна кількість бонусів'
     })
   }
-
+if (
+  source === 'FISCAL_QR' &&
+  bonusUsed !== 0
+) {
+  throw createError({
+    statusCode: 400,
+    statusMessage:
+      'Для вже виданого фіскального чека не можна списувати бонуси'
+  })
+}
   if (!items.length) {
     throw createError({
       statusCode: 400,
@@ -128,12 +202,50 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Сума покупки повинна бути більшою за 0'
     })
   }
-
+if (
+  source === 'FISCAL_QR' &&
+  rewardEnabled &&
+  (
+    rewardAmount === null ||
+    !Number.isFinite(rewardAmount) ||
+    rewardAmount < 0 ||
+    rewardAmount > totalAmount
+  )
+) {
+  throw createError({
+    statusCode: 400,
+    statusMessage:
+      'Некоректна сума для нарахування бонусів'
+  })
+}
   /* ==================================================
      TRANSACTION
   ================================================== */
 
   const result = await prisma.$transaction(async tx => {
+
+
+    /* ---------- DUPLICATE FISCAL RECEIPT ---------- */
+
+if (source === 'FISCAL_QR') {
+  const existingReceipt = await tx.purchase.findFirst({
+    where: {
+      fiscalDeviceNumber,
+      fiscalReceiptNumber
+    },
+    select: {
+      id: true
+    }
+  })
+
+  if (existingReceipt) {
+    throw createError({
+      statusCode: 409,
+      statusMessage:
+        `Цей фіскальний чек вже зареєстровано як покупку №${existingReceipt.id}`
+    })
+  }
+}
 
     /* ---------- CUSTOMER ---------- */
 
@@ -262,31 +374,47 @@ export default defineEventHandler(async (event) => {
 
     /* ---------- ELIGIBLE AMOUNT ---------- */
 
-    let eligibleAmount = 0
+   let eligibleAmount = 0
 
-    if (
-      customer.loyaltyActive &&
-      policy
-    ) {
-      for (const item of preparedItems) {
-        if (
-          item.type === 'PRODUCT' &&
-          policy.rewardProducts
-        ) {
-          eligibleAmount += item.totalPrice
-        }
+if (
+  customer.loyaltyActive &&
+  policy &&
+  rewardEnabled
+) {
+  if (source === 'FISCAL_QR') {
+    /*
+     * Для фіскального чека продавець сам визначив,
+     * яка частина покупки бере участь
+     * у бонусній програмі.
+     */
+    eligibleAmount = Number(
+      rewardAmount ?? totalAmount
+    )
+  } else {
+    /*
+     * Для звичайного ручного продажу
+     * працюють правила товарів/послуг.
+     */
+    for (const item of preparedItems) {
+      if (
+        item.type === 'PRODUCT' &&
+        policy.rewardProducts
+      ) {
+        eligibleAmount += item.totalPrice
+      }
 
-        if (
-          item.type === 'SERVICE' &&
-          policy.rewardServices
-        ) {
-          eligibleAmount += item.totalPrice
-        }
+      if (
+        item.type === 'SERVICE' &&
+        policy.rewardServices
+      ) {
+        eligibleAmount += item.totalPrice
       }
     }
+  }
+}
 
-    eligibleAmount =
-      Math.round(eligibleAmount * 100) / 100
+eligibleAmount =
+  Math.round(eligibleAmount * 100) / 100
 
     /* ---------- REWARD BASE ---------- */
 
@@ -345,8 +473,28 @@ export default defineEventHandler(async (event) => {
         maxRedeemPercentSnapshot:
           policy?.maxRedeemPercent || null,
 
-        source: 'MANUAL',
-        status: 'COMPLETED',
+       source,
+status: 'COMPLETED',
+
+fiscalReceiptNumber:
+  source === 'FISCAL_QR'
+    ? fiscalReceiptNumber
+    : null,
+
+fiscalDeviceNumber:
+  source === 'FISCAL_QR'
+    ? fiscalDeviceNumber
+    : null,
+
+fiscalReceiptDate:
+  source === 'FISCAL_QR'
+    ? fiscalReceiptDate
+    : null,
+
+fiscalReceiptUrl:
+  source === 'FISCAL_QR'
+    ? fiscalReceiptUrl
+    : null,
 
         items: {
           create: preparedItems.map(item => ({

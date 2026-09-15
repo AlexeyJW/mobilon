@@ -1,5 +1,6 @@
 import prisma from '../../../utils/prisma'
 import requireAdmin from '../../../utils/requireAdmin'
+import { normalizePhone } from '../../../utils/normalizePhone'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -7,9 +8,24 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const search = query.search?.toString().trim() || ''
 
+  /*
+   * Якщо в пошуку є цифри, пробуємо отримати
+   * нормалізований номер телефону.
+   *
+   * 097 777 77 77
+   * +380 97 777 77 77
+   * 380977777777
+   *
+   * -> 380977777777
+   */
+  const normalizedPhone = search
+    ? normalizePhone(search)
+    : ''
+
   const customers = await prisma.customer.findMany({
     where: {
       active: true,
+      deletedAt: null,
 
       ...(search
         ? {
@@ -20,11 +36,16 @@ export default defineEventHandler(async (event) => {
                   mode: 'insensitive'
                 }
               },
-              {
-                phone: {
-                  contains: search
-                }
-              }
+
+              ...(normalizedPhone
+                ? [
+                    {
+                      phone: {
+                        contains: normalizedPhone
+                      }
+                    }
+                  ]
+                : [])
             ]
           }
         : {})
