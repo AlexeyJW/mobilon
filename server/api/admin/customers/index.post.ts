@@ -1,5 +1,9 @@
 import prisma from '../../../utils/prisma'
 import requireAdmin from '../../../utils/requireAdmin'
+import {
+  normalizePhone,
+  isValidUkrainianPhone
+} from '../../../utils/normalizePhone'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -7,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
   const name = String(body.name || '').trim()
-  const phone = String(body.phone || '').trim()
+  const rawPhone = String(body.phone || '').trim()
 
   if (!name) {
     throw createError({
@@ -16,12 +20,21 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (!phone) {
+  if (!rawPhone) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Вкажіть номер телефону'
     })
   }
+
+  if (!isValidUkrainianPhone(rawPhone)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Вкажіть коректний номер телефону'
+    })
+  }
+
+  const phone = normalizePhone(rawPhone)
 
   const existingCustomer = await prisma.customer.findUnique({
     where: {
