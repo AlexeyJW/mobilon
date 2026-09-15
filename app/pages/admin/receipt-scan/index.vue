@@ -19,11 +19,17 @@ async function startScanner() {
   decodedText.value = ''
 
   try {
+    // Спочатку показуємо контейнер сканера
+    scannerStarted.value = true
+
+    // Чекаємо, поки Vue створить
+    // #receipt-qr-reader у DOM
+    await nextTick()
+
     const { Html5Qrcode } = await import('html5-qrcode')
 
     html5QrCode = new Html5Qrcode('receipt-qr-reader')
 
-    scannerStarted.value = true
     scanning.value = true
 
     await html5QrCode.start(
@@ -57,20 +63,20 @@ async function startScanner() {
         // Помилки окремих кадрів ігноруємо
       }
     )
- } catch (error: any) {
-  scanning.value = false
+  } catch (error: any) {
+    scanning.value = false
 
-  console.error('CAMERA ERROR:', error)
+    console.error('CAMERA ERROR:', error)
 
-  toast.add({
-    title: 'Не вдалося запустити камеру',
-    description:
-      error?.message ||
-      String(error) ||
-      'Невідома помилка камери',
-    color: 'error'
-  })
-}
+    toast.add({
+      title: 'Не вдалося запустити камеру',
+      description:
+        error?.message ||
+        String(error) ||
+        'Невідома помилка камери',
+      color: 'error'
+    })
+  }
 }
 
 async function stopScanner() {
