@@ -1,8 +1,17 @@
 import prisma from '../../../utils/prisma'
 import requireAdmin from '../../../utils/requireAdmin'
 
+type BonusCategory =
+  | 'SMARTPHONE'
+  | 'FEATURE_PHONE'
+  | 'ACCESSORY'
+  | 'SERVICE'
+  | 'NO_REWARD'
+
 type SaleItemInput = {
   type: 'PRODUCT' | 'SERVICE' | 'OTHER'
+
+  bonusCategory?: BonusCategory | null
 
   productId?: number | null
   serviceId?: number | null
@@ -132,7 +141,23 @@ if (
         statusMessage: 'Некоректний тип позиції'
       })
     }
-
+if (
+  item.bonusCategory !== undefined &&
+  item.bonusCategory !== null &&
+  ![
+    'SMARTPHONE',
+    'FEATURE_PHONE',
+    'ACCESSORY',
+    'SERVICE',
+    'NO_REWARD'
+  ].includes(item.bonusCategory)
+) {
+  throw createError({
+    statusCode: 400,
+    statusMessage:
+      `Некоректна бонусна категорія: ${item.name}`
+  })
+}
     if (!String(item.name || '').trim()) {
       throw createError({
         statusCode: 400,
@@ -175,17 +200,24 @@ if (
     const totalPrice =
       Math.round(quantity * unitPrice * 100) / 100
 
-    return {
-      type: item.type,
-      productId: item.productId || null,
-      serviceId: item.serviceId || null,
+ return {
+  type: item.type,
 
-      name: item.name.trim(),
+  bonusCategory:
+    item.bonusCategory ?? null,
 
-      quantity,
-      unitPrice,
-      totalPrice
-    }
+  productId:
+    item.productId || null,
+
+  serviceId:
+    item.serviceId || null,
+
+  name: item.name.trim(),
+
+  quantity,
+  unitPrice,
+  totalPrice
+}
   })
 
   const totalAmount =
@@ -372,88 +404,150 @@ if (source === 'FISCAL_QR') {
         (totalAmount - bonusUsed) * 100
       ) / 100
 
-    /* ---------- ELIGIBLE AMOUNT ---------- */
+    /* ---------- BONUS REWARD BY ITEM ---------- */
 
-   let eligibleAmount = 0
-
-if (
-  customer.loyaltyActive &&
-  policy &&
-  rewardEnabled
-) {
-  if (source === 'FISCAL_QR') {
-    /*
-     * Для фіскального чека продавець сам визначив,
-     * яка частина покупки бере участь
-     * у бонусній програмі.
-     */
-    eligibleAmount = Number(
-      rewardAmount ?? totalAmount
-    )
-  } else {
-    /*
-     * Для звичайного ручного продажу
-     * працюють правила товарів/послуг.
-     */
-    for (const item of preparedItems) {
-      if (
-        item.type === 'PRODUCT' &&
-        policy.rewardProducts
-      ) {
-        eligibleAmount += item.totalPrice
+    const getRewardPercent = (
+      category: BonusCategory | null
+    ) => {
+      if (!policy || !category) {
+        return 0
       }
 
-      if (
-        item.type === 'SERVICE' &&
-        policy.rewardServices
-      ) {
-        eligibleAmount += item.totalPrice
+      switch (category) {
+        case 'SMARTPHONE':
+          return Number(
+            policy.smartphoneRewardPercent
+          )
+
+        case 'FEATURE_PHONE':
+          return Number(
+            policy.featurePhoneRewardPercent
+          )
+
+        case 'ACCESSORY':
+          return Number(
+            policy.accessoryRewardPercent
+          )
+
+        case 'SERVICE':
+          return Number(
+            policy.serviceRewardPercent
+          )
+
+        case 'NO_REWARD':
+          return 0
+
+        default:
+          return 0
       }
     }
-  }
-}
 
-eligibleAmount =
-  Math.round(eligibleAmount * 100) / 100
-
-    /* ---------- REWARD BASE ---------- */
-
-    let rewardBase = eligibleAmount
-
-    if (
-      policy &&
-      !policy.rewardOnBonusPaidPart &&
-      totalAmount > 0 &&
-      bonusUsed > 0
-    ) {
-      const paidRatio =
-        paidAmount / totalAmount
-
-      rewardBase =
-        eligibleAmount * paidRatio
-    }
-
-    rewardBase =
-      Math.round(rewardBase * 100) / 100
-
-    /* ---------- BONUS EARNED ---------- */
+    /*
+     * Для кожної позиції зберігаємо:
+     * - категорію
+     * - застосований %
+     * - фактично нараховані бонуси
+     */
+    let preparedItemsWithBonus =
+      preparedItems.map(item => ({
+        ...item,
+        rewardPercentSnapshot: 0,
+        bonusEarned: 0
+      }))
 
     let bonusEarned = 0
 
     if (
       customer.loyaltyActive &&
-      policy
+      policy &&
+      rewardEnabled
     ) {
-      const rewardPercent =
-        Number(policy.rewardPercent)
+      /*
+       * Якщо частина покупки оплачена бонусами
+       * і політика забороняє нараховувати бонуси
+       * на цю частину, пропорційно зменшуємо
+       * базу кожної позиції.
+       */
+      const paidRatio =
+        !policy.rewardOnBonusPaidPart &&
+        totalAmount > 0 &&
+        bonusUsed > 0
+          ? paidAmount / totalAmount
+          : 1
 
-      bonusEarned = Math.floor(
-        rewardBase *
-        rewardPercent /
-        100
-      )
+      preparedItemsWithBonus =
+        preparedItems.map(item => {
+          const rewardPercent =
+            getRewardPercent(
+              item.bonusCategory
+            )
+
+          const rewardBase =
+            Math.round(
+              item.totalPrice *
+              paidRatio *
+              100
+            ) / 100
+
+          const itemBonusEarned =
+            Math.floor(
+              rewardBase *
+              rewardPercent /
+              100
+            )
+
+          return {
+            ...item,
+
+            rewardPercentSnapshot:
+              rewardPercent,
+
+            bonusEarned:
+              itemBonusEarned
+          }
+        })
+
+ bonusEarned =
+  preparedItemsWithBonus.reduce(
+    (sum, item) =>
+      sum + item.bonusEarned,
+    0
+  )
+
+/*
+ * Якщо спрацював максимальний ліміт,
+ * зменшуємо бонуси позицій так,
+ * щоб їх сума точно дорівнювала ліміту.
+ */
+if (
+  policy.maxRewardPoints !== null &&
+  bonusEarned > policy.maxRewardPoints
+) {
+  let remainingBonus =
+    policy.maxRewardPoints
+
+  preparedItemsWithBonus =
+    preparedItemsWithBonus.map(item => {
+      const itemBonusEarned =
+        Math.min(
+          item.bonusEarned,
+          remainingBonus
+        )
+
+      remainingBonus -=
+        itemBonusEarned
+
+      return {
+        ...item,
+        bonusEarned:
+          itemBonusEarned
+      }
+    })
+
+  bonusEarned =
+    policy.maxRewardPoints
+}
     }
-
     /* ---------- CREATE PURCHASE ---------- */
 
     const purchase = await tx.purchase.create({
@@ -472,6 +566,9 @@ eligibleAmount =
 
         maxRedeemPercentSnapshot:
           policy?.maxRedeemPercent || null,
+
+        maxRewardPointsSnapshot:
+          policy?.maxRewardPoints ?? null,
 
        source,
 status: 'COMPLETED',
@@ -496,19 +593,28 @@ fiscalReceiptUrl:
     ? fiscalReceiptUrl
     : null,
 
-        items: {
-          create: preparedItems.map(item => ({
-            productId: item.productId,
-            serviceId: item.serviceId,
+items: {
+  create: preparedItemsWithBonus.map(item => ({
+    productId: item.productId,
+    serviceId: item.serviceId,
 
-            name: item.name,
-            type: item.type,
+    name: item.name,
+    type: item.type,
 
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.totalPrice
-          }))
-        }
+    bonusCategory:
+      item.bonusCategory,
+
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    totalPrice: item.totalPrice,
+
+    rewardPercentSnapshot:
+      item.rewardPercentSnapshot,
+
+    bonusEarned:
+      item.bonusEarned
+  }))
+}
       },
 
       include: {

@@ -11,7 +11,15 @@ definePageMeta({
 interface BonusPolicy {
   id: number
 
+  // Legacy — поки залишається в API/БД
   rewardPercent: string | number
+
+  smartphoneRewardPercent: string | number
+  featurePhoneRewardPercent: string | number
+  accessoryRewardPercent: string | number
+  serviceRewardPercent: string | number
+  maxRewardPoints: number | null
+
   maxRedeemPercent: string | number
 
   minPurchaseAmount: string | number | null
@@ -46,7 +54,13 @@ const showCreateModal = ref(false)
 ================================================== */
 
 const form = reactive({
-  rewardPercent: 5,
+  smartphoneRewardPercent: 1,
+  featurePhoneRewardPercent: 2,
+  accessoryRewardPercent: 5,
+  serviceRewardPercent: 5,
+
+  maxRewardPoints: 300 as string | number,
+
   maxRedeemPercent: 20,
 
   minPurchaseAmount: '' as string | number,
@@ -55,8 +69,6 @@ const form = reactive({
   activationDelayDays: 0,
   expirationDays: '' as string | number,
 
-  rewardProducts: true,
-  rewardServices: true,
   rewardOnBonusPaidPart: false,
 
   validFrom: ''
@@ -79,7 +91,10 @@ async function loadPolicies() {
     currentPolicy.value = result.currentPolicy
     policies.value = result.policies
   } catch (error: any) {
-    console.error('Failed to load bonus policies:', error)
+    console.error(
+      'Failed to load bonus policies:',
+      error
+    )
 
     alert(
       error?.data?.statusMessage ||
@@ -100,8 +115,28 @@ onMounted(() => {
 
 function openCreateModal() {
   if (currentPolicy.value) {
-    form.rewardPercent =
-      Number(currentPolicy.value.rewardPercent)
+    form.smartphoneRewardPercent =
+      Number(
+        currentPolicy.value.smartphoneRewardPercent
+      )
+
+    form.featurePhoneRewardPercent =
+      Number(
+        currentPolicy.value.featurePhoneRewardPercent
+      )
+
+    form.accessoryRewardPercent =
+      Number(
+        currentPolicy.value.accessoryRewardPercent
+      )
+
+    form.serviceRewardPercent =
+      Number(
+        currentPolicy.value.serviceRewardPercent
+      )
+
+    form.maxRewardPoints =
+      currentPolicy.value.maxRewardPoints ?? ''
 
     form.maxRedeemPercent =
       Number(currentPolicy.value.maxRedeemPercent)
@@ -118,34 +153,35 @@ function openCreateModal() {
     form.expirationDays =
       currentPolicy.value.expirationDays ?? ''
 
-    form.rewardProducts =
-      currentPolicy.value.rewardProducts
-
-    form.rewardServices =
-      currentPolicy.value.rewardServices
-
     form.rewardOnBonusPaidPart =
       currentPolicy.value.rewardOnBonusPaidPart
   } else {
-    form.rewardPercent = 5
+    form.smartphoneRewardPercent = 1
+    form.featurePhoneRewardPercent = 2
+    form.accessoryRewardPercent = 5
+    form.serviceRewardPercent = 5
+
+    form.maxRewardPoints = 300
     form.maxRedeemPercent = 20
+
     form.minPurchaseAmount = ''
     form.minRedeemPoints = ''
+
     form.activationDelayDays = 0
     form.expirationDays = ''
-    form.rewardProducts = true
-    form.rewardServices = true
+
     form.rewardOnBonusPaidPart = false
   }
 
   /*
-   * datetime-local працює в локальному часі браузера.
-   * За замовчуванням пропонуємо поточний момент.
+   * datetime-local працює у локальному
+   * часі браузера.
    */
   const now = new Date()
 
   const localDate = new Date(
-    now.getTime() - now.getTimezoneOffset() * 60000
+    now.getTime() -
+      now.getTimezoneOffset() * 60000
   )
 
   form.validFrom = localDate
@@ -155,29 +191,75 @@ function openCreateModal() {
   showCreateModal.value = true
 }
 
-async function createPolicy() {
-  const rewardPercent = Number(form.rewardPercent)
-  const maxRedeemPercent =
-    Number(form.maxRedeemPercent)
+function validPercent(value: unknown) {
+  const number = Number(value)
 
+  return (
+    Number.isFinite(number) &&
+    number >= 0 &&
+    number <= 100
+  )
+}
+
+async function createPolicy() {
   if (
-    !Number.isFinite(rewardPercent) ||
-    rewardPercent < 0 ||
-    rewardPercent > 100
+    !validPercent(form.smartphoneRewardPercent)
   ) {
-    alert('Вкажіть коректний відсоток нарахування')
+    alert(
+      'Вкажіть коректний відсоток для смартфонів'
+    )
     return
   }
 
   if (
-    !Number.isFinite(maxRedeemPercent) ||
-    maxRedeemPercent < 0 ||
-    maxRedeemPercent > 100
+    !validPercent(form.featurePhoneRewardPercent)
+  ) {
+    alert(
+      'Вкажіть коректний відсоток для кнопкових телефонів'
+    )
+    return
+  }
+
+  if (
+    !validPercent(form.accessoryRewardPercent)
+  ) {
+    alert(
+      'Вкажіть коректний відсоток для товарів та аксесуарів'
+    )
+    return
+  }
+
+  if (
+    !validPercent(form.serviceRewardPercent)
+  ) {
+    alert(
+      'Вкажіть коректний відсоток для послуг'
+    )
+    return
+  }
+
+  if (
+    !validPercent(form.maxRedeemPercent)
   ) {
     alert(
       'Максимальна оплата бонусами має бути від 0 до 100%'
     )
     return
+  }
+
+  if (form.maxRewardPoints !== '') {
+    const maxRewardPoints =
+      Number(form.maxRewardPoints)
+
+    if (
+      !Number.isInteger(maxRewardPoints) ||
+      maxRewardPoints <= 0
+    ) {
+      alert(
+        'Максимум бонусів має бути цілим числом більше 0'
+      )
+      return
+    }
   }
 
   if (!form.validFrom) {
@@ -202,8 +284,25 @@ async function createPolicy() {
       method: 'POST',
 
       body: {
-        rewardPercent,
-        maxRedeemPercent,
+        smartphoneRewardPercent:
+          Number(form.smartphoneRewardPercent),
+
+        featurePhoneRewardPercent:
+          Number(form.featurePhoneRewardPercent),
+
+        accessoryRewardPercent:
+          Number(form.accessoryRewardPercent),
+
+        serviceRewardPercent:
+          Number(form.serviceRewardPercent),
+
+        maxRewardPoints:
+          form.maxRewardPoints === ''
+            ? null
+            : Number(form.maxRewardPoints),
+
+        maxRedeemPercent:
+          Number(form.maxRedeemPercent),
 
         minPurchaseAmount:
           form.minPurchaseAmount === ''
@@ -223,17 +322,20 @@ async function createPolicy() {
             ? null
             : Number(form.expirationDays),
 
-        rewardProducts:
-          form.rewardProducts,
-
-        rewardServices:
-          form.rewardServices,
+        /*
+         * Legacy flags залишаємо true,
+         * поки старий код ще існує.
+         */
+        rewardProducts: true,
+        rewardServices: true,
 
         rewardOnBonusPaidPart:
           form.rewardOnBonusPaidPart,
 
         validFrom:
-          new Date(form.validFrom).toISOString()
+          new Date(
+            form.validFrom
+          ).toISOString()
       }
     })
 
@@ -259,8 +361,12 @@ async function createPolicy() {
    HELPERS
 ================================================== */
 
-function formatPercent(value: string | number) {
-  return `${Number(value).toLocaleString('uk-UA')}%`
+function formatPercent(
+  value: string | number
+) {
+  return `${Number(value).toLocaleString(
+    'uk-UA'
+  )}%`
 }
 
 function formatMoney(
@@ -270,20 +376,41 @@ function formatMoney(
     return 'Без обмеження'
   }
 
-  return `${Number(value).toLocaleString('uk-UA')} грн`
+  return `${Number(value).toLocaleString(
+    'uk-UA'
+  )} грн`
+}
+
+function formatPoints(
+  value: number | null
+) {
+  if (value === null) {
+    return 'Без обмеження'
+  }
+
+  return `${value.toLocaleString(
+    'uk-UA'
+  )} бонусів`
 }
 
 function formatDateTime(date: string) {
-  return new Date(date).toLocaleString('uk-UA', {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  })
+  return new Date(date).toLocaleString(
+    'uk-UA',
+    {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    }
+  )
 }
 
-function policyStatus(policy: BonusPolicy) {
+function policyStatus(
+  policy: BonusPolicy
+) {
   const now = new Date()
 
-  const from = new Date(policy.validFrom)
+  const from =
+    new Date(policy.validFrom)
+
   const to = policy.validTo
     ? new Date(policy.validTo)
     : null
@@ -299,8 +426,11 @@ function policyStatus(policy: BonusPolicy) {
   return 'active'
 }
 
-function statusLabel(policy: BonusPolicy) {
-  const status = policyStatus(policy)
+function statusLabel(
+  policy: BonusPolicy
+) {
+  const status =
+    policyStatus(policy)
 
   if (status === 'active') {
     return 'Активна'
@@ -313,8 +443,11 @@ function statusLabel(policy: BonusPolicy) {
   return 'Завершена'
 }
 
-function statusColor(policy: BonusPolicy) {
-  const status = policyStatus(policy)
+function statusColor(
+  policy: BonusPolicy
+) {
+  const status =
+    policyStatus(policy)
 
   if (status === 'active') {
     return 'success'
@@ -337,12 +470,17 @@ function statusColor(policy: BonusPolicy) {
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
       <div>
-        <h1 class="text-2xl font-bold text-default">
+        <h1
+          class="text-2xl font-bold text-default"
+        >
           Бонусна програма
         </h1>
 
-        <p class="mt-1 text-sm text-muted">
-          Правила нарахування та використання бонусів Mobilon
+        <p
+          class="mt-1 text-sm text-muted"
+        >
+          Правила нарахування та використання
+          бонусів Mobilon
         </p>
       </div>
 
@@ -358,7 +496,9 @@ function statusColor(policy: BonusPolicy) {
     <!-- LOADING -->
 
     <UCard v-if="loading">
-      <div class="py-10 text-center text-muted">
+      <div
+        class="py-10 text-center text-muted"
+      >
         Завантаження...
       </div>
     </UCard>
@@ -368,7 +508,9 @@ function statusColor(policy: BonusPolicy) {
       <!-- CURRENT POLICY -->
 
       <div>
-        <h2 class="mb-4 text-lg font-semibold text-default">
+        <h2
+          class="mb-4 text-lg font-semibold text-default"
+        >
           Поточна політика
         </h2>
 
@@ -378,23 +520,32 @@ function statusColor(policy: BonusPolicy) {
             <div
               class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
             >
-              <div>
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    name="i-lucide-gift"
-                    class="size-6 text-primary"
-                  />
+              <div
+                class="flex items-center gap-3"
+              >
+                <UIcon
+                  name="i-lucide-gift"
+                  class="size-7 text-primary"
+                />
 
-                  <p class="text-xl font-bold">
-                    {{ formatPercent(currentPolicy.rewardPercent) }}
-                    бонусами
+                <div>
+                  <p
+                    class="text-xl font-bold"
+                  >
+                    Бонуси за категоріями
+                  </p>
+
+                  <p
+                    class="mt-1 text-sm text-muted"
+                  >
+                    Діє з
+                    {{
+                      formatDateTime(
+                        currentPolicy.validFrom
+                      )
+                    }}
                   </p>
                 </div>
-
-                <p class="mt-2 text-sm text-muted">
-                  Діє з
-                  {{ formatDateTime(currentPolicy.validFrom) }}
-                </p>
               </div>
 
               <UBadge
@@ -405,6 +556,126 @@ function statusColor(policy: BonusPolicy) {
               </UBadge>
             </div>
 
+            <!-- CATEGORY RATES -->
+
+            <div
+              class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              <div
+                class="rounded-xl border border-border p-4"
+              >
+                <div
+                  class="flex items-center gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-smartphone"
+                    class="size-5 text-primary"
+                  />
+
+                  <p class="text-xs text-muted">
+                    Смартфони
+                  </p>
+                </div>
+
+                <p
+                  class="mt-2 text-xl font-bold"
+                >
+                  {{
+                    formatPercent(
+                      currentPolicy
+                        .smartphoneRewardPercent
+                    )
+                  }}
+                </p>
+              </div>
+
+              <div
+                class="rounded-xl border border-border p-4"
+              >
+                <div
+                  class="flex items-center gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-phone"
+                    class="size-5 text-primary"
+                  />
+
+                  <p class="text-xs text-muted">
+                    Кнопкові телефони
+                  </p>
+                </div>
+
+                <p
+                  class="mt-2 text-xl font-bold"
+                >
+                  {{
+                    formatPercent(
+                      currentPolicy
+                        .featurePhoneRewardPercent
+                    )
+                  }}
+                </p>
+              </div>
+
+              <div
+                class="rounded-xl border border-border p-4"
+              >
+                <div
+                  class="flex items-center gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-package"
+                    class="size-5 text-primary"
+                  />
+
+                  <p class="text-xs text-muted">
+                    Товари / аксесуари
+                  </p>
+                </div>
+
+                <p
+                  class="mt-2 text-xl font-bold"
+                >
+                  {{
+                    formatPercent(
+                      currentPolicy
+                        .accessoryRewardPercent
+                    )
+                  }}
+                </p>
+              </div>
+
+              <div
+                class="rounded-xl border border-border p-4"
+              >
+                <div
+                  class="flex items-center gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-wrench"
+                    class="size-5 text-primary"
+                  />
+
+                  <p class="text-xs text-muted">
+                    Послуги / ремонт
+                  </p>
+                </div>
+
+                <p
+                  class="mt-2 text-xl font-bold"
+                >
+                  {{
+                    formatPercent(
+                      currentPolicy
+                        .serviceRewardPercent
+                    )
+                  }}
+                </p>
+              </div>
+            </div>
+
+            <!-- LIMITS -->
+
             <div
               class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
             >
@@ -412,13 +683,15 @@ function statusColor(policy: BonusPolicy) {
                 class="rounded-xl border border-border p-4"
               >
                 <p class="text-xs text-muted">
-                  Нарахування
+                  Максимум за покупку
                 </p>
 
-                <p class="mt-1 text-xl font-bold">
+                <p
+                  class="mt-1 font-semibold"
+                >
                   {{
-                    formatPercent(
-                      currentPolicy.rewardPercent
+                    formatPoints(
+                      currentPolicy.maxRewardPoints
                     )
                   }}
                 </p>
@@ -431,11 +704,14 @@ function statusColor(policy: BonusPolicy) {
                   Оплата бонусами
                 </p>
 
-                <p class="mt-1 text-xl font-bold">
+                <p
+                  class="mt-1 font-semibold"
+                >
                   до
                   {{
                     formatPercent(
-                      currentPolicy.maxRedeemPercent
+                      currentPolicy
+                        .maxRedeemPercent
                     )
                   }}
                 </p>
@@ -448,10 +724,13 @@ function statusColor(policy: BonusPolicy) {
                   Мінімальна покупка
                 </p>
 
-                <p class="mt-1 font-semibold">
+                <p
+                  class="mt-1 font-semibold"
+                >
                   {{
                     formatMoney(
-                      currentPolicy.minPurchaseAmount
+                      currentPolicy
+                        .minPurchaseAmount
                     )
                   }}
                 </p>
@@ -464,7 +743,9 @@ function statusColor(policy: BonusPolicy) {
                   Строк дії бонусів
                 </p>
 
-                <p class="mt-1 font-semibold">
+                <p
+                  class="mt-1 font-semibold"
+                >
                   {{
                     currentPolicy.expirationDays
                       ? `${currentPolicy.expirationDays} днів`
@@ -474,60 +755,29 @@ function statusColor(policy: BonusPolicy) {
               </div>
             </div>
 
-            <div class="border-t border-border pt-5">
+            <div
+              class="border-t border-border pt-5"
+            >
               <div
-                class="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3"
+                class="flex items-center gap-2 text-sm"
               >
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    :name="
-                      currentPolicy.rewardProducts
-                        ? 'i-lucide-circle-check'
-                        : 'i-lucide-circle-x'
-                    "
-                    :class="
-                      currentPolicy.rewardProducts
-                        ? 'text-success'
-                        : 'text-muted'
-                    "
-                  />
+                <UIcon
+                  :name="
+                    currentPolicy
+                      .rewardOnBonusPaidPart
+                      ? 'i-lucide-circle-check'
+                      : 'i-lucide-circle-x'
+                  "
+                  :class="
+                    currentPolicy
+                      .rewardOnBonusPaidPart
+                      ? 'text-success'
+                      : 'text-muted'
+                  "
+                />
 
-                  Бонуси за товари
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    :name="
-                      currentPolicy.rewardServices
-                        ? 'i-lucide-circle-check'
-                        : 'i-lucide-circle-x'
-                    "
-                    :class="
-                      currentPolicy.rewardServices
-                        ? 'text-success'
-                        : 'text-muted'
-                    "
-                  />
-
-                  Бонуси за послуги
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    :name="
-                      currentPolicy.rewardOnBonusPaidPart
-                        ? 'i-lucide-circle-check'
-                        : 'i-lucide-circle-x'
-                    "
-                    :class="
-                      currentPolicy.rewardOnBonusPaidPart
-                        ? 'text-success'
-                        : 'text-muted'
-                    "
-                  />
-
-                  Нарахування на бонусну частину
-                </div>
+                Нарахування на частину,
+                оплачену бонусами
               </div>
             </div>
 
@@ -545,7 +795,9 @@ function statusColor(policy: BonusPolicy) {
               Активної політики немає
             </p>
 
-            <p class="mt-1 text-sm text-muted">
+            <p
+              class="mt-1 text-sm text-muted"
+            >
               Створіть першу бонусну політику
             </p>
           </div>
@@ -556,12 +808,17 @@ function statusColor(policy: BonusPolicy) {
 
       <div>
         <div class="mb-4">
-          <h2 class="text-lg font-semibold text-default">
+          <h2
+            class="text-lg font-semibold text-default"
+          >
             Історія політик
           </h2>
 
-          <p class="mt-1 text-sm text-muted">
-            Старі правила зберігаються для історії покупок
+          <p
+            class="mt-1 text-sm text-muted"
+          >
+            Старі правила зберігаються
+            для історії покупок
           </p>
         </div>
 
@@ -579,24 +836,54 @@ function statusColor(policy: BonusPolicy) {
           >
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-border">
-                  <th class="px-3 py-3 text-left">
-                    Нарахування
+                <tr
+                  class="border-b border-border"
+                >
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
+                    Смартфони
                   </th>
 
-                  <th class="px-3 py-3 text-left">
-                    Оплата бонусами
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
+                    Кнопкові
                   </th>
 
-                  <th class="px-3 py-3 text-left">
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
+                    Аксесуари
+                  </th>
+
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
+                    Послуги
+                  </th>
+
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
+                    Ліміт
+                  </th>
+
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
+                    Списання
+                  </th>
+
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
                     Початок
                   </th>
 
-                  <th class="px-3 py-3 text-left">
-                    Завершення
-                  </th>
-
-                  <th class="px-3 py-3 text-left">
+                  <th
+                    class="px-3 py-3 text-left"
+                  >
                     Статус
                   </th>
                 </tr>
@@ -608,11 +895,48 @@ function statusColor(policy: BonusPolicy) {
                   :key="policy.id"
                   class="border-b border-border last:border-0"
                 >
-                  <td class="px-3 py-3 font-semibold">
+                  <td
+                    class="px-3 py-3 font-semibold"
+                  >
                     {{
                       formatPercent(
-                        policy.rewardPercent
+                        policy
+                          .smartphoneRewardPercent
                       )
+                    }}
+                  </td>
+
+                  <td class="px-3 py-3">
+                    {{
+                      formatPercent(
+                        policy
+                          .featurePhoneRewardPercent
+                      )
+                    }}
+                  </td>
+
+                  <td class="px-3 py-3">
+                    {{
+                      formatPercent(
+                        policy
+                          .accessoryRewardPercent
+                      )
+                    }}
+                  </td>
+
+                  <td class="px-3 py-3">
+                    {{
+                      formatPercent(
+                        policy
+                          .serviceRewardPercent
+                      )
+                    }}
+                  </td>
+
+                  <td class="px-3 py-3">
+                    {{
+                      policy.maxRewardPoints ??
+                      '∞'
                     }}
                   </td>
 
@@ -625,24 +949,26 @@ function statusColor(policy: BonusPolicy) {
                     }}
                   </td>
 
-                  <td class="px-3 py-3 text-muted">
-                    {{ formatDateTime(policy.validFrom) }}
-                  </td>
-
-                  <td class="px-3 py-3 text-muted">
+                  <td
+                    class="px-3 py-3 text-muted"
+                  >
                     {{
-                      policy.validTo
-                        ? formatDateTime(policy.validTo)
-                        : '—'
+                      formatDateTime(
+                        policy.validFrom
+                      )
                     }}
                   </td>
 
                   <td class="px-3 py-3">
                     <UBadge
-                      :color="statusColor(policy)"
+                      :color="
+                        statusColor(policy)
+                      "
                       variant="subtle"
                     >
-                      {{ statusLabel(policy) }}
+                      {{
+                        statusLabel(policy)
+                      }}
                     </UBadge>
                   </td>
                 </tr>
@@ -658,7 +984,6 @@ function statusColor(policy: BonusPolicy) {
 
     <UModal v-model:open="showCreateModal">
       <template #content>
-
         <UCard
           class="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         >
@@ -670,7 +995,9 @@ function statusColor(policy: BonusPolicy) {
                 Нова бонусна політика
               </h2>
 
-              <p class="mt-1 text-sm text-muted">
+              <p
+                class="mt-1 text-sm text-muted"
+              >
                 Створюється нова версія правил
               </p>
             </div>
@@ -679,41 +1006,153 @@ function statusColor(policy: BonusPolicy) {
               icon="i-lucide-x"
               color="neutral"
               variant="ghost"
-              @click="showCreateModal = false"
+              @click="
+                showCreateModal = false
+              "
             />
           </div>
 
-          <div class="space-y-5">
+          <div class="space-y-6">
+
+            <!-- REWARD RATES -->
+
+            <div>
+              <h3
+                class="mb-3 font-semibold"
+              >
+                Нарахування бонусів
+              </h3>
+
+              <div
+                class="grid gap-4 sm:grid-cols-2"
+              >
+                <UFormField
+                  label="Смартфони, %"
+                >
+                  <UInput
+                    v-model.number="
+                      form.smartphoneRewardPercent
+                    "
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Кнопкові телефони, %"
+                >
+                  <UInput
+                    v-model.number="
+                      form.featurePhoneRewardPercent
+                    "
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Товари / аксесуари, %"
+                >
+                  <UInput
+                    v-model.number="
+                      form.accessoryRewardPercent
+                    "
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Послуги / ремонт, %"
+                >
+                  <UInput
+                    v-model.number="
+                      form.serviceRewardPercent
+                    "
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
+            </div>
+
+            <UFormField
+              label="Максимум бонусів за одну покупку"
+            >
+              <UInput
+                v-model="
+                  form.maxRewardPoints
+                "
+                type="number"
+                min="1"
+                placeholder="Без обмеження"
+                class="w-full"
+              />
+
+              <template #description>
+                Наприклад 300. Порожньо —
+                без максимального ліміту.
+              </template>
+            </UFormField>
+
+            <!-- REDEEM -->
 
             <div
-              class="grid gap-4 sm:grid-cols-2"
+              class="border-t border-border pt-5"
             >
-              <UFormField label="Нарахування бонусів, %">
-                <UInput
-                  v-model.number="form.rewardPercent"
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField
-                label="Максимальна оплата бонусами, %"
+              <h3
+                class="mb-3 font-semibold"
               >
-                <UInput
-                  v-model.number="
-                    form.maxRedeemPercent
-                  "
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  class="w-full"
-                />
-              </UFormField>
+                Використання бонусів
+              </h3>
+
+              <div
+                class="grid gap-4 sm:grid-cols-2"
+              >
+                <UFormField
+                  label="Максимальна оплата бонусами, %"
+                >
+                  <UInput
+                    v-model.number="
+                      form.maxRedeemPercent
+                    "
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Мінімум бонусів для списання"
+                >
+                  <UInput
+                    v-model="
+                      form.minRedeemPoints
+                    "
+                    type="number"
+                    min="0"
+                    placeholder="Без обмеження"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
             </div>
+
+            <!-- OTHER -->
 
             <div
               class="grid gap-4 sm:grid-cols-2"
@@ -722,7 +1161,9 @@ function statusColor(policy: BonusPolicy) {
                 label="Мінімальна сума покупки"
               >
                 <UInput
-                  v-model="form.minPurchaseAmount"
+                  v-model="
+                    form.minPurchaseAmount
+                  "
                   type="number"
                   min="0"
                   placeholder="Без обмеження"
@@ -730,27 +1171,11 @@ function statusColor(policy: BonusPolicy) {
                 />
 
                 <template #description>
-                  Порожньо — бонуси нараховуються
-                  з будь-якої суми
+                  Порожньо — бонуси
+                  нараховуються з будь-якої суми
                 </template>
               </UFormField>
 
-              <UFormField
-                label="Мінімум бонусів для списання"
-              >
-                <UInput
-                  v-model="form.minRedeemPoints"
-                  type="number"
-                  min="0"
-                  placeholder="Без обмеження"
-                  class="w-full"
-                />
-              </UFormField>
-            </div>
-
-            <div
-              class="grid gap-4 sm:grid-cols-2"
-            >
               <UFormField
                 label="Активація бонусів через"
               >
@@ -767,41 +1192,29 @@ function statusColor(policy: BonusPolicy) {
                   Кількість днів. 0 — одразу.
                 </template>
               </UFormField>
-
-              <UFormField
-                label="Строк дії бонусів"
-              >
-                <UInput
-                  v-model="form.expirationDays"
-                  type="number"
-                  min="1"
-                  placeholder="Не згорають"
-                  class="w-full"
-                />
-
-                <template #description>
-                  Порожньо — бонуси не згорають
-                </template>
-              </UFormField>
             </div>
 
-            <div
-              class="space-y-3 rounded-xl border border-border p-4"
+            <UFormField
+              label="Строк дії бонусів"
             >
-              <p class="font-medium">
-                За що нараховувати бонуси
-              </p>
-
-              <UCheckbox
-                v-model="form.rewardProducts"
-                label="За товари"
+              <UInput
+                v-model="
+                  form.expirationDays
+                "
+                type="number"
+                min="1"
+                placeholder="Не згорають"
+                class="w-full"
               />
 
-              <UCheckbox
-                v-model="form.rewardServices"
-                label="За послуги"
-              />
+              <template #description>
+                Порожньо — бонуси не згорають
+              </template>
+            </UFormField>
 
+            <div
+              class="rounded-xl border border-border p-4"
+            >
               <UCheckbox
                 v-model="
                   form.rewardOnBonusPaidPart
@@ -834,8 +1247,9 @@ function statusColor(policy: BonusPolicy) {
 
                 <p class="text-sm">
                   Нова політика не змінює вже
-                  нараховані бонуси та старі покупки.
-                  Попередня версія залишиться в історії.
+                  нараховані бонуси та старі
+                  покупки. Попередня версія
+                  залишиться в історії.
                 </p>
               </div>
             </div>
@@ -846,7 +1260,9 @@ function statusColor(policy: BonusPolicy) {
               <UButton
                 color="neutral"
                 variant="ghost"
-                @click="showCreateModal = false"
+                @click="
+                  showCreateModal = false
+                "
               >
                 Скасувати
               </UButton>
@@ -863,7 +1279,6 @@ function statusColor(policy: BonusPolicy) {
 
           </div>
         </UCard>
-
       </template>
     </UModal>
 

@@ -63,9 +63,9 @@ onMounted(loadTeam)
           </UBadge>
 
           <h1 class="text-4xl font-black leading-tight text-default">
-            Mobilon — сервіс
+            Mobilon — магазин смартфонів, аксесуарів та сервіс
             <span class="text-primary">
-              налаштування
+              ремонту, налаштування
             </span>
             та оптимізації смартфонів
           </h1>

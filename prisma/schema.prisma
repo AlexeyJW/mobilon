@@ -48,38 +48,69 @@ model BonusTransaction {
 model BonusPolicy {
   id Int @id @default(autoincrement())
 
-  // Наприклад 5 = 5%
+  // ==================================================
+  // LEGACY
+  // ==================================================
+
+  // Тимчасово залишаємо для сумісності
+  // зі старою логікою.
+  // Пізніше приберемо окремою міграцією.
   rewardPercent Decimal @db.Decimal(5, 2)
 
+  // ==================================================
+  // REWARD RATES
+  // ==================================================
+
+  // Смартфони
+  smartphoneRewardPercent Decimal @default(1) @db.Decimal(5, 2)
+
+  // Кнопкові телефони
+  featurePhoneRewardPercent Decimal @default(2) @db.Decimal(5, 2)
+
+  // Товари та аксесуари
+  accessoryRewardPercent Decimal @default(5) @db.Decimal(5, 2)
+
+  // Послуги / ремонт
+  serviceRewardPercent Decimal @default(5) @db.Decimal(5, 2)
+
+  // Максимальна кількість бонусів,
+  // яку можна отримати за одну покупку.
+  // null = без обмеження
+  maxRewardPoints Int? @default(300)
+
+  // ==================================================
+  // REDEEM
+  // ==================================================
+
   // Максимальна частина покупки,
-  // яку дозволено оплатити бонусами.
-  // Наприклад 20 = 20%
+  // яку дозволено оплатити бонусами
   maxRedeemPercent Decimal @db.Decimal(5, 2)
 
-  // Мінімальна сума покупки,
-  // з якої нараховуються бонуси
   minPurchaseAmount Decimal? @db.Decimal(10, 2)
 
-  // Мінімальна кількість бонусів,
-  // яку дозволено використати
   minRedeemPoints Int?
 
-  // Через скільки днів після покупки
-  // бонуси можна використовувати
   activationDelayDays Int @default(0)
 
   // null = бонуси не згорають
   expirationDays Int?
 
-  // Чи нараховувати за ці категорії
+  // ==================================================
+  // LEGACY CATEGORY SETTINGS
+  // ==================================================
+
+  // Поки залишаємо для сумісності
   rewardProducts Boolean @default(true)
   rewardServices Boolean @default(true)
 
-  // Чи давати нові бонуси на частину,
-  // яка була оплачена старими бонусами
+  // Чи давати бонуси на частину,
+  // оплачену старими бонусами
   rewardOnBonusPaidPart Boolean @default(false)
 
-  // Період дії політики
+  // ==================================================
+  // VERSIONING
+  // ==================================================
+
   validFrom DateTime
   validTo   DateTime?
 
@@ -153,6 +184,7 @@ model Purchase {
   // Зберігаємо параметри розрахунку на момент продажу
   rewardPercentSnapshot    Decimal? @db.Decimal(5, 2)
   maxRedeemPercentSnapshot Decimal? @db.Decimal(5, 2)
+  maxRewardPointsSnapshot  Int?
 
   // Дані фіскального чека
   fiscalReceiptNumber String?
@@ -201,25 +233,41 @@ model PurchaseLine {
   service   Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
 
   name String
-
   type PurchaseLineType
 
-  quantity Decimal @db.Decimal(10, 3)
+  // Категорія для розрахунку бонусів
+  bonusCategory BonusCategory?
 
+  quantity   Decimal @db.Decimal(10, 3)
   unitPrice  Decimal @db.Decimal(10, 2)
   totalPrice Decimal @db.Decimal(10, 2)
+
+  // Який відсоток застосували до цієї позиції
+  rewardPercentSnapshot Decimal? @db.Decimal(5, 2)
+
+  // Скільки бонусів дала ця позиція
+  bonusEarned Int @default(0)
 
   createdAt DateTime @default(now())
 
   @@index([purchaseId])
   @@index([productId])
   @@index([serviceId])
+  @@index([bonusCategory])
 }
 
 enum PurchaseLineType {
   PRODUCT
   SERVICE
   OTHER
+}
+
+enum BonusCategory {
+  SMARTPHONE
+  FEATURE_PHONE
+  ACCESSORY
+  SERVICE
+  NO_REWARD
 }
 
 model Request {

@@ -6,8 +6,44 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event)
 
-  const rewardPercent = Number(body.rewardPercent)
-  const maxRedeemPercent = Number(body.maxRedeemPercent)
+  /* ==================================================
+     REWARD RATES
+  ================================================== */
+
+  const smartphoneRewardPercent =
+    Number(body.smartphoneRewardPercent)
+
+  const featurePhoneRewardPercent =
+    Number(body.featurePhoneRewardPercent)
+
+  const accessoryRewardPercent =
+    Number(body.accessoryRewardPercent)
+
+  const serviceRewardPercent =
+    Number(body.serviceRewardPercent)
+
+  const maxRewardPoints =
+    body.maxRewardPoints === null ||
+    body.maxRewardPoints === undefined ||
+    body.maxRewardPoints === ''
+      ? null
+      : Number(body.maxRewardPoints)
+
+  /*
+   * LEGACY
+   *
+   * Поки старі частини системи використовують
+   * rewardPercent, записуємо сюди ставку
+   * товарів / аксесуарів.
+   */
+  const rewardPercent = accessoryRewardPercent
+
+  /* ==================================================
+     REDEEM SETTINGS
+  ================================================== */
+
+  const maxRedeemPercent =
+    Number(body.maxRedeemPercent)
 
   const minPurchaseAmount =
     body.minPurchaseAmount === null ||
@@ -37,10 +73,15 @@ export default defineEventHandler(async (event) => {
       ? null
       : Number(body.expirationDays)
 
+  /* ==================================================
+     VALID FROM
+  ================================================== */
+
   if (!body.validFrom) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Вкажіть дату початку дії політики'
+      statusMessage:
+        'Вкажіть дату початку дії політики'
     })
   }
 
@@ -49,20 +90,65 @@ export default defineEventHandler(async (event) => {
   if (Number.isNaN(validFrom.getTime())) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Некоректна дата початку дії політики'
+      statusMessage:
+        'Некоректна дата початку дії політики'
     })
   }
 
+  /* ==================================================
+     REWARD VALIDATION
+  ================================================== */
+
+  const rewardRates = [
+    {
+      name: 'Смартфони',
+      value: smartphoneRewardPercent
+    },
+    {
+      name: 'Кнопкові телефони',
+      value: featurePhoneRewardPercent
+    },
+    {
+      name: 'Товари / аксесуари',
+      value: accessoryRewardPercent
+    },
+    {
+      name: 'Послуги',
+      value: serviceRewardPercent
+    }
+  ]
+
+  for (const rate of rewardRates) {
+    if (
+      !Number.isFinite(rate.value) ||
+      rate.value < 0 ||
+      rate.value > 100
+    ) {
+      throw createError({
+        statusCode: 400,
+        statusMessage:
+          `${rate.name}: відсоток має бути від 0 до 100`
+      })
+    }
+  }
+
   if (
-    !Number.isFinite(rewardPercent) ||
-    rewardPercent < 0 ||
-    rewardPercent > 100
+    maxRewardPoints !== null &&
+    (
+      !Number.isInteger(maxRewardPoints) ||
+      maxRewardPoints <= 0
+    )
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Відсоток нарахування має бути від 0 до 100'
+      statusMessage:
+        'Максимум бонусів за покупку має бути цілим числом більше 0'
     })
   }
+
+  /* ==================================================
+     REDEEM VALIDATION
+  ================================================== */
 
   if (
     !Number.isFinite(maxRedeemPercent) ||
@@ -71,27 +157,36 @@ export default defineEventHandler(async (event) => {
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Максимальна оплата бонусами має бути від 0 до 100%'
+      statusMessage:
+        'Максимальна оплата бонусами має бути від 0 до 100%'
     })
   }
 
   if (
     minPurchaseAmount !== null &&
-    (!Number.isFinite(minPurchaseAmount) || minPurchaseAmount < 0)
+    (
+      !Number.isFinite(minPurchaseAmount) ||
+      minPurchaseAmount < 0
+    )
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Мінімальна сума покупки не може бути від’ємною'
+      statusMessage:
+        'Мінімальна сума покупки не може бути від’ємною'
     })
   }
 
   if (
     minRedeemPoints !== null &&
-    (!Number.isInteger(minRedeemPoints) || minRedeemPoints < 0)
+    (
+      !Number.isInteger(minRedeemPoints) ||
+      minRedeemPoints < 0
+    )
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Мінімальна кількість бонусів має бути цілим додатним числом'
+      statusMessage:
+        'Мінімальна кількість бонусів має бути цілим невід’ємним числом'
     })
   }
 
@@ -101,105 +196,149 @@ export default defineEventHandler(async (event) => {
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Затримка активації має бути цілим числом днів'
+      statusMessage:
+        'Затримка активації має бути цілим числом днів'
     })
   }
 
   if (
     expirationDays !== null &&
-    (!Number.isInteger(expirationDays) || expirationDays <= 0)
+    (
+      !Number.isInteger(expirationDays) ||
+      expirationDays <= 0
+    )
   ) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Строк дії бонусів має бути цілим числом більше 0'
+      statusMessage:
+        'Строк дії бонусів має бути цілим числом більше 0'
     })
   }
 
-  const policy = await prisma.$transaction(async (tx) => {
-    // Політика, яка діяла безпосередньо перед новою
-    const previousPolicy = await tx.bonusPolicy.findFirst({
-      where: {
-        validFrom: {
-          lt: validFrom
-        }
-      },
-      orderBy: {
-        validFrom: 'desc'
+  /* ==================================================
+     CREATE VERSION
+  ================================================== */
+
+  const policy = await prisma.$transaction(
+    async (tx) => {
+      /*
+       * Політика, яка діяла безпосередньо
+       * перед новою.
+       */
+      const previousPolicy =
+        await tx.bonusPolicy.findFirst({
+          where: {
+            validFrom: {
+              lt: validFrom
+            }
+          },
+
+          orderBy: {
+            validFrom: 'desc'
+          }
+        })
+
+      /*
+       * Наступна вже запланована політика.
+       */
+      const nextPolicy =
+        await tx.bonusPolicy.findFirst({
+          where: {
+            validFrom: {
+              gt: validFrom
+            }
+          },
+
+          orderBy: {
+            validFrom: 'asc'
+          }
+        })
+
+      /*
+       * Не дозволяємо дві політики
+       * з однаковою датою початку.
+       */
+      const sameDatePolicy =
+        await tx.bonusPolicy.findFirst({
+          where: {
+            validFrom
+          }
+        })
+
+      if (sameDatePolicy) {
+        throw createError({
+          statusCode: 409,
+          statusMessage:
+            'Політика з такою датою початку вже існує'
+        })
       }
-    })
 
-    // Наступна вже запланована політика
-    const nextPolicy = await tx.bonusPolicy.findFirst({
-      where: {
-        validFrom: {
-          gt: validFrom
-        }
-      },
-      orderBy: {
-        validFrom: 'asc'
+      /*
+       * Закриваємо попередню політику.
+       */
+      if (previousPolicy) {
+        await tx.bonusPolicy.update({
+          where: {
+            id: previousPolicy.id
+          },
+
+          data: {
+            validTo: validFrom
+          }
+        })
       }
-    })
 
-    // Забороняємо дві політики з однаковим validFrom
-    const sameDatePolicy = await tx.bonusPolicy.findFirst({
-      where: {
-        validFrom
-      }
-    })
-
-    if (sameDatePolicy) {
-      throw createError({
-        statusCode: 409,
-        statusMessage: 'Політика з такою датою початку вже існує'
-      })
-    }
-
-    // Закриваємо попередню політику
-    if (previousPolicy) {
-      await tx.bonusPolicy.update({
-        where: {
-          id: previousPolicy.id
-        },
+      /*
+       * Створюємо нову версію.
+       */
+      return await tx.bonusPolicy.create({
         data: {
-          validTo: validFrom
+          /* LEGACY */
+          rewardPercent,
+
+          /* NEW REWARD RATES */
+          smartphoneRewardPercent,
+          featurePhoneRewardPercent,
+          accessoryRewardPercent,
+          serviceRewardPercent,
+          maxRewardPoints,
+
+          /* REDEEM */
+          maxRedeemPercent,
+          minPurchaseAmount,
+          minRedeemPoints,
+
+          activationDelayDays,
+          expirationDays,
+
+          /*
+           * LEGACY CATEGORY FLAGS.
+           * Поки залишаємо для сумісності.
+           */
+          rewardProducts:
+            body.rewardProducts === undefined
+              ? true
+              : body.rewardProducts === true,
+
+          rewardServices:
+            body.rewardServices === undefined
+              ? true
+              : body.rewardServices === true,
+
+          rewardOnBonusPaidPart:
+            body.rewardOnBonusPaidPart === undefined
+              ? false
+              : body.rewardOnBonusPaidPart === true,
+
+          validFrom,
+
+          validTo: nextPolicy
+            ? nextPolicy.validFrom
+            : null
         }
       })
     }
-
-    // Нова політика діє або безстроково,
-    // або до наступної вже запланованої
-    return await tx.bonusPolicy.create({
-      data: {
-        rewardPercent,
-        maxRedeemPercent,
-        minPurchaseAmount,
-        minRedeemPoints,
-        activationDelayDays,
-        expirationDays,
-
-        rewardProducts:
-          body.rewardProducts === undefined
-            ? true
-            : body.rewardProducts === true,
-
-        rewardServices:
-          body.rewardServices === undefined
-            ? true
-            : body.rewardServices === true,
-
-        rewardOnBonusPaidPart:
-          body.rewardOnBonusPaidPart === undefined
-            ? false
-            : body.rewardOnBonusPaidPart === true,
-
-        validFrom,
-
-        validTo: nextPolicy
-          ? nextPolicy.validFrom
-          : null
-      }
-    })
-  })
+  )
 
   return {
     success: true,

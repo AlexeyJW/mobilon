@@ -125,7 +125,15 @@ async function changePassword() {
             >
               Клієнти
             </UButton>
-
+<UButton
+  to="/admin/bonus-policy"
+  color="primary"
+  :variant="route.path.startsWith('/admin/bonus-policy') ? 'solid' : 'ghost'"
+  size="sm"
+  icon="i-lucide-gift"
+>
+  Бонуси
+</UButton>
 <UButton
   to="/admin/scan"
   color="primary"
@@ -356,7 +364,16 @@ async function changePassword() {
           >
             Клієнти
           </UButton>
-
+<UButton
+  to="/admin/bonus-policy"
+  icon="i-lucide-gift"
+  color="primary"
+  :variant="route.path.startsWith('/admin/bonus-policy') ? 'solid' : 'ghost'"
+  block
+  class="justify-start"
+>
+  Бонусна програма
+</UButton>
 <UButton
   to="/admin/scan"
   icon="i-lucide-scan-line"
