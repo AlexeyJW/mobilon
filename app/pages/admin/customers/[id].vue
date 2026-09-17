@@ -84,10 +84,42 @@ const loyaltySaving = ref(false)
 // покупка
 const saleSaving = ref(false)
 
+type TestBonusCategory =
+  | 'SMARTPHONE'
+  | 'FEATURE_PHONE'
+  | 'ACCESSORY'
+  | 'SERVICE'
+  | 'NO_REWARD'
+
+const bonusCategoryOptions = [
+  {
+    label: 'Смартфон — 1%',
+    value: 'SMARTPHONE'
+  },
+  {
+    label: 'Кнопковий телефон — 2%',
+    value: 'FEATURE_PHONE'
+  },
+  {
+    label: 'Аксесуар / товар — 5%',
+    value: 'ACCESSORY'
+  },
+  {
+    label: 'Послуга — 5%',
+    value: 'SERVICE'
+  },
+  {
+    label: 'Без бонусів — 0%',
+    value: 'NO_REWARD'
+  }
+]
+
 const saleForm = reactive({
-  name: 'Тестова послуга',
-  price: 1000,
-  bonusUsed: 0
+  name: 'Тестовий смартфон',
+  price: 10000,
+  bonusUsed: 0,
+  bonusCategory:
+    'SMARTPHONE' as TestBonusCategory
 })
 
 
@@ -131,14 +163,21 @@ async function createTestSale() {
 
         bonusUsed,
 
-        items: [
-          {
-            type: 'SERVICE',
-            name: saleForm.name.trim(),
-            quantity: 1,
-            unitPrice: price
-          }
-        ]
+       items: [
+  {
+    type:
+      saleForm.bonusCategory === 'SERVICE'
+        ? 'SERVICE'
+        : 'PRODUCT',
+
+    bonusCategory:
+      saleForm.bonusCategory,
+
+    name: saleForm.name.trim(),
+    quantity: 1,
+    unitPrice: price
+  }
+]
       }
     })
 
@@ -149,9 +188,10 @@ async function createTestSale() {
       color: 'success'
     })
 
-    saleForm.name = 'Тестова послуга'
-    saleForm.price = 1000
-    saleForm.bonusUsed = 0
+    saleForm.name = 'Тестовий смартфон'
+saleForm.price = 10000
+saleForm.bonusUsed = 0
+saleForm.bonusCategory = 'SMARTPHONE'
 
     await refresh()
   } catch (error: any) {
@@ -622,8 +662,8 @@ async function adjustBonus() {
       </p>
     </div>
   </template>
-
-  <div class="grid gap-4 md:grid-cols-3">
+<div class="grid gap-4 md:grid-cols-4">
+  
 
     <UFormField label="Назва">
       <UInput
@@ -631,7 +671,13 @@ async function adjustBonus() {
         class="w-full"
       />
     </UFormField>
-
+<UFormField label="Бонусна категорія">
+  <USelect
+    v-model="saleForm.bonusCategory"
+    :items="bonusCategoryOptions"
+    class="w-full"
+  />
+</UFormField>
     <UFormField label="Сума покупки">
       <UInput
         v-model.number="saleForm.price"

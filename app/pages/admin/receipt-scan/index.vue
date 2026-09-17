@@ -15,8 +15,17 @@ interface FiscalReceipt {
 
 interface BonusPolicy {
   id: number
+
   rewardPercent: string | number
+
+  smartphoneRewardPercent: string | number
+  featurePhoneRewardPercent: string | number
+  accessoryRewardPercent: string | number
+  serviceRewardPercent: string | number
+
+  maxRewardPoints: number | null
   maxRedeemPercent: string | number
+
   rewardProducts: boolean
   rewardServices: boolean
   rewardOnBonusPaidPart: boolean
@@ -33,6 +42,45 @@ interface CustomerSearchResult {
   totalSpent: number
   lastPurchase: string | null
 }
+
+type BonusCategory =
+  | 'SMARTPHONE'
+  | 'FEATURE_PHONE'
+  | 'ACCESSORY'
+  | 'SERVICE'
+  | 'NO_REWARD'
+
+interface ReceiptItem {
+  id: number
+  name: string
+  quantity: number
+  unitPrice: number
+  bonusCategory: BonusCategory
+}
+
+const bonusCategoryOptions = [
+  {
+    label: 'Смартфон — 1%',
+    value: 'SMARTPHONE'
+  },
+  {
+    label: 'Кнопковий телефон — 2%',
+    value: 'FEATURE_PHONE'
+  },
+  {
+    label: 'Аксесуар / товар — 5%',
+    value: 'ACCESSORY'
+  },
+  {
+    label: 'Послуга — 5%',
+    value: 'SERVICE'
+  },
+  {
+    label: 'Без бонусів — 0%',
+    value: 'NO_REWARD'
+  }
+]
+
 const customRewardAmount = ref<number | null>(null)
 const customerPhone = ref('')
 const customerSearching = ref(false)
@@ -41,6 +89,239 @@ const customerSearchDone = ref(false)
 const foundCustomers = ref<CustomerSearchResult[]>([])
 const selectedCustomer = ref<CustomerSearchResult | null>(null)
 
+const showCreateCustomer = ref(false)
+const customerCreating = ref(false)
+
+const newCustomer = reactive({
+  name: '',
+  phone: ''
+})
+
+
+const receiptPhotoFile = ref<File | null>(null)
+const receiptPhotoPreview = ref<string | null>(null)
+const receiptPhotoInput = ref<HTMLInputElement | null>(null)
+
+const recognizingReceipt = ref(false)
+const recognitionError = ref('')
+
+
+function openReceiptPhotoCamera() {
+  receiptPhotoInput.value?.click()
+}
+
+function handleReceiptPhoto(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) {
+    return
+  }
+
+  receiptPhotoFile.value = file
+
+  if (receiptPhotoPreview.value) {
+    URL.revokeObjectURL(receiptPhotoPreview.value)
+  }
+
+  receiptPhotoPreview.value =
+    URL.createObjectURL(file)
+}
+
+function removeReceiptPhoto() {
+  if (receiptPhotoPreview.value) {
+    URL.revokeObjectURL(receiptPhotoPreview.value)
+  }
+
+  receiptPhotoFile.value = null
+  receiptPhotoPreview.value = null
+
+  if (receiptPhotoInput.value) {
+    receiptPhotoInput.value.value = ''
+  }
+}
+
+async function compressReceiptImage(
+  file: File,
+  maxSize = 1800,
+  quality = 0.85
+): Promise<File> {
+  const bitmap = await createImageBitmap(file)
+
+  let width = bitmap.width
+  let height = bitmap.height
+
+  // Зменшуємо тільки великі фотографії
+  if (width > maxSize || height > maxSize) {
+    const scale = Math.min(
+      maxSize / width,
+      maxSize / height
+    )
+
+    width = Math.round(width * scale)
+    height = Math.round(height * scale)
+  }
+
+  const canvas = document.createElement('canvas')
+
+  canvas.width = width
+  canvas.height = height
+
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    bitmap.close()
+    throw new Error(
+      'Не вдалося підготувати фото для розпізнавання'
+    )
+  }
+
+  // Білий фон корисний для фотографій чеків
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, width, height)
+
+  context.drawImage(
+    bitmap,
+    0,
+    0,
+    width,
+    height
+  )
+
+  bitmap.close()
+
+  const blob = await new Promise<Blob>(
+    (resolve, reject) => {
+      canvas.toBlob(
+        result => {
+          if (result) {
+            resolve(result)
+          } else {
+            reject(
+              new Error(
+                'Не вдалося стиснути фотографію'
+              )
+            )
+          }
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+  )
+
+  return new File(
+    [blob],
+    'receipt.jpg',
+    {
+      type: 'image/jpeg',
+      lastModified: Date.now()
+    }
+  )
+}
+
+
+async function recognizeReceiptPhoto() {
+  if (!receiptPhotoFile.value) {
+    recognitionError.value =
+      'Спочатку сфотографуйте чек.'
+    return
+  }
+
+  recognizingReceipt.value = true
+  recognitionError.value = ''
+
+  try {
+    const originalFile = receiptPhotoFile.value
+
+const compressedFile =
+  await compressReceiptImage(originalFile)
+
+console.log(
+  'Фото чека:',
+  {
+    original:
+      `${(originalFile.size / 1024 / 1024).toFixed(2)} MB`,
+
+    compressed:
+      `${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`
+  }
+)
+
+const formData = new FormData()
+
+formData.append(
+  'image',
+  compressedFile
+)
+
+    const response = await $fetch<{
+      success: boolean
+      items: Array<{
+        name: string
+        quantity: number
+        unitPrice: number
+        bonusCategory: BonusCategory
+      }>
+      recognizedTotal: number
+    }>('/api/admin/receipt-recognize', {
+      method: 'POST',
+      body: formData
+    })
+
+    receiptItems.value =
+      response.items.map(item => ({
+        id: ++receiptItemId,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        bonusCategory: item.bonusCategory
+      }))
+
+    console.log(
+      'Розпізнані позиції:',
+      response.items
+    )
+
+    console.log(
+      'Розпізнана сума:',
+      response.recognizedTotal
+    )
+  } catch (error: any) {
+    console.error(
+      'Receipt recognition error:',
+      error
+    )
+
+    recognitionError.value =
+      error?.data?.statusMessage ||
+      error?.statusMessage ||
+      'Не вдалося розпізнати чек.'
+  } finally {
+    recognizingReceipt.value = false
+  }
+}
+
+const receiptItems = ref<ReceiptItem[]>([])
+
+let receiptItemId = 0
+
+function addReceiptItem() {
+  receiptItems.value.push({
+    id: ++receiptItemId,
+    name: '',
+    quantity: 1,
+    unitPrice: 0,
+    bonusCategory: 'ACCESSORY'
+  })
+}
+
+function removeReceiptItem(id: number) {
+  receiptItems.value =
+    receiptItems.value.filter(
+      item => item.id !== id
+    )
+}
 
 const toast = useToast()
 
@@ -77,9 +358,7 @@ const currentPolicy = computed(() => {
   return policyData.value?.currentPolicy ?? null
 })
 
-const rewardPercent = computed(() => {
-  return Number(currentPolicy.value?.rewardPercent ?? 0)
-})
+
 
 /* ==================================================
    RECEIPT PARSER
@@ -173,14 +452,136 @@ const rewardBase = computed(() => {
 })
 
 const estimatedBonus = computed(() => {
-  if (!rewardEnabled.value) {
+  if (
+    !rewardEnabled.value ||
+    !currentPolicy.value
+  ) {
     return 0
   }
 
-  return Math.floor(
-    rewardBase.value * rewardPercent.value / 100
+  const policy = currentPolicy.value
+
+  let total = 0
+
+  for (const item of receiptItems.value) {
+    let percent = 0
+
+    switch (item.bonusCategory) {
+      case 'SMARTPHONE':
+        percent = Number(
+          policy.smartphoneRewardPercent
+        )
+        break
+
+      case 'FEATURE_PHONE':
+        percent = Number(
+          policy.featurePhoneRewardPercent
+        )
+        break
+
+      case 'ACCESSORY':
+        percent = Number(
+          policy.accessoryRewardPercent
+        )
+        break
+
+      case 'SERVICE':
+        percent = Number(
+          policy.serviceRewardPercent
+        )
+        break
+
+      case 'NO_REWARD':
+        percent = 0
+        break
+    }
+
+    const itemTotal =
+      Number(item.quantity || 0) *
+      Number(item.unitPrice || 0)
+
+    total += Math.floor(
+      itemTotal * percent / 100
+    )
+  }
+
+  const maxRewardPoints =
+    policy.maxRewardPoints
+
+  if (
+    maxRewardPoints !== null &&
+    total > maxRewardPoints
+  ) {
+    return maxRewardPoints
+  }
+
+  return total
+})
+
+/* ==================================================
+   RECEIPT ITEMS TOTAL CHECK
+================================================== */
+
+/*
+ * Загальна сума всіх введених позицій.
+ */
+const receiptItemsTotal = computed(() => {
+  const total = receiptItems.value.reduce(
+    (sum, item) => {
+      const quantity =
+        Number(item.quantity || 0)
+
+      const unitPrice =
+        Number(item.unitPrice || 0)
+
+      return sum + quantity * unitPrice
+    },
+    0
+  )
+
+  return Math.round(total * 100) / 100
+})
+
+/*
+ * Різниця між введеними позиціями
+ * та реальною сумою фіскального чека.
+ *
+ * +50 = позиції дорожчі на 50 грн
+ * -50 = позицій не вистачає на 50 грн
+ */
+const receiptAmountDifference = computed(() => {
+  if (!receipt.value) {
+    return 0
+  }
+
+  return Math.round(
+    (
+      receiptItemsTotal.value -
+      receipt.value.amount
+    ) * 100
+  ) / 100
+})
+
+/*
+ * Чи збігається сума позицій
+ * із сумою фіскального чека.
+ */
+const receiptItemsTotalMatches = computed(() => {
+  if (!receipt.value) {
+    return false
+  }
+
+  if (receiptItems.value.length === 0) {
+    return false
+  }
+
+  return (
+    Math.abs(
+      receiptAmountDifference.value
+    ) <= 0.01
   )
 })
+
 /* ==================================================
    CUSTOMER
 ================================================== */
@@ -212,11 +613,20 @@ async function searchCustomer() {
     )
 
     foundCustomers.value = customers
-    customerSearchDone.value = true
+customerSearchDone.value = true
 
-    if (customers.length === 1) {
-      selectedCustomer.value = customers[0] ?? null
-    }
+if (customers.length === 0) {
+  newCustomer.phone = search
+  newCustomer.name = ''
+  showCreateCustomer.value = true
+}
+
+if (customers.length === 1) {
+  selectedCustomer.value =
+    customers[0] ?? null
+
+  showCreateCustomer.value = false
+}
   } catch (error: any) {
     toast.add({
       title: 'Помилка пошуку клієнта',
@@ -227,6 +637,126 @@ async function searchCustomer() {
     })
   } finally {
     customerSearching.value = false
+  }
+}
+
+async function createCustomer() {
+  const name = newCustomer.name.trim()
+  const phone = newCustomer.phone.trim()
+
+  if (!name) {
+    toast.add({
+      title: 'Вкажіть ім’я клієнта',
+      color: 'warning'
+    })
+    return
+  }
+
+  if (!phone) {
+    toast.add({
+      title: 'Вкажіть номер телефону',
+      color: 'warning'
+    })
+    return
+  }
+
+  customerCreating.value = true
+
+  try {
+    const result = await $fetch<{
+      success: boolean
+      customer: {
+        id: number
+        name: string
+        phone: string
+        loyaltyActive: boolean
+      }
+    }>('/api/admin/customers', {
+      method: 'POST',
+      body: {
+        name,
+        phone,
+        loyaltyActive: true
+      }
+    })
+
+    selectedCustomer.value = {
+      id: result.customer.id,
+      name: result.customer.name,
+      phone: result.customer.phone,
+      loyaltyActive: result.customer.loyaltyActive,
+      hasCard: false,
+      bonusBalance: 0,
+      purchaseCount: 0,
+      totalSpent: 0,
+      lastPurchase: null
+    }
+
+    customerPhone.value = result.customer.phone
+    foundCustomers.value = []
+    customerSearchDone.value = false
+    showCreateCustomer.value = false
+
+    newCustomer.name = ''
+    newCustomer.phone = ''
+
+    toast.add({
+      title: 'Клієнта створено',
+      description: 'Бонусну програму активовано.',
+      color: 'success'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Не вдалося створити клієнта',
+      description:
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Сталася помилка',
+      color: 'error'
+    })
+  } finally {
+    customerCreating.value = false
+  }
+}
+
+
+async function activateCustomerLoyalty() {
+  if (!selectedCustomer.value) {
+    return
+  }
+
+  customerCreating.value = true
+
+  try {
+    await $fetch(
+      `/api/admin/customers/${selectedCustomer.value.id}`,
+      {
+        method: 'PATCH',
+        body: {
+          loyaltyActive: true
+        }
+      }
+    )
+
+    selectedCustomer.value.loyaltyActive = true
+
+    toast.add({
+      title: 'Бонусну програму активовано',
+      description:
+        `${selectedCustomer.value.name} тепер бере участь у бонусній програмі.`,
+      color: 'success'
+    })
+  } catch (error: any) {
+    toast.add({
+      title: 'Не вдалося активувати бонусну програму',
+      description:
+        error?.data?.statusMessage ||
+        error?.statusMessage ||
+        'Сталася помилка',
+      color: 'error'
+    })
+  } finally {
+    customerCreating.value = false
   }
 }
 
@@ -306,6 +836,23 @@ async function createFiscalSale() {
         customerId: selectedCustomer.value.id,
 
         source: 'FISCAL_QR',
+
+items: receiptItems.value.map(item => ({
+  type:
+    item.bonusCategory === 'SERVICE'
+      ? 'SERVICE'
+      : item.bonusCategory === 'NO_REWARD'
+        ? 'OTHER'
+        : 'PRODUCT',
+
+  bonusCategory: item.bonusCategory,
+
+  name: item.name.trim(),
+
+  quantity: Number(item.quantity),
+
+  unitPrice: Number(item.unitPrice)
+})),
 
         totalAmount: receipt.value.amount,
 
@@ -490,6 +1037,10 @@ async function stopScanner() {
 }
 
 function scanAgain() {
+
+  removeReceiptPhoto()
+receiptItems.value = []
+
   decodedText.value = ''
   receipt.value = null
   scannerStarted.value = false
@@ -640,6 +1191,320 @@ onBeforeUnmount(async () => {
             </div>
 
           </div>
+
+<!-- RECEIPT PHOTO -->
+
+<div class="space-y-4">
+  <div>
+    <h2 class="text-lg font-semibold">
+      Таблиця чека
+    </h2>
+
+    <p class="text-sm text-muted">
+      Сфотографуйте частину чека з товарами та послугами.
+    </p>
+  </div>
+
+  <!-- Прихований input камери -->
+  <input
+    ref="receiptPhotoInput"
+    type="file"
+    accept="image/*"
+    capture="environment"
+    class="hidden"
+    @change="handleReceiptPhoto"
+  >
+
+  <!-- Фото ще немає -->
+  <UButton
+    v-if="!receiptPhotoPreview"
+    block
+    size="lg"
+    variant="soft"
+    icon="i-lucide-camera"
+    @click="openReceiptPhotoCamera"
+  >
+    Сканувати позиції чека
+  </UButton>
+
+  <!-- Прев'ю -->
+  <div
+    v-else
+    class="rounded-xl border border-default overflow-hidden"
+  >
+    <img
+      :src="receiptPhotoPreview"
+      alt="Фото таблиці фіскального чека"
+      class="w-full max-h-[500px] object-contain bg-elevated"
+    >
+
+    <div class="p-3 flex flex-wrap gap-2">
+      <UButton
+        icon="i-lucide-camera"
+        variant="soft"
+        @click="openReceiptPhotoCamera"
+      >
+        Зняти ще раз
+      </UButton>
+
+      <UButton
+        color="error"
+        variant="soft"
+        icon="i-lucide-trash-2"
+        @click="removeReceiptPhoto"
+      >
+        Видалити фото
+      </UButton>
+
+      <UButton
+  block
+  size="lg"
+  icon="i-lucide-scan-text"
+  :loading="recognizingReceipt"
+  :disabled="recognizingReceipt"
+  @click="recognizeReceiptPhoto"
+>
+  Розпізнати позиції
+</UButton>
+
+<UAlert
+  v-if="recognitionError"
+  color="error"
+  variant="soft"
+  icon="i-lucide-triangle-alert"
+  title="Помилка розпізнавання"
+  :description="recognitionError"
+/>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- RECEIPT ITEMS -->
+
+<div class="space-y-4">
+
+  <div
+    class="
+      flex
+      flex-col
+      gap-3
+      sm:flex-row
+      sm:items-center
+      sm:justify-between
+    "
+  >
+    <div>
+      <h2 class="text-lg font-semibold">
+        Позиції чека
+      </h2>
+
+      <p class="text-sm text-muted">
+        Додайте товари та послуги з фіскального чека
+      </p>
+    </div>
+
+    <UButton
+      icon="i-lucide-plus"
+      variant="soft"
+      @click="addReceiptItem"
+    >
+      Додати позицію
+    </UButton>
+  </div>
+
+
+  <!-- Поки позицій немає -->
+
+  <UAlert
+    v-if="receiptItems.length === 0"
+    color="neutral"
+    variant="soft"
+    icon="i-lucide-list-plus"
+    title="Позиції ще не додані"
+    description="Додайте позиції з фіскального чека."
+  />
+
+
+  <!-- Позиції -->
+
+  <div
+    v-for="(item, index) in receiptItems"
+    :key="item.id"
+    class="
+      rounded-xl
+      border
+      border-default
+      p-4
+      space-y-4
+    "
+  >
+
+    <div
+      class="
+        grid
+        gap-4
+        md:grid-cols-[1fr_180px_100px_140px_auto]
+        md:items-end
+      "
+    >
+
+      <!-- Назва -->
+
+      <UFormField
+        :label="`Позиція ${index + 1}`"
+      >
+        <UInput
+          v-model="item.name"
+          placeholder="Наприклад: Samsung Galaxy A17"
+          class="w-full"
+        />
+      </UFormField>
+
+
+      <!-- Категорія -->
+
+      <UFormField label="Категорія">
+        <USelect
+          v-model="item.bonusCategory"
+          :items="bonusCategoryOptions"
+          class="w-full"
+        />
+      </UFormField>
+
+
+      <!-- Кількість -->
+
+      <UFormField label="Кількість">
+        <UInput
+          v-model.number="item.quantity"
+          type="number"
+          min="0.001"
+          step="1"
+          class="w-full"
+        />
+      </UFormField>
+
+
+      <!-- Ціна -->
+
+      <UFormField label="Ціна">
+        <UInput
+          v-model.number="item.unitPrice"
+          type="number"
+          min="0"
+          step="0.01"
+          class="w-full"
+        >
+          <template #trailing>
+            грн
+          </template>
+        </UInput>
+      </UFormField>
+
+
+      <!-- Видалити -->
+
+      <UButton
+        color="error"
+        variant="soft"
+        icon="i-lucide-trash-2"
+        square
+        @click="removeReceiptItem(item.id)"
+      />
+
+    </div>
+
+
+    <!-- Сума позиції -->
+
+    <div class="text-sm text-muted text-right">
+      Сума:
+      <span class="font-semibold text-default">
+        {{
+          (
+            Number(item.quantity || 0) *
+            Number(item.unitPrice || 0)
+          ).toFixed(2)
+        }}
+        грн
+      </span>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- RECEIPT TOTAL CHECK -->
+
+<div
+  v-if="receiptItems.length > 0"
+  class="rounded-xl border border-default p-4 space-y-3"
+>
+  <div class="flex justify-between gap-4">
+    <span class="text-muted">
+      Сума фіскального чека
+    </span>
+
+    <span class="font-semibold">
+      {{ receipt.amount.toFixed(2) }} грн
+    </span>
+  </div>
+
+  <div class="flex justify-between gap-4">
+    <span class="text-muted">
+      Сума позицій
+    </span>
+
+    <span class="font-semibold">
+      {{ receiptItemsTotal.toFixed(2) }} грн
+    </span>
+  </div>
+
+  <div
+    class="flex justify-between gap-4 pt-3 border-t border-default"
+  >
+    <span class="font-semibold">
+      Різниця
+    </span>
+
+    <span
+      class="font-bold"
+      :class="
+        receiptItemsTotalMatches
+          ? 'text-success'
+          : 'text-error'
+      "
+    >
+      {{
+        receiptAmountDifference > 0
+          ? '+'
+          : ''
+      }}{{ receiptAmountDifference.toFixed(2) }} грн
+    </span>
+  </div>
+
+  <UAlert
+    v-if="receiptItemsTotalMatches"
+    color="success"
+    variant="soft"
+    icon="i-lucide-circle-check"
+    title="Суми збігаються"
+    description="Позиції відповідають сумі фіскального чека."
+  />
+
+  <UAlert
+    v-else
+    color="error"
+    variant="soft"
+    icon="i-lucide-triangle-alert"
+    title="Суми не збігаються"
+    description="Перевірте кількість і ціну позицій перед проведенням покупки."
+  />
+</div>
+
+<!-- BONUS SETTINGS -->
 
           <!-- BONUS SETTINGS -->
           <div class="space-y-5">
@@ -817,19 +1682,71 @@ onBeforeUnmount(async () => {
       </div>
     </UFormField>
 
-    <!-- NOT FOUND -->
-    <UAlert
-      v-if="
-        customerSearchDone &&
-        foundCustomers.length === 0
-      "
-      color="warning"
-      variant="soft"
-      icon="i-lucide-user-x"
-      title="Клієнта не знайдено"
-      description="Можна буде створити нового клієнта."
-    />
+   <!-- NOT FOUND / CREATE CUSTOMER -->
 
+<div
+  v-if="
+    customerSearchDone &&
+    foundCustomers.length === 0
+  "
+  class="space-y-4"
+>
+  <UAlert
+    color="warning"
+    variant="soft"
+    icon="i-lucide-user-x"
+    title="Клієнта не знайдено"
+    description="Створіть нового клієнта та одразу підключіть бонусну програму."
+  />
+
+  <div
+    v-if="showCreateCustomer"
+    class="rounded-xl border border-default p-4 space-y-4"
+  >
+    <div>
+      <p class="font-semibold">
+        Новий клієнт
+      </p>
+
+      <p class="text-sm text-muted">
+        Бонусна програма буде активована автоматично.
+      </p>
+    </div>
+
+    <UFormField label="Ім’я клієнта">
+      <UInput
+        v-model="newCustomer.name"
+        placeholder="Наприклад: Іван"
+        size="lg"
+        class="w-full"
+        autofocus
+      />
+    </UFormField>
+
+    <UFormField label="Номер телефону">
+      <UInput
+        v-model="newCustomer.phone"
+        type="tel"
+        inputmode="tel"
+        autocomplete="tel"
+        placeholder="097 777 77 77"
+        size="lg"
+        class="w-full"
+        @keyup.enter="createCustomer"
+      />
+    </UFormField>
+
+    <UButton
+      block
+      size="lg"
+      icon="i-lucide-user-plus"
+      :loading="customerCreating"
+      @click="createCustomer"
+    >
+      Створити та підключити бонуси
+    </UButton>
+  </div>
+</div>
     <!-- MULTIPLE RESULTS -->
     <div
       v-if="foundCustomers.length > 1"
@@ -929,6 +1846,15 @@ onBeforeUnmount(async () => {
             : 'Бонусна програма не активна'
         }}
       </UBadge>
+<UButton
+  v-if="!selectedCustomer.loyaltyActive"
+  size="xs"
+  icon="i-lucide-gift"
+  :loading="customerCreating"
+  @click="activateCustomerLoyalty"
+>
+  Підключити бонусну програму
+</UButton>
 
       <UBadge
         v-if="selectedCustomer.hasCard"
@@ -996,16 +1922,17 @@ onBeforeUnmount(async () => {
     </div>
   </div>
 
-  <UButton
-    block
-    size="xl"
-    icon="i-lucide-circle-check"
-    :loading="saleSaving"
-    @click="createFiscalSale"
-  >
-    Провести покупку ·
-    {{ receipt.amount.toFixed(2) }} грн
-  </UButton>
+<UButton
+  block
+  size="xl"
+  icon="i-lucide-circle-check"
+  :loading="saleSaving"
+  :disabled="!receiptItemsTotalMatches"
+  @click="createFiscalSale"
+>
+  Провести покупку ·
+  {{ receipt.amount.toFixed(2) }} грн
+</UButton>
 
   <p class="text-xs text-muted text-center">
     Після проведення покупка буде записана

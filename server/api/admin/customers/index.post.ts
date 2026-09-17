@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
 
   const name = String(body.name || '').trim()
   const rawPhone = String(body.phone || '').trim()
+const loyaltyActive = body.loyaltyActive === true
 
   if (!name) {
     throw createError({
@@ -49,12 +50,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const customer = await prisma.customer.create({
-    data: {
-      name,
-      phone
-    }
-  })
+const customer = await prisma.customer.create({
+  data: {
+    name,
+    phone,
+    loyaltyActive
+  }
+})
 
   return {
     success: true,
