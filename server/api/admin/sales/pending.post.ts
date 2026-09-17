@@ -108,7 +108,7 @@ export default defineEventHandler(async (event) => {
 
   const policy = await prisma.bonusPolicy.findFirst({
     where: {
-      active: true,
+      
       validFrom: {
         lte: now
       },
