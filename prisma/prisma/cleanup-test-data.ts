@@ -11,7 +11,7 @@ const prisma = new PrismaClient()
  * 380XXXXXXXXX
  */
 const testPhones = [
-  '380971234567',
+  '380984455233',
   
   // '380XXXXXXXXX'
 ]

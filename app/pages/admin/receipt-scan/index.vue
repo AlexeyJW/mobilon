@@ -679,13 +679,18 @@ async function createCustomer() {
         loyaltyActive: true
       }
     })
-
+await $fetch(
+  `/api/admin/customers/${result.customer.id}/card`,
+  {
+    method: 'POST'
+  }
+)
     selectedCustomer.value = {
       id: result.customer.id,
       name: result.customer.name,
       phone: result.customer.phone,
       loyaltyActive: result.customer.loyaltyActive,
-      hasCard: false,
+     hasCard: true,
       bonusBalance: 0,
       purchaseCount: 0,
       totalSpent: 0,
