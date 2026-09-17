@@ -72,6 +72,10 @@ export default defineEventHandler(async (event) => {
     purchase => purchase.status === 'COMPLETED'
   )
 
+const pendingPurchases = customer.purchases.filter(
+  purchase => purchase.status === 'PENDING'
+)
+
   const purchaseCount = completedPurchases.length
 
   const totalSpent = completedPurchases.reduce(
@@ -83,18 +87,21 @@ export default defineEventHandler(async (event) => {
   const lastPurchase =
     completedPurchases[0]?.createdAt ?? null
 
-  return {
-    success: true,
+return {
+  success: true,
 
-    customer: {
-      ...customer,
+  customer: {
+    ...customer,
 
-      bonusBalance,
-      purchaseCount,
-      totalSpent,
-      lastPurchase,
+    bonusBalance,
+    purchaseCount,
+    totalSpent,
+    lastPurchase,
 
-      hasCard: Boolean(customer.cardToken)
-    }
+    hasCard: Boolean(customer.cardToken),
+
+    pendingPurchases,
+    completedPurchases
   }
+}
 })

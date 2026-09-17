@@ -64,6 +64,8 @@ interface Customer {
 
   requests: Request[]
   purchases: Purchase[]
+  pendingPurchases: Purchase[]
+completedPurchases: Purchase[]
   bonusTransactions: BonusTransaction[]
 }
 
@@ -74,6 +76,30 @@ interface CustomerResponse {
 
 const route = useRoute()
 const toast = useToast()
+
+interface ActiveBonusPolicy {
+  id: number
+  maxRedeemPercent: string | number
+  minRedeemPoints: number | null
+  minPurchaseAmount: string | number | null
+}
+
+const {
+  data: bonusPolicyData
+} = await useFetch<{
+  success: boolean
+  currentPolicy: ActiveBonusPolicy | null
+}>('/api/admin/bonus-policy')
+
+const activeBonusPolicy = computed(
+  () => bonusPolicyData.value?.currentPolicy ?? null
+)
+
+const maxRedeemPercent = computed(() => {
+  return Number(
+    activeBonusPolicy.value?.maxRedeemPercent ?? 0
+  )
+})
 
 const notes = ref('')
 const bonusAmount = ref<number>(10)
@@ -90,7 +116,7 @@ const saleForm = reactive({
   bonusUsed: 0
 })
 
-const maxRedeemPercent = 20
+
 
 const maxBonusByPercent = computed(() => {
   const total = Number(saleForm.totalAmount || 0)
@@ -99,9 +125,9 @@ const maxBonusByPercent = computed(() => {
     return 0
   }
 
-  return Math.floor(
-    total * (maxRedeemPercent / 100)
-  )
+return Math.floor(
+  total * (maxRedeemPercent.value / 100)
+)
 })
 
 const maxBonusAllowed = computed(() => {
@@ -232,88 +258,7 @@ async function createPendingSale() {
     saleSaving.value = false
   }
 }
-async function createTestSale() {
-  const price = Number(saleForm.price)
-  const bonusUsed = Number(saleForm.bonusUsed)
 
-  if (!saleForm.name.trim()) {
-    toast.add({
-      title: 'Вкажіть назву позиції',
-      color: 'error'
-    })
-    return
-  }
-
-  if (!Number.isFinite(price) || price <= 0) {
-    toast.add({
-      title: 'Вкажіть коректну суму',
-      color: 'error'
-    })
-    return
-  }
-
-  if (!Number.isInteger(bonusUsed) || bonusUsed < 0) {
-    toast.add({
-      title: 'Некоректна кількість бонусів',
-      color: 'error'
-    })
-    return
-  }
-
-  saleSaving.value = true
-
-  try {
-    const result = await $fetch('/api/admin/sales', {
-      method: 'POST',
-
-      body: {
-        customerId: customer.value?.id,
-
-        bonusUsed,
-
-       items: [
-  {
-    type:
-      saleForm.bonusCategory === 'SERVICE'
-        ? 'SERVICE'
-        : 'PRODUCT',
-
-    bonusCategory:
-      saleForm.bonusCategory,
-
-    name: saleForm.name.trim(),
-    quantity: 1,
-    unitPrice: price
-  }
-]
-      }
-    })
-
-    toast.add({
-      title: 'Покупку створено',
-      description:
-        `Нараховано ${result.bonusEarned} бонусів`,
-      color: 'success'
-    })
-
-    saleForm.name = 'Тестовий смартфон'
-saleForm.price = 10000
-saleForm.bonusUsed = 0
-saleForm.bonusCategory = 'SMARTPHONE'
-
-    await refresh()
-  } catch (error: any) {
-    toast.add({
-      title: 'Не вдалося створити покупку',
-      description:
-        error?.data?.statusMessage ||
-        'Помилка створення покупки',
-      color: 'error'
-    })
-  } finally {
-    saleSaving.value = false
-  }
-}
 
 //______________________
 const {
@@ -755,7 +700,158 @@ async function adjustBonus() {
     </UButton>
   </template>
 </div>
+<!-- Покупки, що очікують оплати -->
 
+<UCard
+  v-if="customer.pendingPurchases?.length"
+  class="border-warning/40"
+>
+  <template #header>
+    <div class="flex items-center gap-3">
+      <UIcon
+        name="i-lucide-clock-3"
+        class="size-6 text-warning"
+      />
+
+      <div>
+        <h2 class="font-semibold">
+          Очікує оплати
+        </h2>
+
+        <p class="text-sm text-muted mt-1">
+          Покупка підготовлена, але ще не підтверджена
+          фіскальним чеком
+        </p>
+      </div>
+    </div>
+  </template>
+
+  <div class="space-y-4">
+
+    <div
+      v-for="purchase in customer.pendingPurchases"
+      :key="purchase.id"
+      class="
+        rounded-xl
+        border
+        border-warning/30
+        p-4
+        space-y-4
+      "
+    >
+
+      <div
+        class="
+          flex
+          flex-col
+          gap-2
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+        "
+      >
+        <div>
+          <div class="flex items-center gap-2">
+
+            <p class="font-semibold">
+              Покупка №{{ purchase.id }}
+            </p>
+
+            <UBadge
+              color="warning"
+              variant="soft"
+            >
+              Очікує чека
+            </UBadge>
+
+          </div>
+
+          <p class="text-sm text-muted mt-1">
+            {{ formatDate(purchase.createdAt) }}
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="
+          grid
+          gap-3
+          sm:grid-cols-3
+        "
+      >
+
+        <div
+          class="
+            rounded-lg
+            bg-elevated
+            p-3
+          "
+        >
+          <p class="text-xs text-muted">
+            Сума покупки
+          </p>
+
+          <p class="mt-1 font-semibold">
+            {{ formatMoney(purchase.totalAmount) }} ₴
+          </p>
+        </div>
+
+        <div
+          class="
+            rounded-lg
+            bg-elevated
+            p-3
+          "
+        >
+          <p class="text-xs text-muted">
+            Плануємо списати
+          </p>
+
+          <p class="mt-1 font-semibold">
+            {{ purchase.bonusUsed }} бонусів
+          </p>
+        </div>
+
+        <div
+          class="
+            rounded-lg
+            bg-elevated
+            p-3
+          "
+        >
+          <p class="text-xs text-muted">
+            До оплати
+          </p>
+
+          <p class="mt-1 text-lg font-bold text-primary">
+            {{ formatMoney(purchase.paidAmount) }} ₴
+          </p>
+        </div>
+
+      </div>
+
+      <UAlert
+        color="warning"
+        variant="soft"
+        icon="i-lucide-receipt"
+        title="Бонуси ще не списані"
+        description="Завершіть продаж у касі та підтвердьте його фіскальним чеком."
+      />
+<div class="flex flex-wrap gap-2">
+
+  <UButton
+    :to="`/admin/receipt-scan?purchaseId=${purchase.id}`"
+    icon="i-lucide-scan-line"
+    color="primary"
+  >
+    Сканувати фіскальний чек
+  </UButton>
+
+</div>
+    </div>
+
+  </div>
+</UCard>
 
 <!-- Нова покупка -->
 
@@ -1066,7 +1162,7 @@ async function adjustBonus() {
         </template>
 
         <div
-          v-if="!customer.purchases.length"
+      v-if="!customer.completedPurchases.length"
           class="text-sm text-muted py-4"
         >
           Покупок поки немає.
@@ -1077,7 +1173,7 @@ async function adjustBonus() {
           class="space-y-3"
         >
           <div
-            v-for="purchase in customer.purchases"
+           v-for="purchase in customer.completedPurchases"
             :key="purchase.id"
             class="
               rounded-lg
