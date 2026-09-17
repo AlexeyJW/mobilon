@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 
 import prisma from '../../../../utils/prisma'
+
 import requireAdmin from '../../../../utils/requireAdmin'
 
 export default defineEventHandler(async (event) => {
@@ -26,13 +27,34 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  /*
+   * Якщо токен уже існує —
+   * не створюємо новий.
+   *
+   * Але обов'язково активуємо
+   * бонусну програму.
+   */
   if (customer.cardToken) {
+    if (!customer.loyaltyActive) {
+      await prisma.customer.update({
+        where: { id },
+        data: {
+          loyaltyActive: true
+        }
+      })
+    }
+
     return {
       success: true,
-      cardToken: customer.cardToken
+      cardToken: customer.cardToken,
+      loyaltyActive: true
     }
   }
 
+  /*
+   * Якщо картки ще немає —
+   * створюємо токен та активуємо її.
+   */
   const cardToken =
     crypto.randomBytes(24).toString('hex')
 
@@ -46,6 +68,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     success: true,
-    cardToken
+    cardToken,
+    loyaltyActive: true
   }
 })
