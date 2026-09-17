@@ -214,12 +214,12 @@ enum PurchaseSource {
 }
 
 enum PurchaseStatus {
+  PENDING
   COMPLETED
   CANCELLED
   REFUNDED
   PARTIALLY_REFUNDED
 }
-
 model PurchaseLine {
   id Int @id @default(autoincrement())
 

@@ -81,49 +81,157 @@ const bonusReason = ref('')
 const bonusSaving = ref(false)
 const notesSaving = ref(false)
 const loyaltySaving = ref(false)
-// покупка
+// Підготовка нової покупки до фіскального чека
+
 const saleSaving = ref(false)
 
-type TestBonusCategory =
-  | 'SMARTPHONE'
-  | 'FEATURE_PHONE'
-  | 'ACCESSORY'
-  | 'SERVICE'
-  | 'NO_REWARD'
-
-const bonusCategoryOptions = [
-  {
-    label: 'Смартфон — 1%',
-    value: 'SMARTPHONE'
-  },
-  {
-    label: 'Кнопковий телефон — 2%',
-    value: 'FEATURE_PHONE'
-  },
-  {
-    label: 'Аксесуар / товар — 5%',
-    value: 'ACCESSORY'
-  },
-  {
-    label: 'Послуга — 5%',
-    value: 'SERVICE'
-  },
-  {
-    label: 'Без бонусів — 0%',
-    value: 'NO_REWARD'
-  }
-]
-
 const saleForm = reactive({
-  name: 'Тестовий смартфон',
-  price: 10000,
-  bonusUsed: 0,
-  bonusCategory:
-    'SMARTPHONE' as TestBonusCategory
+  totalAmount: 0,
+  bonusUsed: 0
 })
 
+const maxRedeemPercent = 20
 
+const maxBonusByPercent = computed(() => {
+  const total = Number(saleForm.totalAmount || 0)
 
+  if (total <= 0) {
+    return 0
+  }
+
+  return Math.floor(
+    total * (maxRedeemPercent / 100)
+  )
+})
+
+const maxBonusAllowed = computed(() => {
+  if (!customer.value) {
+    return 0
+  }
+
+  return Math.min(
+    customer.value.bonusBalance,
+    maxBonusByPercent.value
+  )
+})
+
+const amountToPay = computed(() => {
+  const total = Number(saleForm.totalAmount || 0)
+  const bonus = Number(saleForm.bonusUsed || 0)
+
+  return Math.max(
+    0,
+    Math.round((total - bonus) * 100) / 100
+  )
+})
+
+watch(
+  () => saleForm.totalAmount,
+  () => {
+    if (
+      saleForm.bonusUsed >
+      maxBonusAllowed.value
+    ) {
+      saleForm.bonusUsed =
+        maxBonusAllowed.value
+    }
+  }
+)
+
+async function createPendingSale() {
+  if (!customer.value) {
+    return
+  }
+
+  const totalAmount =
+    Number(saleForm.totalAmount)
+
+  const bonusUsed =
+    Number(saleForm.bonusUsed || 0)
+
+  if (
+    !Number.isFinite(totalAmount) ||
+    totalAmount <= 0
+  ) {
+    toast.add({
+      title: 'Вкажіть суму покупки',
+      color: 'error'
+    })
+
+    return
+  }
+
+  if (
+    !Number.isInteger(bonusUsed) ||
+    bonusUsed < 0
+  ) {
+    toast.add({
+      title: 'Некоректна кількість бонусів',
+      color: 'error'
+    })
+
+    return
+  }
+
+  if (
+    bonusUsed >
+    maxBonusAllowed.value
+  ) {
+    toast.add({
+      title: 'Забагато бонусів',
+      description:
+        `Можна використати максимум ${maxBonusAllowed.value}`,
+      color: 'error'
+    })
+
+    return
+  }
+
+  saleSaving.value = true
+
+  try {
+    const result = await $fetch<{
+      success: boolean
+      purchase: {
+        id: number
+        totalAmount: number
+        bonusUsed: number
+        paidAmount: number
+        status: string
+      }
+    }>('/api/admin/sales/pending', {
+      method: 'POST',
+
+      body: {
+        customerId: customer.value.id,
+        totalAmount,
+        bonusUsed
+      }
+    })
+
+    toast.add({
+      title: 'Покупку підготовлено',
+      description:
+        `До оплати ${formatMoney(result.purchase.paidAmount)} ₴`,
+      color: 'success'
+    })
+
+    saleForm.totalAmount = 0
+    saleForm.bonusUsed = 0
+
+    await refresh()
+  } catch (error: any) {
+    toast.add({
+      title: 'Не вдалося підготувати покупку',
+      description:
+        error?.data?.statusMessage ||
+        'Помилка створення покупки',
+      color: 'error'
+    })
+  } finally {
+    saleSaving.value = false
+  }
+}
 async function createTestSale() {
   const price = Number(saleForm.price)
   const bonusUsed = Number(saleForm.bonusUsed)
@@ -649,69 +757,146 @@ async function adjustBonus() {
 </div>
 
 
-<!-- Створення тестової покупки -->
- <UCard>
+<!-- Нова покупка -->
+
+<UCard>
   <template #header>
     <div>
       <h2 class="font-semibold">
-        🧾 Тестова покупка
+        🛒 Нова покупка
       </h2>
 
       <p class="text-sm text-muted mt-1">
-        Тимчасова форма для перевірки нарахування та списання бонусів
+        Підготовка покупки перед формуванням
+        фіскального чека
       </p>
     </div>
   </template>
-<div class="grid gap-4 md:grid-cols-4">
-  
 
-    <UFormField label="Назва">
-      <UInput
-        v-model="saleForm.name"
-        class="w-full"
-      />
-    </UFormField>
-<UFormField label="Бонусна категорія">
-  <USelect
-    v-model="saleForm.bonusCategory"
-    :items="bonusCategoryOptions"
-    class="w-full"
-  />
-</UFormField>
-    <UFormField label="Сума покупки">
-      <UInput
-        v-model.number="saleForm.price"
-        type="number"
-        min="0"
-        class="w-full"
-      />
-    </UFormField>
+  <div class="space-y-5">
 
-    <UFormField
-      label="Використати бонусів"
-      :description="`Баланс: ${customer.bonusBalance}`"
+    <div class="grid gap-4 sm:grid-cols-2">
+
+      <UFormField label="Сума покупки">
+        <UInput
+          v-model.number="saleForm.totalAmount"
+          type="number"
+          min="0"
+          step="0.01"
+          class="w-full"
+        >
+          <template #trailing>
+            ₴
+          </template>
+        </UInput>
+      </UFormField>
+
+      <UFormField
+        label="Використати бонусів"
+        :description="
+          `Баланс: ${customer.bonusBalance}. Максимум: ${maxBonusAllowed}`
+        "
+      >
+        <UInput
+          v-model.number="saleForm.bonusUsed"
+          type="number"
+          min="0"
+          :max="maxBonusAllowed"
+          step="1"
+          class="w-full"
+        />
+      </UFormField>
+
+    </div>
+
+    <div
+      v-if="saleForm.totalAmount > 0"
+      class="
+        rounded-xl
+        border
+        border-default
+        p-4
+        space-y-3
+      "
     >
-      <UInput
-        v-model.number="saleForm.bonusUsed"
-        type="number"
-        min="0"
-        class="w-full"
-      />
-    </UFormField>
 
-  </div>
+      <div class="flex justify-between gap-4">
+        <span class="text-muted">
+          Сума покупки
+        </span>
 
-  <div class="mt-4">
-    <UButton
-      icon="i-lucide-shopping-cart"
-      :loading="saleSaving"
-      @click="createTestSale"
-    >
-      Провести покупку
-    </UButton>
+        <span class="font-semibold">
+          {{ formatMoney(saleForm.totalAmount) }} ₴
+        </span>
+      </div>
+
+      <div class="flex justify-between gap-4">
+        <span class="text-muted">
+          Доступно списати
+        </span>
+
+        <span class="font-semibold">
+          {{ maxBonusAllowed }} бонусів
+        </span>
+      </div>
+
+      <div class="flex justify-between gap-4">
+        <span class="text-muted">
+          Використовуємо
+        </span>
+
+        <span class="font-semibold text-error">
+          −{{ saleForm.bonusUsed || 0 }} бонусів
+        </span>
+      </div>
+
+      <div
+        class="
+          flex
+          justify-between
+          gap-4
+          pt-3
+          border-t
+          border-default
+        "
+      >
+        <span class="font-semibold">
+          До оплати
+        </span>
+
+        <span class="text-xl font-bold text-primary">
+          {{ formatMoney(amountToPay) }} ₴
+        </span>
+      </div>
+
+    </div>
+
+    <UAlert
+      v-if="saleForm.bonusUsed > 0"
+      color="warning"
+      variant="soft"
+      icon="i-lucide-info"
+      title="Бонуси ще не списуються"
+      description="Списання відбудеться тільки після підтвердження фіскального чека."
+    />
+
+    <div>
+      <UButton
+        icon="i-lucide-shopping-cart"
+        size="lg"
+        :loading="saleSaving"
+        :disabled="
+          !saleForm.totalAmount ||
+          saleForm.totalAmount <= 0
+        "
+        @click="createPendingSale"
+      >
+        Підготувати покупку
+      </UButton>
+    </div>
+
   </div>
 </UCard>
-
       <!-- Нотатки -->
 
       <UCard>
