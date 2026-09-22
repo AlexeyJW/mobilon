@@ -1,4 +1,4 @@
-import prisma from '../../utils/prisma'
+import prisma from '../../../utils/prisma'
 import slugify from 'slugify'
 
 export default defineEventHandler(async (event) => {

@@ -91,16 +91,94 @@ const {
    BRANDS
 ================================================== */
 
+const ADD_BRAND_VALUE = '__add_brand__'
+
 const brands = computed(() => {
-  return (
-    catalogMeta.value?.brands.map(
-      brand => ({
-        label: brand.name,
-        value: brand.name
-      })
-    ) || []
-  )
+  const items =
+    catalogMeta.value?.brands.map(brand => ({
+      label: brand.name,
+      value: brand.name
+    })) || []
+
+  return [
+    ...items,
+    {
+      label: '＋ Додати бренд',
+      value: ADD_BRAND_VALUE
+    }
+  ]
 })
+
+const addBrandModalOpen = ref(false)
+const newBrandName = ref('')
+const addingBrand = ref(false)
+
+function handleBrandChange(value: string) {
+  if (value === ADD_BRAND_VALUE) {
+    addBrandModalOpen.value = true
+    newBrandName.value = ''
+    return
+  }
+
+  form.value.brand = value
+}
+
+async function createBrand() {
+  const name = newBrandName.value.trim()
+
+  if (!name) {
+    toast.add({
+      title: 'Вкажіть назву бренду',
+      color: 'warning',
+      icon: 'i-lucide-circle-alert'
+    })
+    return
+  }
+
+  try {
+    addingBrand.value = true
+
+    const brand = await $fetch<Brand>(
+      '/api/admin/brands',
+      {
+        method: 'POST',
+        body: {
+          name
+        }
+      }
+    )
+
+    if (catalogMeta.value) {
+      catalogMeta.value.brands.push(brand)
+    }
+
+    // Одразу вибираємо новий бренд
+    form.value.brand = brand.name
+
+    addBrandModalOpen.value = false
+    newBrandName.value = ''
+
+    toast.add({
+      title: 'Бренд додано',
+      description: brand.name,
+      color: 'success',
+      icon: 'i-lucide-check-circle'
+    })
+  }
+  catch (error: any) {
+    toast.add({
+      title: 'Не вдалося додати бренд',
+      description:
+        error?.data?.statusMessage ||
+        'Сталася помилка',
+      color: 'error',
+      icon: 'i-lucide-circle-alert'
+    })
+  }
+  finally {
+    addingBrand.value = false
+  }
+}
 
 /* ==================================================
    CATEGORIES
@@ -633,11 +711,12 @@ watch(
           <UFormField
             label="Бренд"
           >
-            <USelect
-              v-model="form.brand"
-              :items="brands"
-              class="w-full min-w-[220px]"
-            />
+<USelect
+  :model-value="form.brand"
+  :items="brands"
+  class="w-full min-w-[220px]"
+  @update:model-value="handleBrandChange"
+/>
           </UFormField>
 
           <UFormField
@@ -1138,4 +1217,46 @@ watch(
     </div>
 
   </form>
+
+
+  <UModal v-model:open="addBrandModalOpen">
+  <template #header>
+    <h2 class="text-lg font-semibold">
+      Додати бренд
+    </h2>
+  </template>
+
+  <template #body>
+    <UFormField label="Назва бренду">
+      <UInput
+        v-model="newBrandName"
+        placeholder="Наприклад: OnePlus"
+        autofocus
+        class="w-full"
+        @keyup.enter="createBrand"
+      />
+    </UFormField>
+  </template>
+
+  <template #footer>
+    <div class="flex justify-end gap-3 w-full">
+      <UButton
+        color="neutral"
+        variant="soft"
+        :disabled="addingBrand"
+        @click="addBrandModalOpen = false"
+      >
+        Скасувати
+      </UButton>
+
+      <UButton
+        icon="i-lucide-plus"
+        :loading="addingBrand"
+        @click="createBrand"
+      >
+        Додати
+      </UButton>
+    </div>
+  </template>
+</UModal>
 </template>
