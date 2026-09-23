@@ -1,34 +1,47 @@
 <template>
   <div>
+    <!-- Головний екран -->
     <RevealOnScroll>
       <HeroMobileNew />
     </RevealOnScroll>
-     <RevealOnScroll>
-        <BenefitsMobile />
-     </RevealOnScroll>
-     
-        
-      <RevealOnScroll>
-  <ServicesMobileNew />
-</RevealOnScroll>
 
-<RevealOnScroll>
-  <PopularProductsMobile />
-</RevealOnScroll>
+    <!-- Популярні товари — одразу показуємо вітрину -->
+    <RevealOnScroll>
+      <PopularProductsMobile />
+    </RevealOnScroll>
 
-<RevealOnScroll>
-  <BrandMobile />
-</RevealOnScroll>
- 
-<RevealOnScroll>
+    <RevealOnScroll>
 
-  <ContactMobile />
-</RevealOnScroll>
- <RevealOnScroll>
-  <ContactMap />  
- </RevealOnScroll>   
+      <MobiPicker />
+
+    </RevealOnScroll>
+
+    <!-- Переваги Mobilon -->
+    <RevealOnScroll>
+      <BenefitsMobile />
+    </RevealOnScroll>
+
+    <!-- Послуги -->
+    <RevealOnScroll>
+      <ServicesMobileNew />
+    </RevealOnScroll>
+
+    <!-- Бренди -->
+    <RevealOnScroll>
+      <BrandMobile />
+    </RevealOnScroll>
+
+    <!-- Порадитись з Мобі / Залишити заявку -->
+    <RevealOnScroll>
+      <ContactMobile />
+    </RevealOnScroll>
+
+    <!-- Карта -->
+    <RevealOnScroll>
+      <ContactMap />
+    </RevealOnScroll>
   </div>
-</template>    
+</template>
 <script setup>
 useSeoMeta({
   title: 'Продаж Cмартфонів | Купити смартфон | Ремонт телефонів у Солотвині | Mobilon',

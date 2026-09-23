@@ -22,36 +22,41 @@ defineProps<{
         hover:border-primary/20
       "
     >
-      <!-- Назва -->
+      <!-- Бейджі + наявність -->
       <div class="flex items-start justify-between gap-3">
+        <ProductBadges :product="product" />
 
-        <h3
-          class="font-bold text-base leading-tight line-clamp-2 flex-1"
-        >
-          {{ product.name }}
-        </h3>
-
-        <UBadge
-          size="xs"
-          variant="soft"
-          :color="product.quantity > 0 ? 'success' : 'error'"
-        >
-          {{ product.quantity > 0 ? 'Є' : 'Немає' }}
-        </UBadge>
-
+        <div class="shrink-0">
+          <ProductAvailability :product="product" />
+        </div>
       </div>
+
+      <!-- Назва -->
+      <h3
+        class="
+          mt-3
+          font-bold
+          text-base
+          leading-tight
+          line-clamp-2
+        "
+      >
+        {{ product.name }}
+      </h3>
 
       <!-- Фото + опис -->
       <div class="mt-4 flex gap-4">
-
         <div
           class="
             w-24
             h-24
             rounded-xl
             overflow-hidden
-            bg-gray-100
+            bg-white
             shrink-0
+            flex
+            items-center
+            justify-center
           "
         >
           <img
@@ -61,7 +66,7 @@ defineProps<{
             class="
               w-full
               h-full
-              object-cover
+              object-contain
               transition
               duration-500
               group-hover:scale-105
@@ -70,44 +75,40 @@ defineProps<{
 
           <div
             v-else
-            class="w-full h-full flex items-center justify-center"
+            class="w-full h-full flex items-center justify-center bg-gray-100"
           >
             <UIcon
               name="i-lucide-image"
               class="text-3xl text-gray-400"
             />
           </div>
-
         </div>
 
-        <div class="flex flex-col justify-between flex-1">
-
+        <div class="flex-1 min-w-0">
           <p
-            class="text-sm text-gray-500 line-clamp-4"
+            class="
+              text-sm
+              text-gray-500
+              line-clamp-4
+            "
           >
             {{ product.shortDescription }}
           </p>
-
         </div>
-
       </div>
 
-      <!-- Низ -->
+      <!-- Ціна + кнопка -->
       <div class="mt-5 border-t pt-4">
-
-        <div
-          class="text-center"
-        >
+        <div class="text-center">
           <div
-            class="text-3xl font-extrabold tracking-tight text-primary"
+            class="
+              text-3xl
+              font-extrabold
+              tracking-tight
+              text-primary
+            "
           >
             {{ product.sellPrice }} грн
-          </div>
-
-          <div
-            class="text-xs text-gray-400 mt-1"
-          >
-            {{ product.quantity }} шт.
           </div>
         </div>
 
@@ -121,9 +122,7 @@ defineProps<{
         >
           Детальніше
         </UButton>
-
       </div>
-
     </UCard>
   </NuxtLink>
 </template>

@@ -14,7 +14,7 @@ defineProps<{
       color="warning"
       variant="solid"
     >
-      🔥 TOP
+      🔥 Популярний
     </UBadge>
 
     <UBadge
@@ -22,7 +22,7 @@ defineProps<{
       color="primary"
       variant="solid"
     >
-      🆕 NEW
+      🆕 Новинка
     </UBadge>
 
     <UBadge
@@ -30,7 +30,7 @@ defineProps<{
       color="error"
       variant="solid"
     >
-      💥 SALE
+      💥 Акція
     </UBadge>
 
     <UBadge

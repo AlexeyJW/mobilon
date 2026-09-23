@@ -5,14 +5,12 @@ const { data: products } = await useFetch('/api/products/popular')
 <template>
   <ProductSection
     badge="Популярні товари"
-    title="Найчастіше купують"
-    description="Телефони та аксесуари, які користуються найбільшим попитом"
+    title="Актуальні пропозиції"
+    description="Популярні смартфони та техніка, які можна придбати в Mobilon"
   >
-
     <ProductGrid
       :products="products ?? []"
     />
-
   </ProductSection>
 
   <div class="mt-8">
@@ -21,9 +19,9 @@ const { data: products } = await useFetch('/api/products/popular')
       size="lg"
       color="primary"
       variant="outline"
-      to="/products"
+      to="/catalog"
     >
-      Переглянути більше товарів
+      Переглянути весь каталог
     </UButton>
   </div>
 </template>
