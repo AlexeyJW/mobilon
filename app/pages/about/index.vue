@@ -15,7 +15,7 @@ useSeoMeta({
 
   ogUrl: 'https://mobilon.com.ua/about',
 
-  ogImage: 'https://mobilon.com.ua/images/og-image.png',
+  ogImage: 'https://mobilon.com.ua/images/og-mobilon.jpg',
 
   twitterCard: 'summary_large_image',
 
@@ -23,7 +23,19 @@ useSeoMeta({
     'Про Mobilon — магазин смартфонів та аксесуарів у Солотвині',
 
   twitterDescription:
-    'Смартфони, аксесуари та допомога з мобільною технікою у Солотвині.'
+    'Смартфони, аксесуари та допомога з мобільною технікою у Солотвині.',
+
+  twitterImage:
+    'https://mobilon.com.ua/images/og-mobilon.jpg'
+})
+
+useHead({
+  link: [
+    {
+      rel: 'canonical',
+      href: 'https://mobilon.com.ua/about'
+    }
+  ]
 })
 
 useHead({
