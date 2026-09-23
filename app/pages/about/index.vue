@@ -15,7 +15,7 @@ useSeoMeta({
 
   ogUrl: 'https://mobilon.com.ua/about',
 
-  ogImage: 'https://mobilon.com.ua/images/og-mobilon.jpg',
+  ogImage: 'https://mobilon.com.ua/images/og-mobilon.png',
 
   twitterCard: 'summary_large_image',
 
@@ -26,7 +26,7 @@ useSeoMeta({
     'Смартфони, аксесуари та допомога з мобільною технікою у Солотвині.',
 
   twitterImage:
-    'https://mobilon.com.ua/images/og-mobilon.jpg'
+    'https://mobilon.com.ua/images/og-mobilon.png'
 })
 
 useHead({
