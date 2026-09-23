@@ -54,6 +54,33 @@ export const useMobi = () => {
   function hide() {
     open.value = false
   }
+ function startProductSelection() {
+  // Починаємо новий сценарій підбору смартфона
+  messages.value = [
+    {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      text:
+        `📱 Допоможу підібрати смартфон.
+
+Напишіть, будь ласка, ваш приблизний бюджет — наприклад:
+• до 8 000 грн
+• 10–12 тис. грн
+• до 15 000 грн
+
+Я подивлюся, які моделі є в каталозі Mobilon.`,
+      createdAt: new Date()
+    }
+  ]
+
+  lead.value = {}
+  mode.value = 'chat'
+
+  shownProducts.value = []
+  rejectedProductIds.value = []
+
+  open.value = true
+}
 
   function clear() {
     messages.value = [
@@ -194,26 +221,26 @@ export const useMobi = () => {
       loading.value = false
     }
   }
+return {
+  open,
+  loading,
+  messages,
 
-  return {
-    open,
-    loading,
-    messages,
+  lead,
+  mode,
 
-    lead,
-    mode,
+  shownProducts,
+  rejectedProductIds,
 
-    shownProducts,
-    rejectedProductIds,
+  show,
+  hide,
+  clear,
+  startProductSelection,
 
-    show,
-    hide,
-    clear,
+  send,
+  addMessage,
 
-    send,
-    addMessage,
-
-    addShownProducts,
-    rejectProductId
-  }
+  addShownProducts,
+  rejectProductId
+}
 }

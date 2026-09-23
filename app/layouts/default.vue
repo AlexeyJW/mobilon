@@ -189,14 +189,15 @@
           
           <!-- Колонка 1: Логотип -->
           <div class="space-y-4">
-            <div class="flex items-center gap-2">
+           <!--  <div class="flex items-center gap-2">
               <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <span class="text-primary-inverted font-bold text-sm">M</span>
               </div>
               <span class="text-default font-bold text-lg">Mobilon</span>
-            </div>
+            </div> -->
+            <LogoMobilon3 size="sm"/>
             <p class="text-muted text-sm">
-              Сервіс налаштування та оптимізації смартфонів
+              Магазин та сервіс налаштування та оптимізації смартфонів
             </p>
           </div>
 
