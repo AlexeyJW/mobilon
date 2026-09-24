@@ -51,7 +51,7 @@ app: {
         content: 'width=device-width, initial-scale=1'
       },
 
-     {
+      {
         name: 'description',
         content: 'Продаж смартфонів та ремонт телефонів, планшетів і ноутбуків у Солотвині. Заміна дисплеїв, акумуляторів, розємів, налаштування смартфонів та перенесення даних.'
       },
@@ -69,6 +69,36 @@ app: {
       {
         property: 'og:site_name',
         content: 'Mobilon'
+      },
+
+      {
+        property: 'og:image',
+        content: 'https://mobilon.com.ua/images/og-mobilon.png'
+      },
+
+      {
+        property: 'og:image:width',
+        content: '1200'
+      },
+
+      {
+        property: 'og:image:height',
+        content: '630'
+      },
+
+      {
+        property: 'og:image:alt',
+        content: 'Mobilon — смартфони, аксесуари та сервіс у Солотвині'
+      },
+
+      {
+        name: 'twitter:card',
+        content: 'summary_large_image'
+      },
+
+      {
+        name: 'twitter:image',
+        content: 'https://mobilon.com.ua/images/og-mobilon.png'
       }
     ],
 
@@ -76,8 +106,7 @@ app: {
       {
         rel: 'icon',
         href: '/favicon.ico'
-      },
-      
+      }
     ]
   }
 }
