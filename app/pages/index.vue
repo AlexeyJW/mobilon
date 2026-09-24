@@ -54,12 +54,36 @@ useSeoMeta({
 })
 
 useHead({
-  link: [
+  script: [
     {
-      rel: 'canonical',
-     href: "https://mobilon.com.ua/"
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        '@id': 'https://mobilon.com.ua/#store',
+
+        name: 'Mobilon',
+
+        description:
+          'Магазин смартфонів та аксесуарів у Солотвині. Смартфони, чохли, захисне скло, зарядні пристрої та допомога з налаштуванням і перенесенням даних.',
+
+        url: 'https://mobilon.com.ua/',
+
+        telephone: '+380984455233',
+
+        logo: 'https://mobilon.com.ua/images/mobilon-logo.png',
+
+        image: 'https://mobilon.com.ua/images/og-mobilon.png',
+
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'вул. Дружби Народів, 3',
+          addressLocality: 'Солотвино',
+          addressRegion: 'Закарпатська область',
+          addressCountry: 'UA'
+        }
+      })
     }
   ]
 })
-
 </script>
