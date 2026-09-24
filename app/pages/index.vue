@@ -85,6 +85,8 @@ useHead({
 
         telephone: '+380984455233',
 
+        priceRange: '₴₴',
+
         logo: 'https://mobilon.com.ua/images/logo.png',
 
         image: 'https://mobilon.com.ua/images/og-mobilon.png',
