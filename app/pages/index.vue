@@ -100,6 +100,7 @@ useHead({
           streetAddress: 'вул. Дружби Народів, 3',
           addressLocality: 'Солотвино',
           addressRegion: 'Закарпатська область',
+          postalCode: '90575',
           addressCountry: 'UA'
         },
 
