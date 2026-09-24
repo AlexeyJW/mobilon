@@ -44,13 +44,27 @@
 </template>
 <script setup>
 useSeoMeta({
-  title: 'Продаж Cмартфонів | Купити смартфон | Ремонт телефонів у Солотвині | Mobilon',
+  title: 'Магазин смартфонів та аксесуарів у Солотвині | Mobilon',
+
   description:
-    'Ремонт телефонів Samsung, iPhone, Xiaomi та інших брендів у Солотвині. Заміна дисплеїв, акумуляторів, розʼємів, перенесення даних та налаштування смартфонів.',
-  ogTitle: 'Купити телефон | Купити нові смартфони |Ремонт телефонів у Солотвині | Mobilon',
+    'Mobilon — магазин смартфонів та аксесуарів у Солотвині. Купуйте смартфони, чохли, захисне скло, зарядні пристрої та отримуйте допомогу з налаштуванням техніки.',
+
+  ogTitle:
+    'Mobilon — смартфони та аксесуари у Солотвині',
+
   ogDescription:
-    'Професійний ремонт телефонів у Солотвині. Samsung, iPhone, Xiaomi, Redmi, Realme та інші.',
-  ogType: 'website'
+    'Смартфони, аксесуари, захист та допомога з мобільною технікою. Магазин Mobilon у Солотвині.',
+
+  ogType: 'website',
+
+  ogUrl: 'https://mobilon.com.ua/',
+
+  ogImage: 'https://mobilon.com.ua/images/og-mobilon.png',
+
+  twitterCard: 'summary_large_image',
+
+  twitterImage:
+    'https://mobilon.com.ua/images/og-mobilon.png'
 })
 
 useHead({
@@ -71,9 +85,13 @@ useHead({
 
         telephone: '+380984455233',
 
-        logo: 'https://mobilon.com.ua/images/mobilon-logo.png',
+        logo: 'https://mobilon.com.ua/images/logo.png',
 
         image: 'https://mobilon.com.ua/images/og-mobilon.png',
+
+        sameAs: [
+          'https://www.instagram.com/mobilon_ua/'
+        ],
 
         address: {
           '@type': 'PostalAddress',
@@ -81,7 +99,28 @@ useHead({
           addressLocality: 'Солотвино',
           addressRegion: 'Закарпатська область',
           addressCountry: 'UA'
-        }
+        },
+
+        openingHoursSpecification: [
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: [
+              'Monday',
+              'Tuesday',
+              'Wednesday',
+              'Thursday',
+              'Friday'
+            ],
+            opens: '09:00',
+            closes: '18:00'
+          },
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: 'Saturday',
+            opens: '09:00',
+            closes: '15:00'
+          }
+        ]
       })
     }
   ]
