@@ -34,6 +34,8 @@
   :ui="{
     tr: 'hover:bg-muted/40 transition'
 }"
+  @select="(_event, row) => editProduct(row.original)"
+
 >
       <template #name-cell="{ row }">
         <div class="flex items-center gap-3">
@@ -129,7 +131,8 @@
       </template>
       <template #actions-cell="{ row }">
 
-        <div class="flex gap-2 justify-center">
+        <div class="flex gap-2 justify-center"
+        @click.stop>
 
           <UButton
             icon="i-lucide-pencil"
@@ -142,7 +145,7 @@
             icon="i-lucide-trash"
             size="xs"
             color="error"
-            @click="confirmDelete(row.original.id)"
+            @click="confirmDelete(row.original)"
           />
 
         </div>
