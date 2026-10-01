@@ -10,6 +10,10 @@ function normalizeText(value: string) {
     .trim()
 }
 
+// --------------------------------------------------
+// Пам'ять ROM
+// --------------------------------------------------
+
 function extractStorage(query: string): number | null {
   const normalized = normalizeText(query)
 
@@ -43,6 +47,10 @@ function extractStorage(query: string): number | null {
   return null
 }
 
+// --------------------------------------------------
+// RAM
+// --------------------------------------------------
+
 function extractRam(query: string): number | null {
   const normalized = normalizeText(query)
 
@@ -67,6 +75,10 @@ function extractRam(query: string): number | null {
   return null
 }
 
+// --------------------------------------------------
+// Модель
+// --------------------------------------------------
+
 function extractModel(tokens: string[]) {
   return (
     tokens.find(token =>
@@ -74,6 +86,10 @@ function extractModel(tokens: string[]) {
     ) ?? null
   )
 }
+
+// --------------------------------------------------
+// Бренд
+// --------------------------------------------------
 
 function extractBrand(tokens: string[]) {
   const brands = [
@@ -98,6 +114,11 @@ function extractBrand(tokens: string[]) {
     ) ?? null
   )
 }
+
+// --------------------------------------------------
+// Лінійка товару
+// --------------------------------------------------
+
 function extractProductLine(tokens: string[]) {
   const lines = [
     'redmi',
@@ -112,23 +133,136 @@ function extractProductLine(tokens: string[]) {
     ) ?? null
   )
 }
+
+// --------------------------------------------------
+// Категорія
+// --------------------------------------------------
+
+function extractCategory(query: string) {
+  const normalized = normalizeText(query)
+
+  const categories = [
+    'смартфони',
+    'навушники',
+    'зарядні пристрої',
+    'кабелі',
+    'повербанк',
+    'чохол',
+    'захисне скло'
+  ]
+
+  return (
+    categories.find(category =>
+      normalized.includes(category)
+    ) ?? null
+  )
+}
+
+// --------------------------------------------------
+// Головний пошук
+// --------------------------------------------------
+
 export async function findProducts(input: FindProductsInput) {
+
+
+  // --------------------------------------------------
+  // Нормалізація запиту
+  // --------------------------------------------------
+
   const query = normalizeQuery(input.query)
 
+  
 
   const normalizedQuery = normalizeText(query)
+
+
 
   const tokens = normalizedQuery
     .split(/\s+/)
     .filter(Boolean)
 
-  const brand = extractBrand(tokens)
+  
 
+  // --------------------------------------------------
+  // Розбір запиту
+  // --------------------------------------------------
+
+  const brand = extractBrand(tokens)
   const productLine = extractProductLine(tokens)
+  const category = extractCategory(normalizedQuery)
 
   const model = extractModel(tokens)
   const storage = extractStorage(normalizedQuery)
   const ram = extractRam(normalizedQuery)
+
+
+
+  // --------------------------------------------------
+  // Службові слова
+  // --------------------------------------------------
+
+  const serviceWords = new Set([
+    'до',
+    'від',
+    'грн',
+    'гривень',
+    'гривні',
+    'гривня',
+    'покажи',
+    'показати',
+    'знайди',
+    'знайти',
+    'потрібен',
+    'потрібна',
+    'потрібно',
+    'хочу',
+    'мені',
+    'будь',
+    'ласка'
+  ])
+
+  // Слова категорій не повинні шукатися в назві товару
+  const categoryWords = new Set([
+    'смартфони',
+    'навушники',
+    'зарядні',
+    'пристрої',
+    'кабелі',
+    'повербанк',
+    'чохол',
+    'захисне',
+    'скло'
+  ])
+
+  // --------------------------------------------------
+  // Токени, за якими реально шукаємо name
+  // --------------------------------------------------
+
+  const searchTokens = tokens.filter(token => {
+    const value = token.toLowerCase()
+
+    if (serviceWords.has(value)) {
+      return false
+    }
+
+    if (categoryWords.has(value)) {
+      return false
+    }
+
+    // Чисті числа тут не потрібні.
+    // Ціна, ROM та RAM обробляються окремо.
+    if (/^\d+$/.test(value)) {
+      return false
+    }
+
+    return true
+  })
+
+
+
+  // --------------------------------------------------
+  // Ціна
+  // --------------------------------------------------
 
   const priceFilter: {
     gte?: number
@@ -144,22 +278,37 @@ export async function findProducts(input: FindProductsInput) {
   }
 
   // --------------------------------------------------
-  // Базовий пошук
+  // Базовий пошук у БД
   // --------------------------------------------------
 
   const candidates = await prisma.product.findMany({
     where: {
       AND: [
+        // Тільки активні
         {
           active: true
         },
 
+        // Тільки в наявності
         {
           quantity: {
             gt: 0
           }
         },
 
+        // Категорія
+        ...(category
+          ? [
+              {
+                category: {
+                  equals: category,
+                  mode: 'insensitive' as const
+                }
+              }
+            ]
+          : []),
+
+        // Ціна
         ...(Object.keys(priceFilter).length > 0
           ? [
               {
@@ -168,6 +317,7 @@ export async function findProducts(input: FindProductsInput) {
             ]
           : []),
 
+        // Не показувати вже показані товари
         ...(input.excludeProductIds?.length
           ? [
               {
@@ -178,45 +328,66 @@ export async function findProducts(input: FindProductsInput) {
             ]
           : []),
 
-        {
-          OR: [
-            ...(brand
-              ? [
-                  {
-                    brand: {
-                      contains: brand,
-                      mode: 'insensitive' as const
-                    }
-                  }
-                ]
-              : []),
+        // Текстовий пошук додаємо ТІЛЬКИ тоді,
+        // коли реально є що шукати
+        ...(brand || model || productLine || searchTokens.length > 0
+          ? [
+              {
+                OR: [
+                  // Бренд
+                  ...(brand
+                    ? [
+                        {
+                          brand: {
+                            contains: brand,
+                            mode: 'insensitive' as const
+                          }
+                        }
+                      ]
+                    : []),
 
-            ...(model
-              ? [
-                  {
+                  // Модель
+                  ...(model
+                    ? [
+                        {
+                          name: {
+                            contains: model,
+                            mode: 'insensitive' as const
+                          }
+                        }
+                      ]
+                    : []),
+
+                  // Redmi / Poco / Galaxy / iPhone
+                  ...(productLine
+                    ? [
+                        {
+                          name: {
+                            contains: productLine,
+                            mode: 'insensitive' as const
+                          }
+                        }
+                      ]
+                    : []),
+
+                  // Інші значущі слова
+                  ...searchTokens.map(token => ({
                     name: {
-                      contains: model,
+                      contains: token,
                       mode: 'insensitive' as const
                     }
-                  }
+                  }))
                 ]
-              : []),
-
-            ...tokens.map(token => ({
-              name: {
-                contains: token,
-                mode: 'insensitive' as const
               }
-            }))
-          ]
-        }
+            ]
+          : [])
       ]
     },
 
     take: 50
   })
 
-
+ 
 
   // --------------------------------------------------
   // Ранжування
@@ -229,22 +400,23 @@ export async function findProducts(input: FindProductsInput) {
 
       let score = 0
 
-      // ----------------------------------------------
       // Бренд
-      // ----------------------------------------------
-
       if (brand) {
-        if (productBrand.includes(brand)) {
+        if (productBrand.includes(brand.toLowerCase())) {
           score += 10
         } else {
           score -= 20
         }
       }
-      
-      // ----------------------------------------------
-      // Модель
-      // ----------------------------------------------
 
+      // Лінійка
+      if (productLine) {
+        if (name.includes(productLine.toLowerCase())) {
+          score += 20
+        }
+      }
+
+      // Модель
       if (model) {
         if (name.includes(model.toLowerCase())) {
           score += 30
@@ -253,10 +425,7 @@ export async function findProducts(input: FindProductsInput) {
         }
       }
 
-      // ----------------------------------------------
-      // Пам'ять ROM
-      // ----------------------------------------------
-
+      // ROM
       if (storage) {
         const storageRegex = new RegExp(
           `(^|[^0-9])${storage}(?:gb|гб)?([^0-9]|$)`,
@@ -270,10 +439,7 @@ export async function findProducts(input: FindProductsInput) {
         }
       }
 
-      // ----------------------------------------------
       // RAM
-      // ----------------------------------------------
-
       if (ram) {
         const ramRegex = new RegExp(
           `(^|[^0-9])${ram}(?:gb|гб)?\\s+(?:${storage ?? '\\d+'})`,
@@ -285,22 +451,11 @@ export async function findProducts(input: FindProductsInput) {
         }
       }
 
-      // ----------------------------------------------
-      // Окремі слова
-      // ----------------------------------------------
-
-      for (const token of tokens) {
-        if (name.includes(token)) {
+      // Значущі слова
+      for (const token of searchTokens) {
+        if (name.includes(token.toLowerCase())) {
           score += 1
         }
-      }
-
-      // ----------------------------------------------
-      // Повний збіг
-      // ----------------------------------------------
-
-      if (name.includes(normalizedQuery)) {
-        score += 20
       }
 
       return {
@@ -308,54 +463,66 @@ export async function findProducts(input: FindProductsInput) {
         score
       }
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      // Спочатку score
+      if (b.score !== a.score) {
+        return b.score - a.score
+      }
 
- 
+      // При однаковому score — дешевший вище
+      return a.product.sellPrice - b.product.sellPrice
+    })
 
   // --------------------------------------------------
   // Фінальна фільтрація
   // --------------------------------------------------
 
   const results = ranked
-  .filter(item => {
-    const name = normalizeText(item.product.name)
+    .filter(item => {
+      const name = normalizeText(item.product.name)
 
-    if (
-      model &&
-      !name.includes(model.toLowerCase())
-    ) {
-      return false
-    }
-
-    if (
-      brand &&
-      !normalizeText(item.product.brand).includes(brand)
-    ) {
-      return false
-    }
-
-    if (
-      productLine &&
-      !name.includes(productLine)
-    ) {
-      return false
-    }
-
-    if (storage) {
-      const storageRegex = new RegExp(
-        `(^|[^0-9])${storage}(?:gb|гб)?([^0-9]|$)`,
-        'i'
-      )
-
-      if (!storageRegex.test(name)) {
+      // Модель
+      if (
+        model &&
+        !name.includes(model.toLowerCase())
+      ) {
         return false
       }
-    }
 
-    return true
-  })
-  .slice(0, 5)
-  .map(item => item.product)
+      // Бренд
+      if (
+        brand &&
+        !normalizeText(item.product.brand).includes(
+          brand.toLowerCase()
+        )
+      ) {
+        return false
+      }
+
+      // Лінійка
+      if (
+        productLine &&
+        !name.includes(productLine.toLowerCase())
+      ) {
+        return false
+      }
+
+      // ROM
+      if (storage) {
+        const storageRegex = new RegExp(
+          `(^|[^0-9])${storage}(?:gb|гб)?([^0-9]|$)`,
+          'i'
+        )
+
+        if (!storageRegex.test(name)) {
+          return false
+        }
+      }
+
+      return true
+    })
+    .slice(0, 5)
+    .map(item => item.product)
 
 
 

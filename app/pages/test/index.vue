@@ -4,7 +4,7 @@
       const response = await $fetch('/api/sync/dclink/dclink-test', {
         method: 'POST'
       })
-      console.log('Connection successful:', response)
+
     } catch (error) {
       console.error('Connection failed:', error)
     }

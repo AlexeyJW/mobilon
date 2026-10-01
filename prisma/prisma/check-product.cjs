@@ -23,8 +23,7 @@ async function main() {
     }
   })
 
-  console.log('✅ Товар оновлено:')
-  console.log(product)
+
 }
 
 main()

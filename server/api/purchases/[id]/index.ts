@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     }
   }
   
-  console.log(`[API] ${method} /api/purchases/${idNumber}`)
+
   
   try {
     // DELETE

@@ -18,7 +18,7 @@ const testPhones = [
 
 async function main() {
   if (testPhones.length === 0) {
-    console.log('Список тестових телефонів порожній.')
+
     return
   }
 
@@ -36,16 +36,13 @@ async function main() {
   })
 
   if (customers.length === 0) {
-    console.log('Тестових клієнтів не знайдено.')
+
     return
   }
 
-  console.log('Будуть видалені:')
 
   for (const customer of customers) {
-    console.log(
-      `#${customer.id} ${customer.name} (${customer.phone})`
-    )
+  
   }
 
   const customerIds = customers.map(

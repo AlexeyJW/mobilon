@@ -42,10 +42,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    console.log('Upload:', {
-      type: file.type,
-      size: file.data.length
-    })
+
 
     const base64 =
       `data:${file.type};base64,${file.data.toString('base64')}`
@@ -54,7 +51,6 @@ export default defineEventHandler(async (event) => {
       folder: 'mobilon-store'
     })
 
-    console.log('Cloudinary uploaded:', result.public_id)
 
     return {
       imageUrl: result.secure_url,

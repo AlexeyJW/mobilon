@@ -5,14 +5,12 @@ import { normalizeQuery } from './normalizeQuery'
 export async function findServices(input: FindServicesInput) {
 
  
-  console.log('🔥 FIND SERVICES CALLED:', input)
+  
 
  
   const query = normalizeQuery(input.query)
 
-  console.log('Original service query:', input.query)
-  console.log('Normalized service query:', query)
-  console.log('Price range:', input.minPrice, input.maxPrice)
+
 
   const priceFilter: {
     gte?: number
@@ -83,7 +81,7 @@ export async function findServices(input: FindServicesInput) {
     take: 5
   })
 
-  console.log('Services found:', services.length)
+
 
   return services
 }

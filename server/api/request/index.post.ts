@@ -11,7 +11,7 @@ const requestSchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  console.log('🔥 API CALLED:', event.method, event.path)
+
 
   try {
     const body = await readBody(event)

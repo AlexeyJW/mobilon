@@ -237,16 +237,7 @@ async function recognizeReceiptPhoto() {
 const compressedFile =
   await compressReceiptImage(originalFile)
 
-console.log(
-  'Фото чека:',
-  {
-    original:
-      `${(originalFile.size / 1024 / 1024).toFixed(2)} MB`,
 
-    compressed:
-      `${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`
-  }
-)
 
 const formData = new FormData()
 
@@ -278,15 +269,9 @@ formData.append(
         bonusCategory: item.bonusCategory
       }))
 
-    console.log(
-      'Розпізнані позиції:',
-      response.items
-    )
+   
 
-    console.log(
-      'Розпізнана сума:',
-      response.recognizedTotal
-    )
+
   } catch (error: any) {
     console.error(
       'Receipt recognition error:',
