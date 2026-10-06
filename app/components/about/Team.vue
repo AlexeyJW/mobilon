@@ -58,14 +58,14 @@ onMounted(loadTeam)
           :key="member.id"
           class="rounded-2xl border border-default bg-elevated overflow-hidden"
         >
-          <div class="aspect-[4/3] bg-muted overflow-hidden">
-            <img
-              v-if="member.photo"
-              :src="member.photo"
-              :alt="member.name"
-              class="w-full h-full object-contain object-top"
-              loading="lazy"
-            >
+         <div class="aspect-[4/3] bg-muted overflow-hidden p-3">
+  <img
+    v-if="member.photo"
+    :src="member.photo"
+    :alt="member.name"
+    class="w-full h-full object-contain object-center rounded-xl"
+    loading="lazy"
+  >
 
             <div
               v-else
