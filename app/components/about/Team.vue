@@ -58,22 +58,37 @@ onMounted(loadTeam)
           :key="member.id"
           class="rounded-2xl border border-default bg-elevated overflow-hidden"
         >
-         <div class="aspect-[4/3] bg-muted overflow-hidden p-3">
+<div class="relative aspect-[4/3] overflow-hidden bg-muted">
+
+  <img
+    v-if="member.photo"
+    :src="member.photo"
+    alt=""
+    class="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-35"
+    aria-hidden="true"
+  >
+
+  <div
+    v-if="member.photo"
+    class="absolute inset-0 bg-black/10"
+  />
+
   <img
     v-if="member.photo"
     :src="member.photo"
     :alt="member.name"
-    class="w-full h-full object-contain object-center rounded-xl"
+    class="relative z-10 w-full h-full object-contain p-2"
     loading="lazy"
   >
 
-            <div
-              v-else
-              class="w-full h-full flex items-center justify-center text-muted"
-            >
-              Фото
-            </div>
-          </div>
+  <div
+    v-else
+    class="w-full h-full flex items-center justify-center text-muted"
+  >
+    Фото
+  </div>
+
+</div>
 
           <div class="p-5 text-center">
             <h3 class="text-lg font-semibold">
