@@ -63,7 +63,7 @@ onMounted(loadTeam)
               v-if="member.photo"
               :src="member.photo"
               :alt="member.name"
-              class="w-full h-full object-cover"
+              class="w-full h-full object-contain object-top"
               loading="lazy"
             >
 
