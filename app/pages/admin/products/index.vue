@@ -13,20 +13,59 @@
   Новий товар
 </UButton>
 <UCard class="overflow-visible">
-<div class="mb-4 flex flex-col sm:flex-row gap-3">
-    <UInput
-      v-model="search"
-      icon="i-lucide-search"
-      placeholder="Пошук товарів..."
-      class="flex-1"
-    />
+
+<div class="mb-4 space-y-3">
+  <UInput
+    v-model="search"
+    icon="i-lucide-search"
+    placeholder="Пошук за назвою, брендом або slug..."
+    class="w-full"
+  />
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
     <USelect
-  v-model="statusFilter"
-  :items="statusOptions"
-  class="w-full sm:w-48"
-  :content="{ side: 'bottom', align: 'start' }"
-/>
+      v-model="categoryFilter"
+      :items="categoryOptions"
+      class="w-full"
+      :content="{ side: 'bottom', align: 'start' }"
+      aria-label="Категорія"
+    />
+
+    <USelect
+      v-model="brandFilter"
+      :items="brandOptions"
+      :disabled="categoryFilter === 'all'"
+      class="w-full"
+      :content="{ side: 'bottom', align: 'start' }"
+      aria-label="Бренд"
+    />
+
+    <USelect
+      v-model="statusFilter"
+      :items="statusOptions"
+      class="w-full"
+      :content="{ side: 'bottom', align: 'start' }"
+      aria-label="Статус"
+    />
   </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <span class="text-sm text-muted">
+      Знайдено товарів: {{ filteredProducts.length }}
+    </span>
+
+    <UButton
+      icon="i-lucide-rotate-ccw"
+      color="neutral"
+      variant="outline"
+      size="sm"
+      @click="resetFilters"
+    >
+      Скинути фільтри
+    </UButton>
+  </div>
+</div>
+
 
   <UTable
   :data="filteredProducts"
@@ -215,7 +254,71 @@ const deletingItem = ref<Product | null>(null)
 
 const search = ref('')
 const statusFilter = ref('all')
-  
+
+
+const categoryFilter = ref('all')
+const brandFilter = ref('all')
+
+// Унікальні категорії з каталогу
+const categoryOptions = computed(() => {
+  const categories = [
+    ...new Set(
+      (products.value ?? [])
+        .map(product => product.category)
+        .filter((value): value is string =>
+          typeof value === 'string' && value.trim() !== ''
+        )
+    )
+  ].sort((a, b) => a.localeCompare(b, 'uk'))
+
+  return [
+    { label: 'Всі категорії', value: 'all' },
+    ...categories.map(category => ({
+      label: category,
+      value: category
+    }))
+  ]
+})
+
+// Бренди лише вибраної категорії
+const brandOptions = computed(() => {
+  const selectedProducts = (products.value ?? []).filter(
+    product =>
+      categoryFilter.value === 'all' ||
+      product.category === categoryFilter.value
+  )
+
+  const brands = [
+    ...new Set(
+      selectedProducts
+        .map(product => product.brand)
+        .filter((value): value is string =>
+          typeof value === 'string' && value.trim() !== ''
+        )
+    )
+  ].sort((a, b) => a.localeCompare(b, 'uk'))
+
+  return [
+    { label: 'Всі бренди', value: 'all' },
+    ...brands.map(brand => ({
+      label: brand,
+      value: brand
+    }))
+  ]
+})
+
+// При зміні категорії скидати бренд
+watch(categoryFilter, () => {
+  brandFilter.value = 'all'
+})
+
+function resetFilters() {
+  search.value = ''
+  categoryFilter.value = 'all'
+  brandFilter.value = 'all'
+  statusFilter.value = 'all'
+}
+
 
 function createEmptyProduct() {
   return {
@@ -446,28 +549,49 @@ const columns = [
   }
 ]
 
-const filteredProducts = computed(() => {
-  let result = products.value
-  // Filter by status
-  if (statusFilter.value === 'active') {
-  result = result.filter(product => product.active)
-}
 
-if (statusFilter.value === 'inactive') {
-  result = result.filter(product => !product.active)
-}
-  // Filter by search
-  if (search.value) {
-    const query = search.value.toLowerCase()
+
+const filteredProducts = computed(() => {
+  let result = products.value ?? []
+
+  // Категорія
+  if (categoryFilter.value !== 'all') {
     result = result.filter(product =>
-      product.name.toLowerCase().includes(query) ||
-      product.brand.toLowerCase().includes(query) ||
-      product.slug.toLowerCase().includes(query)
+      product.category === categoryFilter.value
+    )
+  }
+
+  // Бренд
+  if (brandFilter.value !== 'all') {
+    result = result.filter(product =>
+      product.brand === brandFilter.value
+    )
+  }
+
+  // Статус
+  if (statusFilter.value === 'active') {
+    result = result.filter(product => product.active)
+  }
+
+  if (statusFilter.value === 'inactive') {
+    result = result.filter(product => !product.active)
+  }
+
+  // Пошук
+  const query = search.value.trim().toLowerCase()
+
+  if (query) {
+    result = result.filter(product =>
+      (product.name ?? '').toLowerCase().includes(query) ||
+      (product.brand ?? '').toLowerCase().includes(query) ||
+      (product.slug ?? '').toLowerCase().includes(query)
     )
   }
 
   return result
 })
+
+
 
 
 
